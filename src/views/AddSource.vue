@@ -150,11 +150,19 @@ async function validateSource() {
   error.value = null
 
   try {
-    // Fetch index.yaml directly (source URL includes the filename)
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`Could not reach ${url} (HTTP ${response.status})`)
+    // If URL doesn't end with .yaml, try appending /index.yaml
+    let fetchUrl = url
+    if (!url.endsWith('.yaml')) {
+      fetchUrl = url.replace(/\/$/, '') + '/index.yaml'
     }
+
+    const response = await fetch(fetchUrl)
+    if (!response.ok) {
+      throw new Error(`Could not reach ${fetchUrl} (HTTP ${response.status})`)
+    }
+
+    // Update sourceUrl to include the resolved filename
+    sourceUrl.value = fetchUrl
 
     const text = await response.text()
     const data = yaml.load(text)
@@ -163,8 +171,8 @@ async function validateSource() {
       throw new Error('No languages found in the content source')
     }
 
-    // Derive base URL by stripping the index.yaml filename
-    const baseUrl = url.replace(/\/[^/]+\.yaml$/, '')
+    // Derive base URL by stripping the yaml filename
+    const baseUrl = fetchUrl.replace(/\/[^/]+\.yaml$/, '')
 
     // Discover content structure
     const content = {}

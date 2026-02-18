@@ -103,18 +103,24 @@ export function useLessons() {
   // sourceUrl is the full URL to index.yaml (e.g. https://user.github.io/repo/index.yaml)
   async function loadContentSource(sourceUrl, content, codes) {
     try {
-      console.log(`📡 Loading content source: ${sourceUrl}`)
-      const response = await fetch(sourceUrl)
+      // If URL doesn't end with .yaml, append /index.yaml
+      let fetchUrl = sourceUrl
+      if (!sourceUrl.endsWith('.yaml')) {
+        fetchUrl = sourceUrl.replace(/\/$/, '') + '/index.yaml'
+      }
+
+      console.log(`📡 Loading content source: ${fetchUrl}`)
+      const response = await fetch(fetchUrl)
       if (!response.ok) {
-        console.warn(`⚠️ Failed to fetch ${sourceUrl}: ${response.status}`)
+        console.warn(`⚠️ Failed to fetch ${fetchUrl}: ${response.status}`)
         return
       }
 
       const text = await response.text()
       const data = yaml.load(text)
 
-      // Derive base URL by stripping the index.yaml filename
-      const baseUrl = sourceUrl.replace(/\/workshop\.yaml$/, '')
+      // Derive base URL by stripping the yaml filename
+      const baseUrl = fetchUrl.replace(/\/[^/]+\.yaml$/, '')
 
       for (const lang of data.languages) {
         const source = parseSource(lang)

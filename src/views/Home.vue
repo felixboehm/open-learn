@@ -141,7 +141,8 @@ const copiedTopic = ref(null)
 
 // Known workshops that can be discovered
 const knownWorkshops = [
-  { url: 'https://felixboehm.github.io/workshop-open-learn/index.yaml', title: 'Open Learn Workshop', host: 'felixboehm.github.io' }
+  { url: 'https://felixboehm.github.io/workshop-open-learn/index.yaml', title: 'Open Learn Workshop', host: 'felixboehm.github.io' },
+  { url: 'https://felixboehm.github.io/workshop-english/index.yaml', title: 'Englisch lernen', host: 'felixboehm.github.io' }
 ]
 
 const learningLanguages = computed(() => {
