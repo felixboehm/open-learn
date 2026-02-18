@@ -3,7 +3,7 @@ import { useLessons } from './useLessons'
 import { useProgress } from './useProgress'
 
 // Get lesson composable for language codes
-const { getLanguageCode, getTopicCode } = useLessons()
+const { getLanguageCode, getTopicCode, resolveTopicKey } = useLessons()
 
 // Get progress composable for learned items
 const { areAllItemsLearned } = useProgress()
@@ -29,14 +29,17 @@ function buildReadingQueue(lesson, learning, teaching, settings) {
   const baseUrl = import.meta.env.BASE_URL
   const lessonFilename = lesson._filename || `${String(lesson.number).padStart(2, '0')}-lesson`
 
+  // Resolve slug to URL if needed (e.g. "workshop-open-learn~topic" → full URL)
+  const resolvedTeaching = resolveTopicKey(teaching)
+
   // Determine audio base path based on lesson source
   let audioBase
   if (lesson._source && lesson._source.type === 'url') {
     // Lesson is from URL
     audioBase = `${lesson._source.path}/audio`
-  } else if (teaching && (teaching.startsWith('http://') || teaching.startsWith('https://'))) {
-    // Topic is from URL
-    audioBase = `${teaching}/${lessonFilename}/audio`
+  } else if (resolvedTeaching && (resolvedTeaching.startsWith('http://') || resolvedTeaching.startsWith('https://'))) {
+    // Topic is from URL (resolved from slug)
+    audioBase = `${resolvedTeaching}/${lessonFilename}/audio`
   } else if (learning && (learning.startsWith('http://') || learning.startsWith('https://'))) {
     // Language is from URL
     audioBase = `${learning}/${teaching}/${lessonFilename}/audio`

@@ -15,11 +15,10 @@ export function formatLangName(lang) {
 
   if (names[lang]) return names[lang]
 
-  // For URL-based topics, extract the last path segment
-  if (lang.startsWith('http://') || lang.startsWith('https://')) {
-    const parts = lang.replace(/\/+$/, '').split('/')
-    const lastPart = parts[parts.length - 1]
-    return lastPart.charAt(0).toUpperCase() + lastPart.slice(1).replace(/-/g, ' ')
+  // For slug-based remote topics (e.g. "workshop-open-learn~open-learn-workshop")
+  if (lang.includes('~')) {
+    const topicPart = lang.split('~').pop()
+    return topicPart.charAt(0).toUpperCase() + topicPart.slice(1).replace(/-/g, ' ')
   }
 
   return lang.charAt(0).toUpperCase() + lang.slice(1)

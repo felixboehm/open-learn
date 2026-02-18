@@ -28,10 +28,24 @@ function parseSource(source) {
   return null
 }
 
+// Generate a slug from a source URL: extract repo name and topic folder
+// e.g. "https://user.github.io/workshop-open-learn/deutsch/my-topic" → "workshop-open-learn~my-topic"
+function generateSlug(sourceUrl, topicFolder) {
+  try {
+    const url = new URL(sourceUrl)
+    const pathParts = url.pathname.split('/').filter(Boolean)
+    const repoName = pathParts[0] || 'remote'
+    return `${repoName}~${topicFolder}`
+  } catch {
+    return `remote~${topicFolder}`
+  }
+}
+
 export function useLessons() {
   const availableContent = ref({})
   const languageCodes = ref({}) // Store language codes
   const topicCodes = ref({}) // Store topic codes
+  const topicSlugMap = ref({}) // slug → URL and URL → slug
   const isLoading = ref(false)
 
   // Get content sources from localStorage
@@ -63,9 +77,22 @@ export function useLessons() {
     saveContentSources(sources)
   }
 
-  // Check if a topic key is from a content source (URL-based)
+  // Check if a topic key is from a content source (slug-based)
   function isRemoteTopic(topicKey) {
-    return topicKey.startsWith('http://') || topicKey.startsWith('https://')
+    return topicKey.includes('~')
+  }
+
+  // Resolve a topic key: if it's a slug, return the URL; otherwise return as-is
+  function resolveTopicKey(topicKey) {
+    return topicSlugMap.value[topicKey] || topicKey
+  }
+
+  // Get the source URL for a slug (for removing sources)
+  function getSourceForSlug(slug) {
+    const url = topicSlugMap.value[slug]
+    if (!url) return null
+    const sources = getContentSources()
+    return sources.find(s => url.startsWith(s)) || null
   }
 
   // Load a remote content source's languages and topics
@@ -108,18 +135,22 @@ export function useLessons() {
             const topicSource = parseSource(topic)
             if (!topicSource) continue
 
-            // For remote topics, use the full URL as the key
-            // so useLessons can fetch lessons.yaml from the URL
-            const topicKey = `${sourceUrl}/${langKey}/${topicSource.path}`
-            content[langKey][topicKey] = []
+            // Generate a clean slug for the route, map it to the full URL
+            const topicUrl = `${sourceUrl}/${langKey}/${topicSource.path}`
+            const slug = generateSlug(sourceUrl, topicSource.path)
+            content[langKey][slug] = []
+
+            // Bidirectional mapping: slug ↔ URL
+            topicSlugMap.value[slug] = topicUrl
+            topicSlugMap.value[topicUrl] = slug
 
             // Store topic code
             if (!topicCodes.value[langKey]) {
               topicCodes.value[langKey] = {}
             }
-            topicCodes.value[langKey][topicKey] = topicSource.code || null
+            topicCodes.value[langKey][slug] = topicSource.code || null
 
-            console.log(`  ✓ Remote topic: ${topicKey} (${topicSource.code || 'no code'})`)
+            console.log(`  ✓ Remote topic: ${slug} → ${topicUrl} (${topicSource.code || 'no code'})`)
           }
         } catch (e) {
           console.warn(`⚠️ Failed to load topics from ${topicsUrl}:`, e)
@@ -251,17 +282,20 @@ export function useLessons() {
         }
       }
 
+      // Resolve slug to URL if needed
+      const resolvedTopic = resolveTopicKey(topic)
+
       // Construct lessons.yaml URL
       let lessonsUrl
-      if (topic.startsWith('http://') || topic.startsWith('https://')) {
-        // Topic is a URL
-        lessonsUrl = `${topic}/lessons.yaml`
+      if (resolvedTopic.startsWith('http://') || resolvedTopic.startsWith('https://')) {
+        // Topic is a URL (resolved from slug or direct)
+        lessonsUrl = `${resolvedTopic}/lessons.yaml`
       } else if (lang.startsWith('http://') || lang.startsWith('https://')) {
         // Language is a URL, topic is a folder
-        lessonsUrl = `${lang}/${topic}/lessons.yaml`
+        lessonsUrl = `${lang}/${resolvedTopic}/lessons.yaml`
       } else {
         // Both are folders
-        lessonsUrl = `lessons/${lang}/${topic}/lessons.yaml`
+        lessonsUrl = `lessons/${lang}/${resolvedTopic}/lessons.yaml`
       }
 
       const response = await fetch(lessonsUrl)
@@ -295,20 +329,23 @@ export function useLessons() {
         return null
       }
 
+      // Resolve slug to URL if needed
+      const resolvedTopic = resolveTopicKey(topic)
+
       // Construct content.yaml URL
       let lessonPath
       if (source.type === 'url') {
         // Lesson is a URL
         lessonPath = `${source.path}/content.yaml`
-      } else if (topic.startsWith('http://') || topic.startsWith('https://')) {
-        // Topic is a URL, lesson is a folder
-        lessonPath = `${topic}/${source.path}/content.yaml`
+      } else if (resolvedTopic.startsWith('http://') || resolvedTopic.startsWith('https://')) {
+        // Topic is a URL (resolved from slug), lesson is a folder
+        lessonPath = `${resolvedTopic}/${source.path}/content.yaml`
       } else if (lang.startsWith('http://') || lang.startsWith('https://')) {
         // Language is a URL, others are folders
-        lessonPath = `${lang}/${topic}/${source.path}/content.yaml`
+        lessonPath = `${lang}/${resolvedTopic}/${source.path}/content.yaml`
       } else {
         // All are folders
-        lessonPath = `lessons/${lang}/${topic}/${source.path}/content.yaml`
+        lessonPath = `lessons/${lang}/${resolvedTopic}/${source.path}/content.yaml`
       }
 
       const response = await fetch(lessonPath)
@@ -398,6 +435,8 @@ export function useLessons() {
     getContentSources,
     addContentSource,
     removeContentSource,
-    isRemoteTopic
+    isRemoteTopic,
+    resolveTopicKey,
+    getSourceForSlug
   }
 }
