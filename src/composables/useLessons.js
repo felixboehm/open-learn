@@ -80,7 +80,7 @@ export function useLessons() {
     const url = topicSlugMap.value[slug]
     if (!url) return null
     const sources = getContentSources()
-    // Sources include workshop.yaml filename, strip it for prefix matching
+    // Sources include index.yaml filename, strip it for prefix matching
     return sources.find(s => {
       const base = s.replace(/\/workshop\.yaml$/, '')
       return url.startsWith(base)
@@ -100,7 +100,7 @@ export function useLessons() {
   }
 
   // Load a remote content source's languages and topics
-  // sourceUrl is the full URL to workshop.yaml (e.g. https://user.github.io/repo/workshop.yaml)
+  // sourceUrl is the full URL to index.yaml (e.g. https://user.github.io/repo/index.yaml)
   async function loadContentSource(sourceUrl, content, codes) {
     try {
       console.log(`📡 Loading content source: ${sourceUrl}`)
@@ -113,7 +113,7 @@ export function useLessons() {
       const text = await response.text()
       const data = yaml.load(text)
 
-      // Derive base URL by stripping the workshop.yaml filename
+      // Derive base URL by stripping the index.yaml filename
       const baseUrl = sourceUrl.replace(/\/workshop\.yaml$/, '')
 
       for (const lang of data.languages) {
@@ -182,10 +182,10 @@ export function useLessons() {
     try {
       console.log('📚 Loading available languages...')
       isLoading.value = true
-      const response = await fetch('lessons/workshop.yaml')
+      const response = await fetch('lessons/index.yaml')
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch workshop.yaml: ${response.status}`)
+        throw new Error(`Failed to fetch index.yaml: ${response.status}`)
       }
 
       const text = await response.text()

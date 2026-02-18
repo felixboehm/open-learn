@@ -81,7 +81,7 @@ const sourceLabel = computed(() => {
   if (!url) return ''
   try {
     const u = new URL(url)
-    const path = u.pathname.replace(/\/workshop\.yaml$/, '')
+    const path = u.pathname.replace(/\/index\.yaml$/, '')
     return u.hostname + path
   } catch { return '' }
 })

@@ -46,7 +46,7 @@
           No content source URL provided
         </div>
         <p class="text-gray-600 dark:text-gray-400 mb-6">
-          Use a share link with <code class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">?source=URL/workshop.yaml</code> to add external content.
+          Use a share link with <code class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">?source=URL/index.yaml</code> to add external content.
         </p>
         <button
           @click="goHome"
@@ -150,7 +150,7 @@ async function validateSource() {
   error.value = null
 
   try {
-    // Fetch workshop.yaml directly (source URL includes the filename)
+    // Fetch index.yaml directly (source URL includes the filename)
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(`Could not reach ${url} (HTTP ${response.status})`)
@@ -163,7 +163,7 @@ async function validateSource() {
       throw new Error('No languages found in the content source')
     }
 
-    // Derive base URL by stripping the workshop.yaml filename
+    // Derive base URL by stripping the index.yaml filename
     const baseUrl = url.replace(/\/workshop\.yaml$/, '')
 
     // Discover content structure

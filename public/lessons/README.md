@@ -7,7 +7,7 @@ This directory contains learning content in YAML format for the Open Learn platf
 ```
 lessons/
 ├── README.md
-├── workshop.yaml              # Root index
+├── index.yaml              # Root index
 ├── deutsch/                    # Learning in German
 │   ├── topics.yaml
 │   ├── portugiesisch/         # Teaching Portuguese
