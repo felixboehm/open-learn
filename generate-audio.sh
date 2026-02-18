@@ -14,7 +14,7 @@
 #   ./generate-audio.sh -f path/to/lesson-folder/ # Force single lesson
 #
 # Works with external workshops too — auto-detects the content root
-# by walking up to find languages.yaml:
+# by walking up to find index.yaml:
 #   ./generate-audio.sh /path/to/workshop/deutsch/topic/01-lesson/
 
 LESSONS_DIR="public/lessons"
@@ -101,9 +101,9 @@ get_voice() {
     code=$(get_language_code "$parent_dir/index.yaml" "$folder_name")
   fi
 
-  # Try main languages.yaml
+  # Try main index.yaml
   if [[ -z "$code" || "$code" == "null" ]]; then
-    code=$(get_language_code "$content_root/languages.yaml" "$folder_name")
+    code=$(get_language_code "$content_root/index.yaml" "$folder_name")
   fi
 
   # Look up voice by code
@@ -126,11 +126,11 @@ get_voice() {
   echo "Alex"
 }
 
-# Function to find the content root by walking up to find languages.yaml
+# Function to find the content root by walking up to find index.yaml
 find_content_root() {
   local dir="$1"
   while [[ "$dir" != "/" ]]; do
-    if [[ -f "$dir/languages.yaml" ]]; then
+    if [[ -f "$dir/index.yaml" ]]; then
       echo "$dir"
       return
     fi

@@ -96,7 +96,7 @@ open-learn/
 │       └── formatters.js    # Display name formatting
 ├── public/
 │   └── lessons/             # YAML lesson content
-│       ├── languages.yaml   # Root index
+│       ├── index.yaml       # Root index
 │       └── deutsch/         # German learning content
 ├── tests/                   # Test files
 ├── docs/                    # Documentation
@@ -192,7 +192,7 @@ Push to the `main` branch triggers automatic deployment via GitHub Actions (`.gi
 - `#/settings` - Settings panel
 
 ### Data Flow
-1. Load `lessons/languages.yaml` → get available interface languages
+1. Load `lessons/index.yaml` → get available interface languages
 2. Load `lessons/{lang}/topics.yaml` → get topics
 3. Load `lessons/{lang}/{topic}/lessons.yaml` → get lesson folders
 4. Load lesson content dynamically with js-yaml
@@ -204,8 +204,8 @@ Add community workshops to Open Learn by clicking the links below:
 
 | Workshop | Description | Link |
 |----------|-------------|------|
-| **Learn English** | 10 lessons covering 30 core English verbs (German interface) | [Add workshop](https://felixboehm.github.io/open-learn/#/add?source=https://felixboehm.github.io/workshop-english) |
-| **Getting to Know Open Learn** | Learn how the platform works and create your own workshops (DE/EN) | [Add workshop](https://felixboehm.github.io/open-learn/#/add?source=https://felixboehm.github.io/workshop-open-learn) |
+| **Learn English** | 10 lessons covering 30 core English verbs (German interface) | [Add workshop](https://felixboehm.github.io/open-learn/#/add?source=https://felixboehm.github.io/workshop-english/index.yaml) |
+| **Getting to Know Open Learn** | Learn how the platform works and create your own workshops (DE/EN) | [Add workshop](https://felixboehm.github.io/open-learn/#/add?source=https://felixboehm.github.io/workshop-open-learn/index.yaml) |
 
 Want to create your own workshop? See the [External Workshop Guide](docs/external-workshop-guide.md).
 
