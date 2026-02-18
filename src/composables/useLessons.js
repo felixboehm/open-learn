@@ -34,6 +34,104 @@ export function useLessons() {
   const topicCodes = ref({}) // Store topic codes
   const isLoading = ref(false)
 
+  // Get content sources from localStorage
+  function getContentSources() {
+    try {
+      return JSON.parse(localStorage.getItem('contentSources') || '[]')
+    } catch {
+      return []
+    }
+  }
+
+  // Save content sources to localStorage
+  function saveContentSources(sources) {
+    localStorage.setItem('contentSources', JSON.stringify(sources))
+  }
+
+  // Add a content source
+  function addContentSource(url) {
+    const sources = getContentSources()
+    if (!sources.includes(url)) {
+      sources.push(url)
+      saveContentSources(sources)
+    }
+  }
+
+  // Remove a content source
+  function removeContentSource(url) {
+    const sources = getContentSources().filter(s => s !== url)
+    saveContentSources(sources)
+  }
+
+  // Check if a topic key is from a content source (URL-based)
+  function isRemoteTopic(topicKey) {
+    return topicKey.startsWith('http://') || topicKey.startsWith('https://')
+  }
+
+  // Load a remote content source's languages and topics
+  async function loadContentSource(sourceUrl, content, codes) {
+    try {
+      console.log(`📡 Loading content source: ${sourceUrl}`)
+      const response = await fetch(`${sourceUrl}/languages.yaml`)
+      if (!response.ok) {
+        console.warn(`⚠️ Failed to fetch ${sourceUrl}/languages.yaml: ${response.status}`)
+        return
+      }
+
+      const text = await response.text()
+      const data = yaml.load(text)
+
+      for (const lang of data.languages) {
+        const source = parseSource(lang)
+        if (!source) continue
+
+        // For remote sources, the language key is the folder name (e.g. "deutsch")
+        // so it merges with local languages
+        const langKey = source.path
+        if (!content[langKey]) {
+          content[langKey] = {}
+        }
+        if (!codes[langKey]) {
+          codes[langKey] = source.code || null
+        }
+
+        // Load topics for this language from the remote source
+        const topicsUrl = `${sourceUrl}/${langKey}/topics.yaml`
+        try {
+          const topicsResponse = await fetch(topicsUrl)
+          if (!topicsResponse.ok) continue
+
+          const topicsText = await topicsResponse.text()
+          const topicsData = yaml.load(topicsText)
+
+          for (const topic of topicsData.topics) {
+            const topicSource = parseSource(topic)
+            if (!topicSource) continue
+
+            // For remote topics, use the full URL as the key
+            // so useLessons can fetch lessons.yaml from the URL
+            const topicKey = `${sourceUrl}/${langKey}/${topicSource.path}`
+            content[langKey][topicKey] = []
+
+            // Store topic code
+            if (!topicCodes.value[langKey]) {
+              topicCodes.value[langKey] = {}
+            }
+            topicCodes.value[langKey][topicKey] = topicSource.code || null
+
+            console.log(`  ✓ Remote topic: ${topicKey} (${topicSource.code || 'no code'})`)
+          }
+        } catch (e) {
+          console.warn(`⚠️ Failed to load topics from ${topicsUrl}:`, e)
+        }
+      }
+
+      console.log(`✅ Content source loaded: ${sourceUrl}`)
+    } catch (error) {
+      console.warn(`⚠️ Error loading content source ${sourceUrl}:`, error)
+    }
+  }
+
   async function loadAvailableContent() {
     try {
       console.log('📚 Loading available languages...')
@@ -63,6 +161,12 @@ export function useLessons() {
         content[key] = {}
         codes[key] = source.code || null
         console.log(`  ✓ Language: ${key} (${source.type}) (${source.code || 'no code'})`)
+      }
+
+      // Load remote content sources from localStorage
+      const contentSources = getContentSources()
+      for (const sourceUrl of contentSources) {
+        await loadContentSource(sourceUrl, content, codes)
       }
 
       availableContent.value = content
@@ -290,6 +394,10 @@ export function useLessons() {
     loadLesson,
     loadAllLessonsForTopic,
     getLanguageCode,
-    getTopicCode
+    getTopicCode,
+    getContentSources,
+    addContentSource,
+    removeContentSource,
+    isRemoteTopic
   }
 }
