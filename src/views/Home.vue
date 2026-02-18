@@ -42,34 +42,72 @@
         <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-3">
           What I want to learn:
         </label>
-        <div v-if="teachingTopics.length > 0" class="flex flex-wrap gap-2">
+        <div v-if="teachingTopics.length > 0" class="flex flex-col gap-3">
           <div
             v-for="topic in teachingTopics"
             :key="topic"
-            class="flex items-center gap-0">
-            <button
-              @click="selectTeaching(topic)"
-              :class="[
-                'px-5 py-2 border-2 font-semibold transition',
-                isRemoteTopic(topic) ? 'rounded-l-md' : 'rounded-md',
-                selectedTeaching === topic
-                  ? 'bg-primary-500 text-white border-primary-500'
-                  : 'bg-white dark:bg-gray-900 text-primary-500 dark:text-gray-200 border-primary-500 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700'
-              ]">
-              {{ formatLangName(topic) }}
-            </button>
-            <button
-              v-if="isRemoteTopic(topic)"
-              @click.stop="removeSource(topic)"
-              class="px-2 py-2 border-2 border-l-0 border-red-400 rounded-r-md text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition text-sm"
-              title="Remove external source">
-              ✕
-            </button>
+            @click="selectTeaching(topic)"
+            :class="[
+              'p-4 rounded-lg border-2 cursor-pointer transition',
+              selectedTeaching === topic
+                ? 'border-primary-500 bg-blue-50 dark:bg-gray-700'
+                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-primary-300 dark:hover:border-gray-500'
+            ]">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-grow min-w-0">
+                <div class="font-semibold text-gray-800 dark:text-gray-200">
+                  {{ getTopicTitle(topic) }}
+                </div>
+                <div v-if="getTopicDescription(topic)" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {{ getTopicDescription(topic) }}
+                </div>
+                <div v-if="isRemoteTopic(topic)" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  {{ getTopicSourceLabel(topic) }}
+                </div>
+              </div>
+              <div v-if="isRemoteTopic(topic)" class="flex items-center gap-1 flex-shrink-0">
+                <button
+                  @click.stop="copyShareLink(topic)"
+                  class="p-1.5 rounded text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+                  title="Copy share link">
+                  <span class="text-sm">{{ copiedTopic === topic ? '✓' : '🔗' }}</span>
+                </button>
+                <button
+                  @click.stop="removeSource(topic)"
+                  class="p-1.5 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition"
+                  title="Remove external source">
+                  <span class="text-sm">✕</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <p v-else class="text-gray-500 dark:text-gray-400">
           Select a learning language first
         </p>
+      </div>
+
+      <!-- Workshop discovery -->
+      <div v-if="availableWorkshops.length > 0" class="mb-4">
+        <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-3">
+          Discover Workshops
+        </label>
+        <div class="flex flex-col gap-2">
+          <div
+            v-for="workshop in availableWorkshops"
+            :key="workshop.url"
+            class="flex items-center justify-between p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900">
+            <div>
+              <div class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ workshop.title }}</div>
+              <div class="text-xs text-gray-400 dark:text-gray-500">{{ workshop.host }}</div>
+            </div>
+            <a
+              :href="'#/add?source=' + encodeURIComponent(workshop.url)"
+              class="px-3 py-1 rounded text-sm font-semibold text-primary-500 border border-primary-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition">
+              Add
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Load lessons button -->
@@ -95,10 +133,16 @@ import { useLessons } from '../composables/useLessons'
 import { formatLangName } from '../utils/formatters'
 
 const router = useRouter()
-const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug } = useLessons()
+const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug, getTopicMeta, getShareUrl, getContentSources } = useLessons()
 
 const selectedLearning = ref(null)
 const selectedTeaching = ref(null)
+const copiedTopic = ref(null)
+
+// Known workshops that can be discovered
+const knownWorkshops = [
+  { url: 'https://felixboehm.github.io/workshop-open-learn', title: 'Open Learn Workshop', host: 'felixboehm.github.io' }
+]
 
 const learningLanguages = computed(() => {
   return Object.keys(availableContent.value)
@@ -112,6 +156,44 @@ const teachingTopics = computed(() => {
 const canLoadLessons = computed(() => {
   return selectedLearning.value && selectedTeaching.value
 })
+
+// Workshops not yet added by the user
+const availableWorkshops = computed(() => {
+  const sources = getContentSources()
+  return knownWorkshops.filter(w => !sources.includes(w.url))
+})
+
+function getTopicTitle(topic) {
+  const meta = getTopicMeta(selectedLearning.value, topic)
+  return meta.title || formatLangName(topic)
+}
+
+function getTopicDescription(topic) {
+  const meta = getTopicMeta(selectedLearning.value, topic)
+  return meta.description || null
+}
+
+function getTopicSourceLabel(topic) {
+  const sourceUrl = getSourceForSlug(topic)
+  if (!sourceUrl) return ''
+  try {
+    return new URL(sourceUrl).hostname
+  } catch {
+    return sourceUrl
+  }
+}
+
+async function copyShareLink(topic) {
+  const url = getShareUrl(topic)
+  if (!url) return
+  try {
+    await navigator.clipboard.writeText(url)
+    copiedTopic.value = topic
+    setTimeout(() => { copiedTopic.value = null }, 2000)
+  } catch {
+    // Clipboard API not available
+  }
+}
 
 async function selectLearning(lang) {
   selectedLearning.value = lang

@@ -19,10 +19,10 @@ function parseSource(source) {
   }
   if (typeof source === 'object') {
     if (source.folder) {
-      return { type: 'folder', path: source.folder, code: source.code }
+      return { type: 'folder', path: source.folder, code: source.code, title: source.title || null, description: source.description || null }
     }
     if (source.url) {
-      return { type: 'url', path: resolveUrl(source.url), code: source.code }
+      return { type: 'url', path: resolveUrl(source.url), code: source.code, title: source.title || null, description: source.description || null }
     }
   }
   return null
@@ -33,6 +33,7 @@ export function useLessons() {
   const languageCodes = ref({}) // Store language codes
   const topicCodes = ref({}) // Store topic codes
   const topicSlugMap = ref({}) // slug → URL mapping for remote topics
+  const topicMeta = ref({}) // { lang: { topic: { title, description } } }
   const isLoading = ref(false)
 
   // Get content sources from localStorage
@@ -80,6 +81,18 @@ export function useLessons() {
     if (!url) return null
     const sources = getContentSources()
     return sources.find(s => url.startsWith(s)) || null
+  }
+
+  // Get metadata (title, description) for a topic
+  function getTopicMeta(langFolder, topicFolder) {
+    return topicMeta.value[langFolder]?.[topicFolder] || { title: null, description: null }
+  }
+
+  // Get share URL for a remote topic
+  function getShareUrl(topicSlug) {
+    const sourceUrl = getSourceForSlug(topicSlug)
+    if (!sourceUrl) return null
+    return `https://felixboehm.github.io/open-learn/#/add?source=${encodeURIComponent(sourceUrl)}`
   }
 
   // Load a remote content source's languages and topics
@@ -130,11 +143,19 @@ export function useLessons() {
             // Map slug → full URL for resolving later
             topicSlugMap.value[slug] = topicUrl
 
-            // Store topic code
+            // Store topic code and metadata
             if (!topicCodes.value[langKey]) {
               topicCodes.value[langKey] = {}
             }
             topicCodes.value[langKey][slug] = topicSource.code || null
+
+            if (!topicMeta.value[langKey]) {
+              topicMeta.value[langKey] = {}
+            }
+            topicMeta.value[langKey][slug] = {
+              title: topicSource.title || null,
+              description: topicSource.description || null
+            }
 
             console.log(`  ✓ Remote topic: ${slug} → ${topicUrl} (${topicSource.code || 'no code'})`)
           }
@@ -245,6 +266,15 @@ export function useLessons() {
         const key = source.path
         availableContent.value[lang][key] = []
         topicCodes.value[lang][key] = source.code || null
+
+        if (!topicMeta.value[lang]) {
+          topicMeta.value[lang] = {}
+        }
+        topicMeta.value[lang][key] = {
+          title: source.title || null,
+          description: source.description || null
+        }
+
         console.log(`  ✓ Topic: ${key} (${source.type}) (${source.code || 'no code'})`)
       }
 
@@ -423,6 +453,8 @@ export function useLessons() {
     removeContentSource,
     isRemoteTopic,
     resolveTopicKey,
-    getSourceForSlug
+    getSourceForSlug,
+    getTopicMeta,
+    getShareUrl
   }
 }
