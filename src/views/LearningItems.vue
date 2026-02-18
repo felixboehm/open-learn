@@ -182,9 +182,8 @@ const emit = defineEmits(['update-title'])
 const { loadAllLessonsForTopic } = useLessons()
 const { isItemLearned, toggleItemLearned } = useProgress()
 
-// Use computed to make params reactive to route changes (URL-decoded for remote sources)
-const learning = computed(() => decodeURIComponent(route.params.learning))
-const teaching = computed(() => decodeURIComponent(route.params.teaching))
+const learning = computed(() => route.params.learning)
+const teaching = computed(() => route.params.teaching)
 const lessonNumber = computed(() => route.params.number ? parseInt(route.params.number) : null)
 
 const allItems = ref([])
@@ -322,12 +321,12 @@ watch(selectedLesson, (newValue) => {
   if (newValue === 'all') {
     router.replace({
       name: 'learning-items',
-      params: { learning: encodeURIComponent(learning.value), teaching: encodeURIComponent(teaching.value) }
+      params: { learning: learning.value, teaching: teaching.value }
     })
   } else {
     router.replace({
       name: 'learning-items',
-      params: { learning: encodeURIComponent(learning.value), teaching: encodeURIComponent(teaching.value), number: newValue }
+      params: { learning: learning.value, teaching: teaching.value, number: newValue }
     })
   }
 })
