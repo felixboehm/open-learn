@@ -2,11 +2,11 @@
 
 ## Overview
 
-The language learning app features a high-quality audio playback system using pre-recorded MP3 files generated with native text-to-speech voices. Audio files are pre-loaded for each lesson and support features like variable playback speed, lock screen controls, and automatic pauses between examples.
+The Open Learn platform features a high-quality audio playback system using pre-recorded MP3 files generated with native text-to-speech voices. Audio files are pre-loaded for each lesson and support features like variable playback speed, lock screen controls, and automatic pauses between examples.
 
 ## Audio Generation
 
-### Script: `generate-lesson-audio.sh`
+### Script: `generate-audio.sh`
 
 This Bash script generates MP3 audio files for all lesson content using macOS `say` command and `ffmpeg`.
 
@@ -199,7 +199,7 @@ Lock screen controls are configured automatically when a lesson loads:
 navigator.mediaSession.metadata = new MediaMetadata({
   title: lessonTitle,
   artist: `Learning ${teaching}`,
-  album: `Language Learning - ${learning}`,
+  album: `Open Learn - ${learning}`,
   artwork: [
     { src: artworkUrl, sizes: '512x512', type: 'image/svg+xml' }
   ]

@@ -1,12 +1,12 @@
 # Universal Lesson Plan Template
 
-This document provides a suggested learning progression and lesson schema template that can be used for teaching any language pair.
+This document provides a suggested learning progression and lesson schema template. While the example below focuses on language learning, the same structure can be adapted for any topic on the Open Learn platform.
 
 ## Overview
 
-A complete language learning curriculum typically consists of **30-50 lessons** organized into progressive difficulty levels. **Phase 1 focuses heavily on verbs** - the backbone of language - while introducing topical vocabulary through verb usage contexts.
+A complete curriculum typically consists of **30-50 lessons** organized into progressive difficulty levels. The example below shows a language learning curriculum where **Phase 1 focuses heavily on verbs** - the backbone of language - while introducing topical vocabulary through verb usage contexts.
 
-## Learning Philosophy: Verbs First
+## Learning Philosophy: Verbs First (Language Example)
 
 **Why verbs first?**
 - Verbs are the most frequently used words in any language
@@ -14,7 +14,7 @@ A complete language learning curriculum typically consists of **30-50 lessons** 
 - Conjugation patterns are foundational
 - Topics (weather, food, animals) serve as **vocabulary contexts** for verb learning
 
-**Phase 1 Goal**: Cover the **50 most common verbs** with complete conjugation examples, simultaneously building vocabulary across multiple topics.
+**Language Learning Phase 1 Goal**: Cover the **50 most common verbs** with complete conjugation examples, simultaneously building vocabulary across multiple topics.
 
 ## Suggested Learning Progression
 

@@ -1,12 +1,12 @@
-# 🌍 Language Learning by Examples
+# 🎓 Open Learn
 
 A modern, static single-page web application for learning any topic through practical examples. Built with Vue 3, this platform features interactive lessons with audio pronunciation, progress tracking, and a clean, responsive interface.
 
 ## ✨ Features
 
-- **📚 Topic-Based Learning**: Organized lessons with sections and examples
-- **🌐 Multi-Language Support**: Learn any topic in your preferred language
-- **🔊 Audio Reading**: Text-to-speech functionality for listening to examples (Web Speech API)
+- **📚 Topic-Based Learning**: Organized lessons with sections and examples for any subject
+- **🌐 Multi-Language Interface**: Learn any topic in your preferred language
+- **🔊 Audio Reading**: Pre-recorded MP3 audio for listening to examples
 - **📊 Progress Tracking**: Mark items as learned with LocalStorage persistence
 - **🌓 Dark Mode**: Toggle between light and dark themes
 - **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
@@ -38,7 +38,7 @@ A modern, static single-page web application for learning any topic through prac
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd language
+cd open-learn
 
 # Install dependencies
 pnpm install
@@ -74,7 +74,7 @@ pnpm test:e2e
 ## 📁 Project Structure
 
 ```
-language/
+open-learn/
 ├── src/
 │   ├── main.js              # Application entry point
 │   ├── App.vue              # Root component with navigation
@@ -82,21 +82,28 @@ language/
 │   ├── router/
 │   │   └── index.js         # Vue Router configuration
 │   ├── views/               # Page components
-│   │   ├── Home.vue         # Language selection
+│   │   ├── Home.vue         # Topic selection
 │   │   ├── LessonsOverview.vue  # Lessons grid
 │   │   ├── LessonDetail.vue     # Lesson viewer
+│   │   ├── LearningItems.vue    # Learning items browser
 │   │   └── Settings.vue     # Settings panel
-│   └── composables/         # Reusable composition functions
-│       ├── useLessons.js    # Lesson loading logic
-│       └── useSettings.js   # Settings persistence
+│   ├── composables/         # Reusable composition functions
+│   │   ├── useLessons.js    # Lesson loading logic
+│   │   ├── useSettings.js   # Settings persistence
+│   │   ├── useProgress.js   # Progress tracking
+│   │   └── useAudio.js      # Audio playback system
+│   └── utils/
+│       └── formatters.js    # Display name formatting
 ├── public/
 │   └── lessons/             # YAML lesson content
-│       ├── index.yaml       # Root index
+│       ├── languages.yaml   # Root index
 │       ├── deutsch/         # German learning content
 │       └── english/         # English learning content
 ├── tests/                   # Test files
 ├── docs/                    # Documentation
-│   └── lesson-schema.md     # YAML schema reference
+│   ├── lesson-schema.md     # YAML schema reference
+│   ├── yaml-schemas.md      # Index file schemas
+│   └── audio-system.md      # Audio system docs
 └── dist/                    # Production build output
 ```
 
@@ -105,14 +112,10 @@ language/
 ### Adding a New Lesson
 
 1. Navigate to the appropriate folder: `public/lessons/<learning>/<teaching>/`
-2. Create a YAML file following the schema (see `docs/lesson-schema.md`)
-3. Add the filename to the topic's `index.yaml`:
-
-```yaml
-lessons:
-  - 01-basics.yaml
-  - 02-your-new-lesson.yaml
-```
+2. Create a new lesson folder: `public/lessons/<learning>/<teaching>/##-lesson-name/`
+3. Create `content.yaml` in the lesson folder following the schema (see `docs/lesson-schema.md`)
+4. Add the folder name to `lessons.yaml`
+5. Optionally generate audio files with `./generate-audio.sh`
 
 ### Lesson Format Example
 
@@ -132,12 +135,12 @@ sections:
           - ["bin", "am", "to be"]
 ```
 
-### Adding a New Language Pair
+### Adding a New Topic
 
 1. Create folder structure: `public/lessons/<learning>/<teaching>/`
-2. Add language to `public/lessons/index.yaml` if needed
-3. Create topic index: `public/lessons/<learning>/index.yaml`
-4. Add lesson files and their index
+2. Add topic to `public/lessons/<learning>/topics.yaml`
+3. Create `lessons.yaml` with lesson folder names
+4. Add lesson folders with `content.yaml` files
 
 For complete schema documentation, see [`docs/lesson-schema.md`](docs/lesson-schema.md).
 
@@ -172,7 +175,7 @@ pnpm build
 
 Push to the `main` branch triggers automatic deployment via GitHub Actions (`.github/workflows/static.yml`).
 
-**Note**: Vite is configured with `base: '/language/'` for subdirectory deployment.
+**Note**: Vite is configured with `base: '/open-learn/'` for subdirectory deployment.
 
 ## 🏗 Architecture
 
@@ -183,16 +186,18 @@ Push to the `main` branch triggers automatic deployment via GitHub Actions (`.gi
 - **Dynamic Routing**: Hash-based routing for static hosting
 
 ### Routes
-- `#/` - Home (language selection)
-- `#/lessons/:learning/:teaching` - Lessons overview
-- `#/lesson/:learning/:teaching/:number` - Lesson detail
+- `#/` - Home (topic selection)
+- `#/:learning/:teaching/lessons` - Lessons overview
+- `#/:learning/:teaching/lesson/:number` - Lesson detail
+- `#/:learning/:teaching/items/:number?` - Learning items
 - `#/settings` - Settings panel
 
 ### Data Flow
-1. Load `lessons/index.yaml` → get available languages
-2. Load `lessons/{lang}/index.yaml` → get topics
-3. Load lesson files dynamically with js-yaml
-4. Render with Vue components
+1. Load `lessons/languages.yaml` → get available interface languages
+2. Load `lessons/{lang}/topics.yaml` → get topics
+3. Load `lessons/{lang}/{topic}/lessons.yaml` → get lesson folders
+4. Load lesson content dynamically with js-yaml
+5. Render with Vue components
 
 ## 🤝 Contributing
 

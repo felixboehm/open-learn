@@ -178,7 +178,7 @@ function setupMediaSession(lessonTitle, learning, teaching) {
   navigator.mediaSession.metadata = new MediaMetadata({
     title: lessonTitle,
     artist: `Learning ${teaching}`,
-    album: `Language Learning - ${learning}`,
+    album: `Open Learn - ${learning}`,
     artwork: [
       { src: artworkUrl, sizes: '512x512', type: 'image/svg+xml' }
     ]

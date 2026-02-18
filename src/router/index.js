@@ -10,7 +10,7 @@ const routes = [
     path: '/',
     name: 'home',
     component: Home,
-    meta: { title: '🌍 Language Learning' }
+    meta: { title: '🎓 Open Learn' }
   },
   {
     path: '/:learning/:teaching/lessons',
