@@ -1,0 +1,509 @@
+# External Workshop Guide
+
+How to create a standalone repository with learning content that Open Learn can consume as a remote content source.
+
+## Overview
+
+Open Learn supports loading lessons from external repositories hosted on GitHub Pages (or any static file server). This allows workshop creators to maintain their own content independently and share it with learners via a simple link.
+
+**The flow:**
+1. You create a repository with lessons in the Open Learn format
+2. You deploy it to GitHub Pages
+3. You share a link like `https://felixboehm.github.io/open-learn/#/add?source=https://YOUR-USER.github.io/YOUR-REPO`
+4. The learner clicks the link, confirms, and your content appears alongside the built-in content
+
+## Repository Structure
+
+Your repository must follow this exact directory structure. The root of your deployed site serves as the content source URL.
+
+```
+your-workshop-repo/
+├── languages.yaml              # Required: declares available interface languages
+├── deutsch/                    # One folder per interface language
+│   ├── topics.yaml             # Required: declares available topics
+│   └── your-topic/             # One folder per topic
+│       ├── lessons.yaml        # Required: lists lesson folders
+│       ├── 01-first-lesson/    # Lesson folders
+│       │   ├── content.yaml    # Required: lesson content
+│       │   └── audio/          # Optional: audio files
+│       │       ├── title.mp3
+│       │       ├── 0-title.mp3
+│       │       ├── 0-0-q.mp3
+│       │       ├── 0-0-a.mp3
+│       │       └── ...
+│       └── 02-second-lesson/
+│           ├── content.yaml
+│           └── audio/
+└── english/                    # Optional: same content in English interface
+    ├── topics.yaml
+    └── your-topic-en/
+        ├── lessons.yaml
+        └── ...
+```
+
+## File-by-File Reference
+
+### 1. `languages.yaml` (Root)
+
+Declares which interface languages your workshop supports. The folder names must match actual folders in your repository.
+
+```yaml
+languages:
+  - folder: deutsch
+    code: de-DE
+  - folder: english
+    code: en-US
+```
+
+**Fields:**
+- `folder` (string, required): Directory name — must match a folder in your repo
+- `code` (string, required): BCP 47 language code — used for audio generation (text-to-speech voice selection)
+
+**Supported language codes:**
+
+| Code | Language | macOS TTS Voice |
+|------|----------|-----------------|
+| `de-DE` | German | Anna |
+| `en-US` | English (US) | Samantha |
+| `pt-PT` | Portuguese (EU) | Joana |
+| `es-ES` | Spanish | Mónica |
+
+> You can support a single language or multiple languages. Each language provides its own set of topics.
+
+### 2. `<language>/topics.yaml`
+
+Lists the topics available for a given interface language.
+
+```yaml
+topics:
+  - folder: portugiesisch
+    code: pt-PT
+  - folder: first-aid
+    code: de-DE
+```
+
+**Fields:**
+- `folder` (string, required): Directory name of the topic — must match a folder inside the language directory
+- `code` (string, required): BCP 47 code for the **topic's** language
+  - For language-learning topics: use the target language code (e.g. `pt-PT` for Portuguese)
+  - For non-language topics (math, first aid, etc.): use the same code as the interface language (e.g. `de-DE`)
+
+> The `code` determines which text-to-speech voice is used for questions (`q` fields) in audio generation.
+
+### 3. `<language>/<topic>/lessons.yaml`
+
+Lists all lesson folders for a topic, in order.
+
+```yaml
+lessons:
+  - 01-introduction
+  - 02-basics
+  - 03-advanced-topics
+```
+
+Each entry is a **folder name** (not a file name). Each folder must contain a `content.yaml` file.
+
+**Naming convention:** Prefix with zero-padded numbers for ordering: `01-`, `02-`, ... `10-`, `11-`.
+
+### 4. `<language>/<topic>/<lesson>/content.yaml`
+
+The actual lesson content. This is where the learning material lives.
+
+```yaml
+version: 1
+number: 1
+title: "Lesson Title"
+description: "Brief description of what this lesson covers"
+sections:
+  - title: "Section Title"
+    explanation: |
+      Markdown-formatted explanation text.
+      Supports **bold**, _italic_, lists, tables, etc.
+    examples:
+      - q: "Question or source text"
+        a: "Answer or target text"
+        labels: ["Category1", "Category2"]
+        rel:
+          - ["term", "translation", "context"]
+          - ["another-term", "another-translation"]
+```
+
+#### Top-Level Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `version` | integer | no | Schema version (default: 1) |
+| `number` | integer | yes | Lesson number — used for ordering and display |
+| `title` | string | yes | Lesson title |
+| `description` | string | no | Brief description shown on lesson cards |
+| `sections` | array | yes | Array of sections (see below) |
+
+#### Section Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | yes | Section heading |
+| `explanation` | string | no | Markdown text displayed before examples |
+| `examples` | array | yes | Array of Q&A examples |
+
+#### Example Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `q` | string | yes | Question / source content |
+| `a` | string | yes | Answer / target content |
+| `labels` | array of strings | no | Tags for categorization (shown as badges) |
+| `rel` | array of arrays | no | Related learning items (vocabulary, concepts) |
+
+#### Related Items (`rel`)
+
+Each related item is an array of strings:
+- **First element**: unique identifier (used for progress tracking across lessons)
+- **Second element**: translation or explanation
+- **Third element** (optional): additional context (part of speech, usage note)
+
+```yaml
+rel:
+  - ["ser", "sein (permanent)", "Verb"]
+  - ["casa", "Haus", "Substantiv"]
+  - ["2 + 2 = 4", "basic addition"]        # Non-language example
+```
+
+> Items with the same first element across different lessons are treated as the same learning item. When a learner marks it as "learned" in one lesson, it's learned everywhere.
+
+### 5. Audio Files (Optional)
+
+Each lesson can include pre-recorded audio files in an `audio/` subfolder.
+
+#### Naming Convention
+
+```
+audio/
+├── title.mp3              # Lesson title (in interface language)
+├── 0-title.mp3            # Section 0 title (in topic language)
+├── 0-0-q.mp3              # Section 0, Example 0, Question (topic language)
+├── 0-0-a.mp3              # Section 0, Example 0, Answer (interface language)
+├── 0-1-q.mp3              # Section 0, Example 1, Question
+├── 0-1-a.mp3              # Section 0, Example 1, Answer
+├── 1-title.mp3            # Section 1 title
+├── 1-0-q.mp3              # Section 1, Example 0, Question
+├── 1-0-a.mp3              # Section 1, Example 0, Answer
+└── ...
+```
+
+**Pattern:** `{sectionIndex}-{exampleIndex}-{q|a}.mp3` and `{sectionIndex}-title.mp3`
+
+**Language mapping:**
+
+| Content | Voice Language | Why |
+|---------|---------------|-----|
+| Lesson title (`title.mp3`) | Interface language (e.g. German) | It's navigation/metadata |
+| Section titles (`N-title.mp3`) | Topic language (e.g. Portuguese) | Introduces the topic content |
+| Questions (`N-N-q.mp3`) | Topic language | The content being learned |
+| Answers (`N-N-a.mp3`) | Interface language | The translation/explanation |
+
+#### Generating Audio
+
+If you have access to the Open Learn repository, you can use the `generate-audio.sh` script:
+
+```bash
+# From the open-learn repo, pointing to your workshop's lesson folder
+./generate-audio.sh /path/to/your-workshop/deutsch/your-topic/01-first-lesson/
+```
+
+Requirements: macOS with `say` command, `yq` (`brew install yq`), `ffmpeg` (`brew install ffmpeg`).
+
+Alternatively, you can generate MP3 files with any TTS tool — just follow the naming convention above.
+
+## Complete Example
+
+Here is a minimal but complete workshop repository for a Portuguese language course with German interface:
+
+### `languages.yaml`
+
+```yaml
+languages:
+  - folder: deutsch
+    code: de-DE
+```
+
+### `deutsch/topics.yaml`
+
+```yaml
+topics:
+  - folder: portugiesisch-basics
+    code: pt-PT
+```
+
+### `deutsch/portugiesisch-basics/lessons.yaml`
+
+```yaml
+lessons:
+  - 01-greetings
+  - 02-numbers
+```
+
+### `deutsch/portugiesisch-basics/01-greetings/content.yaml`
+
+```yaml
+version: 1
+number: 1
+title: "Begrüßungen"
+description: "Grundlegende Begrüßungen und Verabschiedungen"
+sections:
+  - title: "Olá - Hallo"
+    explanation: |
+      Die wichtigsten Begrüßungen auf Portugiesisch.
+
+      **Formell vs. Informell:**
+      - **Olá** ist universell (wie "Hallo")
+      - **Bom dia** ist formeller (wie "Guten Tag")
+    examples:
+      - q: "Olá, como estás?"
+        a: "Hallo, wie geht es dir?"
+        labels: ["Informell"]
+        rel:
+          - ["olá", "hallo", "Begrüßung"]
+          - ["como estás", "wie geht es dir", "Frage - informell"]
+
+      - q: "Bom dia, como está?"
+        a: "Guten Tag, wie geht es Ihnen?"
+        labels: ["Formell"]
+        rel:
+          - ["bom dia", "guten Tag", "Begrüßung - formell"]
+          - ["como está", "wie geht es Ihnen", "Frage - formell"]
+
+      - q: "Boa tarde!"
+        a: "Guten Nachmittag!"
+        rel:
+          - ["boa tarde", "guten Nachmittag", "Begrüßung - ab ca. 12 Uhr"]
+
+  - title: "Adeus - Tschüss"
+    explanation: |
+      Verabschiedungen für verschiedene Situationen.
+    examples:
+      - q: "Adeus!"
+        a: "Auf Wiedersehen!"
+        labels: ["Formell"]
+        rel:
+          - ["adeus", "auf Wiedersehen", "Verabschiedung - formell"]
+
+      - q: "Tchau, até amanhã!"
+        a: "Tschüss, bis morgen!"
+        labels: ["Informell"]
+        rel:
+          - ["tchau", "tschüss", "Verabschiedung - informell"]
+          - ["até amanhã", "bis morgen", "Zeitangabe"]
+```
+
+### `deutsch/portugiesisch-basics/02-numbers/content.yaml`
+
+```yaml
+version: 1
+number: 2
+title: "Zahlen 1-10"
+description: "Die Zahlen von eins bis zehn"
+sections:
+  - title: "Um a cinco"
+    explanation: |
+      Die Zahlen 1-5 auf Portugiesisch.
+    examples:
+      - q: "Eu tenho um gato."
+        a: "Ich habe eine Katze."
+        rel:
+          - ["um", "eins/ein", "Zahl"]
+          - ["gato", "Katze", "Substantiv - Tier"]
+
+      - q: "Ela tem dois irmãos."
+        a: "Sie hat zwei Brüder."
+        rel:
+          - ["dois", "zwei", "Zahl"]
+          - ["irmãos", "Brüder", "Substantiv - Familie"]
+
+      - q: "Nós temos três carros."
+        a: "Wir haben drei Autos."
+        rel:
+          - ["três", "drei", "Zahl"]
+          - ["carros", "Autos", "Substantiv"]
+```
+
+## Non-Language Workshop Example
+
+The same format works for any topic. Here's a first-aid workshop example:
+
+### `languages.yaml`
+
+```yaml
+languages:
+  - folder: deutsch
+    code: de-DE
+```
+
+### `deutsch/topics.yaml`
+
+```yaml
+topics:
+  - folder: erste-hilfe
+    code: de-DE          # Same as interface language for non-language topics
+```
+
+### `deutsch/erste-hilfe/01-basics/content.yaml`
+
+```yaml
+version: 1
+number: 1
+title: "Grundlagen der Ersten Hilfe"
+description: "Die wichtigsten Sofortmaßnahmen"
+sections:
+  - title: "Rettungskette"
+    explanation: |
+      Die **Rettungskette** beschreibt die Abfolge der Hilfsmaßnahmen:
+      1. Absichern der Unfallstelle
+      2. Notruf absetzen (112)
+      3. Erste Hilfe leisten
+      4. Rettungsdienst übergeben
+    examples:
+      - q: "Was ist die Notrufnummer in Europa?"
+        a: "112"
+        labels: ["Notruf"]
+        rel:
+          - ["112", "Europäische Notrufnummer"]
+
+      - q: "Welche 5 W-Fragen beantwortet man beim Notruf?"
+        a: "Wo, Was, Wie viele, Welche Verletzungen, Warten auf Rückfragen"
+        labels: ["Notruf", "5 W-Fragen"]
+        rel:
+          - ["5 W-Fragen", "Wo, Was, Wie viele, Welche, Warten"]
+```
+
+## Deploying to GitHub Pages
+
+### Step 1: Create a GitHub Repository
+
+```bash
+mkdir my-workshop
+cd my-workshop
+git init
+
+# Create your content files (languages.yaml, topics.yaml, etc.)
+
+git add -A
+git commit -m "Initial workshop content"
+gh repo create YOUR-USER/my-workshop --public --source . --push
+```
+
+### Step 2: Enable GitHub Pages
+
+Either via GitHub UI (Settings → Pages → Source: GitHub Actions) or via API:
+
+```bash
+gh api repos/YOUR-USER/my-workshop/pages -X POST -f build_type=workflow
+```
+
+### Step 3: Add a Deployment Workflow
+
+Create `.github/workflows/static.yml`:
+
+```yaml
+name: Deploy to Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+### Step 4: Push and Wait for Deployment
+
+```bash
+git add .github/workflows/static.yml
+git commit -m "Add GitHub Pages deployment"
+git push
+```
+
+Wait for the Action to complete. Your content is now available at `https://YOUR-USER.github.io/my-workshop/`.
+
+### Step 5: Share the Link
+
+The share link for Open Learn is:
+
+```
+https://felixboehm.github.io/open-learn/#/add?source=https://YOUR-USER.github.io/my-workshop
+```
+
+When a learner clicks this link:
+1. Open Learn fetches `languages.yaml` from your repo to discover content
+2. Shows the learner what's available (languages, topics)
+3. Learner confirms → your content is saved in their browser
+4. Your topics appear on the Home page alongside the built-in content
+
+## Checklist
+
+Before sharing your workshop, verify:
+
+- [ ] `languages.yaml` exists at the root and lists at least one language
+- [ ] Each language folder has a `topics.yaml`
+- [ ] Each topic folder has a `lessons.yaml`
+- [ ] Each lesson folder listed in `lessons.yaml` exists and contains `content.yaml`
+- [ ] Every `content.yaml` has `number`, `title`, and at least one section with examples
+- [ ] Every example has both `q` and `a` fields
+- [ ] Language codes are valid BCP 47 codes
+- [ ] GitHub Pages is enabled and deployment succeeded
+- [ ] The share link works: `#/add?source=YOUR-URL`
+
+## Troubleshooting
+
+**Content not loading:**
+- Check browser console for 404 errors
+- Verify your GitHub Pages URL is correct: `https://YOUR-USER.github.io/YOUR-REPO/`
+- Ensure `languages.yaml` is at the root, not in a subdirectory
+
+**Audio not playing:**
+- Verify audio file naming matches the convention exactly
+- Check that files are MP3 format
+- Ensure section/example indices are zero-based (first section = `0`, first example = `0`)
+
+**Topics not appearing after adding:**
+- Refresh the page (F5) to reload content sources
+- Check localStorage in browser DevTools: key `contentSources` should contain your URL
+
+**CORS errors:**
+- GitHub Pages serves files with `Access-Control-Allow-Origin: *` by default — no issues
+- If self-hosting: ensure your server sends CORS headers
+
+## See Also
+
+- [Lesson Schema Documentation](lesson-schema.md) — detailed field reference for `content.yaml`
+- [YAML Schemas Documentation](yaml-schemas.md) — index file schemas (`languages.yaml`, `topics.yaml`, `lessons.yaml`)
+- [Audio System Documentation](audio-system.md) — audio generation and playback details
