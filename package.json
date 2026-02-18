@@ -1,7 +1,7 @@
 {
-  "name": "language-learning",
+  "name": "open-learn",
   "version": "1.0.0",
-  "description": "Language learning application",
+  "description": "Open Learn - A general-purpose learning platform",
   "type": "module",
   "scripts": {
     "dev": "vite --host",

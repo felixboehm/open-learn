@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Language Learning App', () => {
+test.describe('Open Learn App', () => {
   test('should load the homepage without errors', async ({ page }) => {
     // Listen for console errors
     const errors = [];
@@ -21,7 +21,7 @@ test.describe('Language Learning App', () => {
     }
     
     // Check that the page title is set
-    await expect(page).toHaveTitle('Language Learning');
+    await expect(page).toHaveTitle('Open Learn');
     
     // Check that the app div exists
     const app = page.locator('#app');

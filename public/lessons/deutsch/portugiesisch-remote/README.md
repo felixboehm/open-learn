@@ -16,8 +16,8 @@ This topic folder contains only a `lessons.yaml` file that references lessons vi
 
 All URLs point to the Portuguese lessons on GitHub Pages:
 ```
-https://felixboehm.github.io/language/lessons/deutsch/portugiesisch/01-essential-verbs
-https://felixboehm.github.io/language/lessons/deutsch/portugiesisch/02-action-verbs
+https://felixboehm.github.io/open-learn/lessons/deutsch/portugiesisch/01-essential-verbs
+https://felixboehm.github.io/open-learn/lessons/deutsch/portugiesisch/02-action-verbs
 ...
 ```
 

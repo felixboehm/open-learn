@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the structure of individual lesson YAML files used for language learning content. The schema is designed to be flexible and support learning any language pair or educational content.
+This document describes the structure of individual lesson YAML files used for learning content. The schema is designed to be flexible and support learning any topic — languages, math, theory exams, and more.
 
 > **Note**: This document covers individual lesson files only. For information about the index files that organize lessons (`languages.yaml`, `topics.yaml`, `lessons.yaml`), see [YAML Schemas Documentation](yaml-schemas.md).
 

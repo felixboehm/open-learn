@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a static single-page web application for learning any topics by examples. It's a learning platform featuring example sentences with audio pronunciation using the Web Speech API, and tracking with progress persistence via LocalStorage.
+This is a static single-page web application for learning any topics by examples. It's a general-purpose learning platform featuring example-based lessons with audio pronunciation and progress tracking via LocalStorage.
 
 - **static**: easy deploy on github pages
 - **open**: learn any topic, lessons with sections, sections with examples, eg. new language, math, theory for driver / boot / pilot license
@@ -29,7 +29,7 @@ This is a static single-page web application for learning any topics by examples
 ## Directory Structure
 
 ```
-language/
+open-learn/
 ├── index.html              # Minimal HTML entry point
 ├── src/
 │   ├── main.js            # App entry point - creates Vue app with router
@@ -38,17 +38,22 @@ language/
 │   ├── router/
 │   │   └── index.js       # Vue Router configuration
 │   ├── views/             # Page components
-│   │   ├── Home.vue       # Language selection page
+│   │   ├── Home.vue       # Topic selection page
 │   │   ├── LessonsOverview.vue  # Lessons grid page
 │   │   ├── LessonDetail.vue     # Individual lesson page
+│   │   ├── LearningItems.vue    # Learning items browser
 │   │   └── Settings.vue   # Settings page
-│   └── composables/       # Reusable composition functions
-│       ├── useLessons.js  # Lesson loading logic with js-yaml
-│       └── useSettings.js # Settings persistence logic
+│   ├── composables/       # Reusable composition functions
+│   │   ├── useLessons.js  # Lesson loading logic with js-yaml
+│   │   ├── useSettings.js # Settings persistence logic
+│   │   ├── useProgress.js # Progress tracking logic
+│   │   └── useAudio.js    # Audio playback system
+│   └── utils/
+│       └── formatters.js  # Display name formatting
 ├── public/
 │   └── lessons/           # YAML lesson content (deployed as-is)
-│       ├── languages.yaml # Root index - lists available languages
-│       ├── deutsch/       # German language folder
+│       ├── languages.yaml # Root index - lists available interface languages
+│       ├── deutsch/       # German interface folder
 │       │   ├── topics.yaml            # Lists topics (portugiesisch, englisch)
 │       │   ├── portugiesisch/
 │       │   │   ├── lessons.yaml       # Lists lesson folder names
@@ -74,7 +79,7 @@ language/
 │   ├── dark-mode.test.js  # Dark mode toggle tests
 │   └── e2e/
 │       └── app.spec.js    # Playwright E2E tests
-├── vite.config.js         # Vite config (base: '/language/')
+├── vite.config.js         # Vite config (base: '/open-learn/')
 ├── tailwind.config.js     # Tailwind customization
 ├── playwright.config.js   # Playwright E2E test config
 └── package.json           # Dependencies and scripts
@@ -117,9 +122,10 @@ pnpm test:e2e
 
 **Main Components**:
 - `App.vue` - Root component with unified navigation (back button, dynamic title, settings button)
-- `Home.vue` - Language selection page (route: `/`)
-- `LessonsOverview.vue` - Lessons grid page (route: `/lessons/:language/:topic`)
-- `LessonDetail.vue` - Individual lesson page (route: `/lesson/:language/:topic/:number`)
+- `Home.vue` - Topic selection page (route: `/`)
+- `LessonsOverview.vue` - Lessons grid page (route: `/:learning/:teaching/lessons`)
+- `LessonDetail.vue` - Individual lesson page (route: `/:learning/:teaching/lesson/:number`)
+- `LearningItems.vue` - Learning items browser (route: `/:learning/:teaching/items/:number?`)
 - `Settings.vue` - Settings page (route: `/settings`)
 
 **Composables** (Reusable logic):
@@ -131,20 +137,27 @@ pnpm test:e2e
   - Shared reactive state across all components
   - Automatic localStorage persistence via watchers
   - Dark mode toggle with DOM class manipulation
-  - Translation visibility toggle
   - Settings loaded on app initialization in `main.js`
+- `useProgress()` - Progress tracking (singleton pattern)
+  - Track learned items per language/topic combination
+  - Persisted to localStorage
+- `useAudio()` - Audio playback system
+  - Pre-loads MP3 files per lesson
+  - Media Session API for lock screen controls
+  - Variable playback speed
 
 **Routing**:
-- `#/` - Home page (language selection)
-- `#/lessons/:language/:topic` - Lessons overview grid
-- `#/lesson/:language/:topic/:number` - Lesson detail view
+- `#/` - Home page (topic selection)
+- `#/:learning/:teaching/lessons` - Lessons overview grid
+- `#/:learning/:teaching/lesson/:number` - Lesson detail view
+- `#/:learning/:teaching/items/:number?` - Learning items
 - `#/settings` - Settings panel
 
 Uses hash-based routing (`createWebHashHistory`) for GitHub Pages compatibility.
 
 **Navigation Pattern**:
 - **Dynamic Title**: Changes based on route
-  - Home: "🌍 Language Learning"
+  - Home: "🎓 Open Learn"
   - Overview: Topic name (e.g., "Portugiesisch")
   - Detail: Lesson title (e.g., "Basic Verbs - Ser and Estar")
   - Settings: "⚙️ Settings"
@@ -152,9 +165,9 @@ Uses hash-based routing (`createWebHashHistory`) for GitHub Pages compatibility.
 - **Settings Button**: Always visible in top-right corner
 
 **YAML Loading Flow**:
-1. Load `lessons/languages.yaml` → get available languages
+1. Load `lessons/languages.yaml` → get available interface languages
 2. User selects language → load `lessons/{language}/topics.yaml` → get topics
-3. User selects topic → navigate to `/lessons/{language}/{topic}`
+3. User selects topic → navigate to `/:learning/:teaching/lessons`
 4. Load `lessons/{language}/{topic}/lessons.yaml` → get lesson folder names
 5. Load all lessons for topic → fetch `{folder}/content.yaml` for each folder and parse with js-yaml
 
@@ -173,7 +186,7 @@ sections:
     examples:
       - q: "Question/source sentence"
         a: "Answer/translation"
-        labels: ["Futur", "Gerundium"]  # Optional grammar labels
+        labels: ["Futur", "Gerundium"]  # Optional labels
         rel:
           - ["term", "translation", "context"]  # First element is unique ID
           - ["word", "meaning"]
@@ -182,14 +195,14 @@ sections:
 **Key Concepts**:
 - **Three-level hierarchy**: Language → Topic → Lesson
   - `lessons/<language>/<topic>/<lesson-folder>/`
-  - Example: `deutsch/portugiesisch/01-essential-verbs/` = Portuguese lesson in German language
-  - Example: `english/math-algebra/01-basics/` = Math lesson in English language
+  - Example: `deutsch/portugiesisch/01-essential-verbs/` = Portuguese lesson in German interface
+  - Example: `english/math-algebra/01-basics/` = Math lesson in English interface
 - **Self-contained lessons**: Each lesson folder contains its content and audio files
   - `content.yaml` - Lesson content
   - `audio/` - Audio files for pronunciation
   - Makes lessons portable and distributable (can be hosted on IPFS, CDN, etc.)
 - **Labels**: Optional categorization (e.g. for grammar, like "Futur", "Passiv")
-- **Related items (`rel`)**: Vocabulary with first element as unique identifier
+- **Related items (`rel`)**: Vocabulary/concepts with first element as unique identifier
 - **Markdown support**: Section explanations support markdown formatting
 
 See `docs/lesson-schema.md` for individual lesson documentation and `docs/yaml-schemas.md` for index file schemas.
@@ -217,25 +230,14 @@ See `docs/lesson-schema.md` for individual lesson documentation and `docs/yaml-s
 4. All components access the same reactive settings object
 
 **Settings**:
-- `showTranslation` (boolean): Toggle visibility of answer translations in lessons
-- `darkMode` (boolean): Dark theme toggle (adds/removes 'dark' class on `<html>`)
-
-**Implementation**:
-```javascript
-// Shared state (singleton)
-const settings = ref({
-  showTranslation: true,
-  darkMode: false
-})
-
-// Auto-save watchers
-watch(() => settings.value.darkMode, (newValue) => {
-  applyDarkMode(newValue)
-  saveSettings()
-})
-```
-
-No lesson progress tracking is currently implemented.
+- `showAnswers` (boolean): Toggle visibility of answer translations in lessons
+- `showLearningItems` (boolean): Show/hide learning items on lesson cards
+- `showLabels` (boolean): Show/hide grammar labels
+- `darkMode` (boolean): Dark theme toggle
+- `audioSpeed` (number): Playback speed (0.6, 0.8, 1.0)
+- `readAnswers` (boolean): Include answers in audio playback
+- `hideLearnedExamples` (boolean): Filter out learned examples
+- `showDebugOverlay` (boolean): Debug info overlay
 
 ## Adding New Content
 
@@ -267,7 +269,7 @@ No lesson progress tracking is currently implemented.
 3. Create `public/lessons/<language>/<topic>/lessons.yaml` with lesson folder names
 4. Add lesson folders with `content.yaml` files
 
-### Adding a New Language
+### Adding a New Interface Language
 
 1. Add language to `public/lessons/languages.yaml`:
    ```yaml
@@ -298,13 +300,13 @@ See `docs/yaml-schemas.md` for detailed documentation on all index file schemas.
 - Runs build
 - Deploys `dist/` to GitHub Pages
 
-**Important**: Vite is configured with `base: '/language/'` for the GitHub Pages subdirectory deployment.
+**Important**: Vite is configured with `base: '/open-learn/'` for the GitHub Pages subdirectory deployment.
 
 ## Browser APIs Used
 
-- **Web Speech API**: Text-to-speech for reading examples (planned feature)
-- **LocalStorage**: Settings persistence
+- **LocalStorage**: Settings and progress persistence
 - **Fetch API**: Dynamic YAML lesson loading
+- **Media Session API**: Lock screen audio controls
 
 ## Development Notes
 
@@ -315,6 +317,6 @@ See `docs/yaml-schemas.md` for detailed documentation on all index file schemas.
 - Dark mode: Tailwind `dark:` classes + `<html class="dark">` toggle via useSettings composable
 - YAML parsing uses js-yaml library for full spec support
 - Markdown rendering uses marked library for section explanations
-- Composables pattern for shared logic (useLessons, useSettings)
+- Composables pattern for shared logic (useLessons, useSettings, useProgress, useAudio)
 - Navigation state is managed by Vue Router - no manual view switching
 - Dynamic page titles based on route and content

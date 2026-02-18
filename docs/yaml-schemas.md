@@ -1,6 +1,6 @@
 # YAML Schema Documentation
 
-This document describes the YAML file schemas used for organizing and structuring learning content in the language learning application.
+This document describes the YAML file schemas used for organizing and structuring learning content in the Open Learn platform.
 
 ## Overview
 

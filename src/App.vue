@@ -90,7 +90,7 @@ import { useSettings } from './composables/useSettings'
 const router = useRouter()
 const route = useRoute()
 
-const pageTitle = ref('🌍 Language Learning')
+const pageTitle = ref('🎓 Open Learn')
 
 const { isPlaying, play, pause, resume } = useAudio()
 const { settings } = useSettings()
