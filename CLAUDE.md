@@ -54,21 +54,16 @@ open-learn/
 │   └── lessons/           # YAML lesson content (deployed as-is)
 │       ├── languages.yaml # Root index - lists available interface languages
 │       ├── deutsch/       # German interface folder
-│       │   ├── topics.yaml            # Lists topics (portugiesisch, englisch)
-│       │   ├── portugiesisch/
-│       │   │   ├── lessons.yaml       # Lists lesson folder names
-│       │   │   ├── 01-essential-verbs/
-│       │   │   │   ├── content.yaml   # Lesson content
-│       │   │   │   └── audio/         # Audio files for this lesson
-│       │   │   ├── 02-action-verbs/
-│       │   │   │   ├── content.yaml
-│       │   │   │   └── audio/
-│       │   │   └── ...
-│       │   └── englisch/
-│       │       ├── lessons.yaml
-│       │       └── 01-greetings/
-│       │           ├── content.yaml
-│       │           └── audio/
+│       │   ├── topics.yaml            # Lists topics (portugiesisch)
+│       │   └── portugiesisch/
+│       │       ├── lessons.yaml       # Lists lesson folder names
+│       │       ├── 01-essential-verbs/
+│       │       │   ├── content.yaml   # Lesson content
+│       │       │   └── audio/         # Audio files for this lesson
+│       │       ├── 02-action-verbs/
+│       │       │   ├── content.yaml
+│       │       │   └── audio/
+│       │       └── ...
 │       └── README.md      # Lesson system documentation
 ├── docs/
 │   ├── lesson-schema.md   # Individual lesson YAML schema documentation
@@ -196,7 +191,7 @@ sections:
 - **Three-level hierarchy**: Language → Topic → Lesson
   - `lessons/<language>/<topic>/<lesson-folder>/`
   - Example: `deutsch/portugiesisch/01-essential-verbs/` = Portuguese lesson in German interface
-  - Example: `english/math-algebra/01-basics/` = Math lesson in English interface
+  - Example: `deutsch/math-algebra/01-basics/` = Math lesson in German interface
 - **Self-contained lessons**: Each lesson folder contains its content and audio files
   - `content.yaml` - Lesson content
   - `audio/` - Audio files for pronunciation
