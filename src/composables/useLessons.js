@@ -80,7 +80,11 @@ export function useLessons() {
     const url = topicSlugMap.value[slug]
     if (!url) return null
     const sources = getContentSources()
-    return sources.find(s => url.startsWith(s)) || null
+    // Sources include workshop.yaml filename, strip it for prefix matching
+    return sources.find(s => {
+      const base = s.replace(/\/workshop\.yaml$/, '')
+      return url.startsWith(base)
+    }) || null
   }
 
   // Get metadata (title, description) for a topic
@@ -96,17 +100,21 @@ export function useLessons() {
   }
 
   // Load a remote content source's languages and topics
+  // sourceUrl is the full URL to workshop.yaml (e.g. https://user.github.io/repo/workshop.yaml)
   async function loadContentSource(sourceUrl, content, codes) {
     try {
       console.log(`📡 Loading content source: ${sourceUrl}`)
-      const response = await fetch(`${sourceUrl}/languages.yaml`)
+      const response = await fetch(sourceUrl)
       if (!response.ok) {
-        console.warn(`⚠️ Failed to fetch ${sourceUrl}/languages.yaml: ${response.status}`)
+        console.warn(`⚠️ Failed to fetch ${sourceUrl}: ${response.status}`)
         return
       }
 
       const text = await response.text()
       const data = yaml.load(text)
+
+      // Derive base URL by stripping the workshop.yaml filename
+      const baseUrl = sourceUrl.replace(/\/workshop\.yaml$/, '')
 
       for (const lang of data.languages) {
         const source = parseSource(lang)
@@ -123,7 +131,7 @@ export function useLessons() {
         }
 
         // Load topics for this language from the remote source
-        const topicsUrl = `${sourceUrl}/${langKey}/topics.yaml`
+        const topicsUrl = `${baseUrl}/${langKey}/topics.yaml`
         try {
           const topicsResponse = await fetch(topicsUrl)
           if (!topicsResponse.ok) continue
@@ -137,7 +145,7 @@ export function useLessons() {
 
             // Use the topic folder name as the slug for clean URLs
             const slug = topicSource.path
-            const topicUrl = `${sourceUrl}/${langKey}/${topicSource.path}`
+            const topicUrl = `${baseUrl}/${langKey}/${topicSource.path}`
             content[langKey][slug] = []
 
             // Map slug → full URL for resolving later
@@ -174,10 +182,10 @@ export function useLessons() {
     try {
       console.log('📚 Loading available languages...')
       isLoading.value = true
-      const response = await fetch('lessons/languages.yaml')
+      const response = await fetch('lessons/workshop.yaml')
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch languages.yaml: ${response.status}`)
+        throw new Error(`Failed to fetch workshop.yaml: ${response.status}`)
       }
 
       const text = await response.text()

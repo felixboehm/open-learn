@@ -141,7 +141,7 @@ const copiedTopic = ref(null)
 
 // Known workshops that can be discovered
 const knownWorkshops = [
-  { url: 'https://felixboehm.github.io/workshop-open-learn', title: 'Open Learn Workshop', host: 'felixboehm.github.io' }
+  { url: 'https://felixboehm.github.io/workshop-open-learn/workshop.yaml', title: 'Open Learn Workshop', host: 'felixboehm.github.io' }
 ]
 
 const learningLanguages = computed(() => {
@@ -177,7 +177,9 @@ function getTopicSourceLabel(topic) {
   const sourceUrl = getSourceForSlug(topic)
   if (!sourceUrl) return ''
   try {
-    return new URL(sourceUrl).hostname
+    const url = new URL(sourceUrl)
+    const path = url.pathname.replace(/\/workshop\.yaml$/, '')
+    return url.hostname + path
   } catch {
     return sourceUrl
   }

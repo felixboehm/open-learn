@@ -8,7 +8,7 @@ The application uses a hierarchical structure of YAML files to organize content:
 
 **Hierarchy**: Language → Topic → Lesson
 
-1. **languages.yaml** - Root index listing all available languages (interface languages)
+1. **workshop.yaml** - Root index listing all available languages (interface languages)
 2. **topics.yaml** - Lists available topics for each language
 3. **lessons.yaml** - Lists lesson files for each topic
 4. **Individual lesson files** - Contain the actual lesson content (see [lesson-schema.md](lesson-schema.md))
@@ -17,7 +17,7 @@ The application uses a hierarchical structure of YAML files to organize content:
 
 ```
 lessons/
-├── languages.yaml                  # Root: lists all available languages
+├── workshop.yaml                  # Root: lists all available languages
 ├── deutsch/                        # Language folder
 │   ├── topics.yaml                # Lists topics for this language
 │   ├── portugiesisch/             # Topic folder
@@ -41,9 +41,9 @@ lessons/
         └── ...
 ```
 
-## 1. languages.yaml
+## 1. workshop.yaml
 
-**Location**: `lessons/languages.yaml` (root level)
+**Location**: `lessons/workshop.yaml` (root level)
 
 **Purpose**: Defines all available languages (interface/base languages) in the application.
 
@@ -97,7 +97,7 @@ languages:
 
 ```javascript
 // In useLessons.js
-const response = await fetch('lessons/languages.yaml')
+const response = await fetch('lessons/workshop.yaml')
 const data = yaml.load(text)
 
 // Iterate through languages
@@ -252,16 +252,16 @@ for (const folderName of data.lessons) {
 
 ## Audio Integration
 
-The language codes specified in `languages.yaml` and `topics.yaml` are used for audio generation and text-to-speech functionality.
+The language codes specified in `workshop.yaml` and `topics.yaml` are used for audio generation and text-to-speech functionality.
 
 ### Language Usage by Content Type
 
 | Content Type | YAML Field | Language Used | Code Source |
 |--------------|-----------|---------------|-------------|
-| **Lesson title** | `title` | **Base** language | `languages.yaml` |
+| **Lesson title** | `title` | **Base** language | `workshop.yaml` |
 | **Section titles** | `sections[].title` | **Topic** language | `topics.yaml` |
 | **Questions** | `sections[].examples[].q` | **Topic** language | `topics.yaml` |
-| **Answers** | `sections[].examples[].a` | **Base** language | `languages.yaml` |
+| **Answers** | `sections[].examples[].a` | **Base** language | `workshop.yaml` |
 
 **Example for `deutsch/portugiesisch/`:**
 - Lesson title: German (de-DE)
@@ -386,14 +386,14 @@ lessons:
 
 ### 3. File Organization
 
-- Always create all three index files (`languages.yaml`, `topics.yaml`, `lessons.yaml`)
+- Always create all three index files (`workshop.yaml`, `topics.yaml`, `lessons.yaml`)
 - Keep the directory structure consistent: `lessons/<language>/<topic>/`
 - Update index files immediately when adding new content
 
 ### 4. Versioning and Updates
 
 - **When adding a new language**:
-  1. Add entry to `languages.yaml`
+  1. Add entry to `workshop.yaml`
   2. Create `lessons/<language>/topics.yaml`
   3. Create topic folders and their `lessons.yaml` files
 
@@ -416,7 +416,7 @@ lessons:
 For each new content addition, ensure these files exist:
 
 ```
-✓ lessons/languages.yaml exists
+✓ lessons/workshop.yaml exists
 ✓ lessons/<language>/topics.yaml exists
 ✓ lessons/<language>/<topic>/lessons.yaml exists
 ✓ All lesson folders listed in lessons.yaml exist
@@ -467,7 +467,7 @@ Error: Failed to fetch lesson .../01-basic-verbs/content.yaml: 404
 
 ### Full Example: Adding German lessons with English interface
 
-**1. Update or create `lessons/languages.yaml`:**
+**1. Update or create `lessons/workshop.yaml`:**
 ```yaml
 languages:
   - folder: english

@@ -79,7 +79,11 @@ const topicDescription = computed(() => {
 const sourceLabel = computed(() => {
   const url = getSourceForSlug(teaching.value)
   if (!url) return ''
-  try { return new URL(url).hostname } catch { return '' }
+  try {
+    const u = new URL(url)
+    const path = u.pathname.replace(/\/workshop\.yaml$/, '')
+    return u.hostname + path
+  } catch { return '' }
 })
 
 async function copyShareLink() {

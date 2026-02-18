@@ -46,7 +46,7 @@
           No content source URL provided
         </div>
         <p class="text-gray-600 dark:text-gray-400 mb-6">
-          Use a share link with <code class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">?source=URL</code> to add external content.
+          Use a share link with <code class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">?source=URL/workshop.yaml</code> to add external content.
         </p>
         <button
           @click="goHome"
@@ -150,10 +150,10 @@ async function validateSource() {
   error.value = null
 
   try {
-    // Fetch languages.yaml from the source
-    const response = await fetch(`${url}/languages.yaml`)
+    // Fetch workshop.yaml directly (source URL includes the filename)
+    const response = await fetch(url)
     if (!response.ok) {
-      throw new Error(`Could not reach ${url}/languages.yaml (HTTP ${response.status})`)
+      throw new Error(`Could not reach ${url} (HTTP ${response.status})`)
     }
 
     const text = await response.text()
@@ -163,6 +163,9 @@ async function validateSource() {
       throw new Error('No languages found in the content source')
     }
 
+    // Derive base URL by stripping the workshop.yaml filename
+    const baseUrl = url.replace(/\/workshop\.yaml$/, '')
+
     // Discover content structure
     const content = {}
     for (const lang of data.languages) {
@@ -170,7 +173,7 @@ async function validateSource() {
       if (!langKey) continue
 
       try {
-        const topicsResponse = await fetch(`${url}/${langKey}/topics.yaml`)
+        const topicsResponse = await fetch(`${baseUrl}/${langKey}/topics.yaml`)
         if (!topicsResponse.ok) continue
 
         const topicsText = await topicsResponse.text()

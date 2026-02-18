@@ -9,7 +9,7 @@ Open Learn supports loading lessons from external repositories hosted on GitHub 
 **The flow:**
 1. You create a repository with lessons in the Open Learn format
 2. You deploy it to GitHub Pages
-3. You share a link like `https://felixboehm.github.io/open-learn/#/add?source=https://YOUR-USER.github.io/YOUR-REPO`
+3. You share a link like `https://felixboehm.github.io/open-learn/#/add?source=https://YOUR-USER.github.io/YOUR-REPO/workshop.yaml`
 4. The learner clicks the link, confirms, and your content appears alongside the built-in content
 
 ## Repository Structure
@@ -18,7 +18,7 @@ Your repository must follow this exact directory structure. The root of your dep
 
 ```
 your-workshop-repo/
-├── languages.yaml              # Required: declares available interface languages
+├── workshop.yaml              # Required: declares available interface languages
 ├── deutsch/                    # One folder per interface language
 │   ├── topics.yaml             # Required: declares available topics
 │   └── your-topic/             # One folder per topic
@@ -43,7 +43,7 @@ your-workshop-repo/
 
 ## File-by-File Reference
 
-### 1. `languages.yaml` (Root)
+### 1. `workshop.yaml` (Root)
 
 Declares which interface languages your workshop supports. The folder names must match actual folders in your repository.
 
@@ -219,7 +219,7 @@ Alternatively, you can generate MP3 files with any TTS tool — just follow the 
 
 Here is a minimal but complete workshop repository for a Portuguese language course with German interface:
 
-### `languages.yaml`
+### `workshop.yaml`
 
 ```yaml
 languages:
@@ -331,7 +331,7 @@ sections:
 
 The same format works for any topic. Here's a first-aid workshop example:
 
-### `languages.yaml`
+### `workshop.yaml`
 
 ```yaml
 languages:
@@ -385,7 +385,7 @@ mkdir my-workshop
 cd my-workshop
 git init
 
-# Create your content files (languages.yaml, topics.yaml, etc.)
+# Create your content files (workshop.yaml, topics.yaml, etc.)
 
 git add -A
 git commit -m "Initial workshop content"
@@ -459,11 +459,11 @@ Wait for the Action to complete. Your content is now available at `https://YOUR-
 The share link for Open Learn is:
 
 ```
-https://felixboehm.github.io/open-learn/#/add?source=https://YOUR-USER.github.io/my-workshop
+https://felixboehm.github.io/open-learn/#/add?source=https://YOUR-USER.github.io/my-workshop/workshop.yaml
 ```
 
 When a learner clicks this link:
-1. Open Learn fetches `languages.yaml` from your repo to discover content
+1. Open Learn fetches the `workshop.yaml` URL to discover content
 2. Shows the learner what's available (languages, topics)
 3. Learner confirms → your content is saved in their browser
 4. Your topics appear on the Home page alongside the built-in content
@@ -472,7 +472,7 @@ When a learner clicks this link:
 
 Before sharing your workshop, verify:
 
-- [ ] `languages.yaml` exists at the root and lists at least one language
+- [ ] `workshop.yaml` exists at the root and lists at least one language
 - [ ] Each language folder has a `topics.yaml`
 - [ ] Each topic folder has a `lessons.yaml`
 - [ ] Each lesson folder listed in `lessons.yaml` exists and contains `content.yaml`
@@ -487,7 +487,7 @@ Before sharing your workshop, verify:
 **Content not loading:**
 - Check browser console for 404 errors
 - Verify your GitHub Pages URL is correct: `https://YOUR-USER.github.io/YOUR-REPO/`
-- Ensure `languages.yaml` is at the root, not in a subdirectory
+- Ensure `workshop.yaml` is at the root, not in a subdirectory
 
 **Audio not playing:**
 - Verify audio file naming matches the convention exactly
@@ -505,5 +505,5 @@ Before sharing your workshop, verify:
 ## See Also
 
 - [Lesson Schema Documentation](lesson-schema.md) — detailed field reference for `content.yaml`
-- [YAML Schemas Documentation](yaml-schemas.md) — index file schemas (`languages.yaml`, `topics.yaml`, `lessons.yaml`)
+- [YAML Schemas Documentation](yaml-schemas.md) — index file schemas (`workshop.yaml`, `topics.yaml`, `lessons.yaml`)
 - [Audio System Documentation](audio-system.md) — audio generation and playback details

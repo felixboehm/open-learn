@@ -4,7 +4,7 @@
 
 This document describes the structure of individual lesson YAML files used for learning content. The schema is designed to be flexible and support learning any topic — languages, math, theory exams, and more.
 
-> **Note**: This document covers individual lesson files only. For information about the index files that organize lessons (`languages.yaml`, `topics.yaml`, `lessons.yaml`), see [YAML Schemas Documentation](yaml-schemas.md).
+> **Note**: This document covers individual lesson files only. For information about the index files that organize lessons (`workshop.yaml`, `topics.yaml`, `lessons.yaml`), see [YAML Schemas Documentation](yaml-schemas.md).
 
 ## Format
 
@@ -14,7 +14,7 @@ Lessons are stored in **YAML** format for human readability and ease of editing.
 
 ```
 lessons/
-├── languages.yaml              # Root index: lists all languages
+├── workshop.yaml              # Root index: lists all languages
 ├── deutsch/                    # Language folder
 │   ├── topics.yaml            # Lists topics for this language
 │   ├── portugiesisch/         # Topic folder
@@ -50,7 +50,7 @@ Lessons are organized in a **three-level hierarchy**:
 
 **Hierarchy**: Language → Topic → Lesson
 
-1. **Root level**: `languages.yaml` defines available languages (interface languages)
+1. **Root level**: `workshop.yaml` defines available languages (interface languages)
 2. **Language level**: Each language folder contains `topics.yaml` listing available topics
 3. **Topic level**: Each topic folder contains `lessons.yaml` listing lesson files
 
@@ -339,7 +339,7 @@ The script uses:
 - **macOS `say`** for text-to-speech
 - **ffmpeg** for MP3 conversion
 
-Audio files are automatically generated based on the language codes defined in `topics.yaml` and `languages.yaml`.
+Audio files are automatically generated based on the language codes defined in `topics.yaml` and `workshop.yaml`.
 
 ## Best Practices
 
