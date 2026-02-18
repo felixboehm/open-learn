@@ -95,7 +95,7 @@ import { useLessons } from '../composables/useLessons'
 import { formatLangName } from '../utils/formatters'
 
 const router = useRouter()
-const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic } = useLessons()
+const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug } = useLessons()
 
 const selectedLearning = ref(null)
 const selectedTeaching = ref(null)
@@ -128,19 +128,13 @@ function selectTeaching(topic) {
   localStorage.setItem('lastTeachingTopic', topic)
 }
 
-async function removeSource(topicUrl) {
-  // Find the content source base URL from the topic URL
-  // Topic URLs look like: https://user.github.io/repo/lang/topic
-  // We need to find which content source it belongs to
-  const sources = JSON.parse(localStorage.getItem('contentSources') || '[]')
-  for (const source of sources) {
-    if (topicUrl.startsWith(source)) {
-      removeContentSource(source)
-      break
-    }
+async function removeSource(topicSlug) {
+  const sourceUrl = getSourceForSlug(topicSlug)
+  if (sourceUrl) {
+    removeContentSource(sourceUrl)
   }
   // Clear selection if removed topic was selected
-  if (selectedTeaching.value === topicUrl) {
+  if (selectedTeaching.value === topicSlug) {
     selectedTeaching.value = null
     localStorage.removeItem('lastTeachingTopic')
   }
@@ -156,8 +150,8 @@ function loadLessons() {
     router.push({
       name: 'lessons-overview',
       params: {
-        learning: encodeURIComponent(selectedLearning.value),
-        teaching: encodeURIComponent(selectedTeaching.value)
+        learning: selectedLearning.value,
+        teaching: selectedTeaching.value
       }
     })
   }

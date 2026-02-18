@@ -135,9 +135,8 @@ const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanu
 
 const lesson = ref(null)
 
-// Use computed to get current route params (URL-decoded for remote sources)
-const learning = computed(() => decodeURIComponent(route.params.learning))
-const teaching = computed(() => decodeURIComponent(route.params.teaching))
+const learning = computed(() => route.params.learning)
+const teaching = computed(() => route.params.teaching)
 const lessonNumber = computed(() => parseInt(route.params.number))
 
 // Filter sections to show only examples that have unlearned items (if setting is enabled)
@@ -249,8 +248,8 @@ watch(
 )
 
 onMounted(async () => {
-  const currentLearning = decodeURIComponent(route.params.learning)
-  const currentTeaching = decodeURIComponent(route.params.teaching)
+  const currentLearning = route.params.learning
+  const currentTeaching = route.params.teaching
   const currentLessonNumber = parseInt(route.params.number)
 
   // Load all lessons to find the correct file
