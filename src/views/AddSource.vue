@@ -164,7 +164,7 @@ async function validateSource() {
     }
 
     // Derive base URL by stripping the index.yaml filename
-    const baseUrl = url.replace(/\/workshop\.yaml$/, '')
+    const baseUrl = url.replace(/\/[^/]+\.yaml$/, '')
 
     // Discover content structure
     const content = {}
