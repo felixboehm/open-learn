@@ -6,10 +6,7 @@
 export function formatLangName(lang) {
   const names = {
     'deutsch': 'Deutsch',
-    'english': 'English',
     'portugiesisch': 'Portugiesisch',
-    'englisch': 'Englisch',
-    'spanish': 'Spanish',
     'spanisch': 'Spanisch'
   }
 
