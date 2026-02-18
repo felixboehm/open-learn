@@ -25,7 +25,7 @@ The script reads language codes from YAML metadata files and maps them to native
 - **English (en-US)**: Samantha
 - **Spanish (es-ES)**: Mónica
 
-Voices are determined automatically based on the `code` field in `languages.yaml` and `topics.yaml` files.
+Voices are determined automatically based on the `code` field in `index.yaml` and `topics.yaml` files.
 
 #### Usage
 
