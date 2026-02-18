@@ -52,7 +52,7 @@ open-learn/
 │       └── formatters.js  # Display name formatting
 ├── public/
 │   └── lessons/           # YAML lesson content (deployed as-is)
-│       ├── languages.yaml # Root index - lists available interface languages
+│       ├── index.yaml    # Root index - lists available interface languages
 │       ├── deutsch/       # German interface folder
 │       │   ├── topics.yaml            # Lists topics (portugiesisch)
 │       │   └── portugiesisch/
@@ -160,7 +160,7 @@ Uses hash-based routing (`createWebHashHistory`) for GitHub Pages compatibility.
 - **Settings Button**: Always visible in top-right corner
 
 **YAML Loading Flow**:
-1. Load `lessons/languages.yaml` → get available interface languages
+1. Load `lessons/index.yaml` → get available interface languages
 2. User selects language → load `lessons/{language}/topics.yaml` → get topics
 3. User selects topic → navigate to `/:learning/:teaching/lessons`
 4. Load `lessons/{language}/{topic}/lessons.yaml` → get lesson folder names
@@ -266,7 +266,7 @@ See `docs/lesson-schema.md` for individual lesson documentation and `docs/yaml-s
 
 ### Adding a New Interface Language
 
-1. Add language to `public/lessons/languages.yaml`:
+1. Add language to `public/lessons/index.yaml`:
    ```yaml
    languages:
      - folder: deutsch
