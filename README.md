@@ -97,8 +97,7 @@ open-learn/
 ├── public/
 │   └── lessons/             # YAML lesson content
 │       ├── languages.yaml   # Root index
-│       ├── deutsch/         # German learning content
-│       └── english/         # English learning content
+│       └── deutsch/         # German learning content
 ├── tests/                   # Test files
 ├── docs/                    # Documentation
 │   ├── lesson-schema.md     # YAML schema reference
@@ -198,6 +197,17 @@ Push to the `main` branch triggers automatic deployment via GitHub Actions (`.gi
 3. Load `lessons/{lang}/{topic}/lessons.yaml` → get lesson folders
 4. Load lesson content dynamically with js-yaml
 5. Render with Vue components
+
+## 📦 Workshops
+
+Add community workshops to Open Learn by clicking the links below:
+
+| Workshop | Description | Link |
+|----------|-------------|------|
+| **Learn English** | 10 lessons covering 30 core English verbs (German interface) | [Add workshop](https://felixboehm.github.io/open-learn/#/add?source=https://felixboehm.github.io/workshop-english) |
+| **Getting to Know Open Learn** | Learn how the platform works and create your own workshops (DE/EN) | [Add workshop](https://felixboehm.github.io/open-learn/#/add?source=https://felixboehm.github.io/workshop-open-learn) |
+
+Want to create your own workshop? See the [External Workshop Guide](docs/external-workshop-guide.md).
 
 ## 🤝 Contributing
 
