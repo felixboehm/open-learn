@@ -53,16 +53,16 @@ const { loadAllLessonsForTopic } = useLessons()
 const lessons = ref([])
 const isLoading = ref(true)
 
-// Use computed to get current route params
-const learning = computed(() => route.params.learning)
-const teaching = computed(() => route.params.teaching)
+// Use computed to get current route params (URL-decoded for remote sources)
+const learning = computed(() => decodeURIComponent(route.params.learning))
+const teaching = computed(() => decodeURIComponent(route.params.teaching))
 
 function openLesson(number) {
   router.push({
     name: 'lesson-detail',
     params: {
-      learning: learning.value,
-      teaching: teaching.value,
+      learning: encodeURIComponent(learning.value),
+      teaching: encodeURIComponent(teaching.value),
       number
     }
   })

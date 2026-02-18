@@ -4,6 +4,7 @@ import LessonsOverview from '../views/LessonsOverview.vue'
 import LessonDetail from '../views/LessonDetail.vue'
 import LearningItems from '../views/LearningItems.vue'
 import Settings from '../views/Settings.vue'
+import AddSource from '../views/AddSource.vue'
 
 const routes = [
   {
@@ -35,6 +36,12 @@ const routes = [
     name: 'settings',
     component: Settings,
     meta: { title: '⚙️ Settings' }
+  },
+  {
+    path: '/add',
+    name: 'add-source',
+    component: AddSource,
+    meta: { title: '🎓 Open Learn' }
   }
 ]
 
