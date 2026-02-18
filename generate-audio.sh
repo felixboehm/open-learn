@@ -8,10 +8,14 @@
 #   lessons/{learning}/{teaching}/{lesson-folder}/audio/ (output)
 #
 # Usage:
-#   ./generate-audio.sh                           # Generate all lessons
+#   ./generate-audio.sh                           # Generate all built-in lessons
 #   ./generate-audio.sh -f                        # Force regenerate all
 #   ./generate-audio.sh path/to/lesson-folder/    # Generate single lesson
 #   ./generate-audio.sh -f path/to/lesson-folder/ # Force single lesson
+#
+# Works with external workshops too — auto-detects the content root
+# by walking up to find languages.yaml:
+#   ./generate-audio.sh /path/to/workshop/deutsch/topic/01-lesson/
 
 LESSONS_DIR="public/lessons"
 FORCE_REGENERATE=false
@@ -86,6 +90,7 @@ get_language_code() {
 get_voice() {
   local folder_name="$1"
   local parent_dir="$2"
+  local content_root="${3:-$LESSONS_DIR}"
 
   # Try to get code from parent's topics.yaml or index.yaml
   local code=""
@@ -98,7 +103,7 @@ get_voice() {
 
   # Try main languages.yaml
   if [[ -z "$code" || "$code" == "null" ]]; then
-    code=$(get_language_code "$LESSONS_DIR/languages.yaml" "$folder_name")
+    code=$(get_language_code "$content_root/languages.yaml" "$folder_name")
   fi
 
   # Look up voice by code
@@ -121,6 +126,19 @@ get_voice() {
   echo "Alex"
 }
 
+# Function to find the content root by walking up to find languages.yaml
+find_content_root() {
+  local dir="$1"
+  while [[ "$dir" != "/" ]]; do
+    if [[ -f "$dir/languages.yaml" ]]; then
+      echo "$dir"
+      return
+    fi
+    dir=$(dirname "$dir")
+  done
+  echo ""
+}
+
 # Function to process a single lesson folder
 process_lesson() {
   local lesson_folder="$1"
@@ -132,11 +150,23 @@ process_lesson() {
     return
   fi
 
+  # Resolve absolute path for reliable path extraction
+  local abs_folder=$(cd "$lesson_folder" && pwd)
+
+  # Auto-detect content root if lesson is outside LESSONS_DIR
+  local effective_root="$LESSONS_DIR"
+  if [[ ! "$abs_folder" == "$(cd "$LESSONS_DIR" 2>/dev/null && pwd)"* ]]; then
+    local detected_root=$(find_content_root "$abs_folder")
+    if [[ -n "$detected_root" ]]; then
+      effective_root="$detected_root"
+    fi
+  fi
+
   # Extract path components
-  local rel_path="${lesson_folder#$LESSONS_DIR/}"
+  local rel_path="${abs_folder#$effective_root/}"
   local learning=$(echo "$rel_path" | cut -d'/' -f1)
   local teaching=$(echo "$rel_path" | cut -d'/' -f2)
-  local folder_name=$(basename "$lesson_folder")
+  local folder_name=$(basename "$abs_folder")
 
   echo "📚 Processing: $learning/$teaching/$folder_name"
 
@@ -145,8 +175,8 @@ process_lesson() {
   mkdir -p "$audio_dir"
 
   # Get voices for this lesson
-  local teaching_voice=$(get_voice "$teaching" "$LESSONS_DIR/$learning")
-  local learning_voice=$(get_voice "$learning" "$LESSONS_DIR")
+  local teaching_voice=$(get_voice "$teaching" "$effective_root/$learning" "$effective_root")
+  local learning_voice=$(get_voice "$learning" "$effective_root" "$effective_root")
 
   if [[ "$teaching_voice" == "Alex" ]]; then
     echo "   ⚠️  No voice found for '$teaching', using default"
