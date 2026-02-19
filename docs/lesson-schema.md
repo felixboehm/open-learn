@@ -102,10 +102,11 @@ sections:
 
 ### Example Structure
 
-Examples follow the q/a/rel pattern:
+Examples follow the q/a/rel pattern and support multiple types:
 
 ```yaml
 examples:
+  # Default: Q&A (type field optional, defaults to "qa")
   - q: "Question or source sentence"    # Question/source language
     a: "Answer or target sentence"      # Answer/target language
     labels: ["Futur", "Gerundium"]      # Optional labels for categorization
@@ -113,6 +114,52 @@ examples:
       - ["term1", "translation1"]       # Each item is an array of strings
       - ["term2", "translation2"]       # First element is the item ID
 ```
+
+### Assessment Types (version 2)
+
+The `type` field controls how an example is rendered and interacted with. When absent, defaults to `qa` (backward compatible).
+
+**Input** — free text answer:
+
+```yaml
+  - type: input
+    q: "Translate: Eu sou professor."
+    a: "Ich bin Lehrer."               # Single correct answer (optional)
+    # Or multiple accepted answers:
+    # a:
+    #   - "Ich bin Lehrer."
+    #   - "Ich bin ein Lehrer."
+```
+
+**Multiple Choice** — checkboxes, multiple correct answers possible:
+
+```yaml
+  - type: multiple-choice
+    q: "Which are correct translations of 'ser'?"
+    options:
+      - text: "sein (dauerhaft)"
+        correct: true                  # correct is optional; omit for no validation
+      - text: "haben"
+      - text: "sein (Identität)"
+        correct: true
+```
+
+**Select** — radio buttons, single correct answer:
+
+```yaml
+  - type: select
+    q: "Which is the correct conjugation?"
+    options:
+      - text: "eu sou"
+        correct: true
+      - text: "eu estou"
+      - text: "eu tenho"
+```
+
+**Notes:**
+- User answers are stored locally in the browser for later review
+- If `correct` markers are provided in `options` (or `a` for input), the user receives immediate feedback after submitting
+- If no correct answers are defined, the submission is recorded without validation
 
 ### Labels (Optional)
 

@@ -43,7 +43,8 @@
           :id="`example-${example._originalSectionIdx}-${example._originalExampleIdx}`"
           @click="handleExampleClick(example)"
           :class="[
-            'p-4 mb-3 rounded cursor-pointer transition',
+            'p-4 mb-3 rounded transition',
+            isAssessmentType(example) ? '' : 'cursor-pointer',
             isCurrentlyReading(example) && isPlaying
               ? 'ring-4 ring-yellow-400 dark:ring-yellow-600'
               : '',
@@ -59,12 +60,131 @@
             {{ example.q }}
           </div>
 
-          <!-- Answer (toggle with settings) -->
-          <div
-            v-show="settings.showAnswers"
-            class="text-gray-600 dark:text-gray-400 italic mb-3">
-            {{ example.a }}
-          </div>
+          <!-- Type: qa (default) -->
+          <template v-if="!example.type || example.type === 'qa'">
+            <div
+              v-show="settings.showAnswers"
+              class="text-gray-600 dark:text-gray-400 italic mb-3">
+              {{ displayAnswer(example.a) }}
+            </div>
+          </template>
+
+          <!-- Type: input -->
+          <template v-else-if="example.type === 'input'">
+            <div class="mt-2" @click.stop>
+              <input
+                type="text"
+                :value="getDraft(example)"
+                @input="setDraft(example, $event.target.value)"
+                @keyup.enter="submitAnswer(example)"
+                :disabled="!!getSubmission(example)"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 disabled:opacity-60"
+                placeholder="Type your answer..." />
+              <button
+                v-if="!getSubmission(example)"
+                @click="submitAnswer(example)"
+                :disabled="!getDraft(example)"
+                class="mt-2 px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition disabled:opacity-50">
+                Submit
+              </button>
+              <button
+                v-else
+                @click="resetAnswer(example)"
+                class="mt-2 px-3 py-1 text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                Reset
+              </button>
+            </div>
+            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
+              <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
+              <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">
+                Incorrect — {{ displayAnswer(example.a) }}
+              </span>
+              <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
+            </div>
+          </template>
+
+          <!-- Type: multiple-choice -->
+          <template v-else-if="example.type === 'multiple-choice'">
+            <div class="mt-2 space-y-2" @click.stop>
+              <label
+                v-for="(option, optIdx) in example.options"
+                :key="optIdx"
+                :class="[
+                  'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
+                  getSubmission(example) && option.correct
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
+                ]">
+                <input
+                  type="checkbox"
+                  :checked="isDraftOptionSelected(example, optIdx)"
+                  @change="toggleDraftOption(example, optIdx)"
+                  :disabled="!!getSubmission(example)"
+                  class="w-4 h-4 accent-primary-500" />
+                <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
+              </label>
+              <button
+                v-if="!getSubmission(example)"
+                @click="submitAnswer(example)"
+                :disabled="!hasDraftOptions(example)"
+                class="mt-2 px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition disabled:opacity-50">
+                Submit
+              </button>
+              <button
+                v-else
+                @click="resetAnswer(example)"
+                class="mt-2 px-3 py-1 text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                Reset
+              </button>
+            </div>
+            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
+              <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
+              <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">Incorrect</span>
+              <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
+            </div>
+          </template>
+
+          <!-- Type: select -->
+          <template v-else-if="example.type === 'select'">
+            <div class="mt-2 space-y-2" @click.stop>
+              <label
+                v-for="(option, optIdx) in example.options"
+                :key="optIdx"
+                :class="[
+                  'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
+                  getSubmission(example) && option.correct
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
+                ]">
+                <input
+                  type="radio"
+                  :name="`select-${example._originalSectionIdx}-${example._originalExampleIdx}`"
+                  :checked="getDraftSelect(example) === optIdx"
+                  @change="setDraftSelect(example, optIdx)"
+                  :disabled="!!getSubmission(example)"
+                  class="w-4 h-4 accent-primary-500" />
+                <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
+              </label>
+              <button
+                v-if="!getSubmission(example)"
+                @click="submitAnswer(example)"
+                :disabled="getDraftSelect(example) === null"
+                class="mt-2 px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition disabled:opacity-50">
+                Submit
+              </button>
+              <button
+                v-else
+                @click="resetAnswer(example)"
+                class="mt-2 px-3 py-1 text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                Reset
+              </button>
+            </div>
+            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
+              <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
+              <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">Incorrect</span>
+              <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
+            </div>
+          </template>
 
           <!-- Related items -->
           <div v-if="settings.showLearningItems && example.rel && example.rel.length > 0" class="flex flex-wrap gap-2 mb-3">
@@ -128,12 +248,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
 import { useSettings } from '../composables/useSettings'
 import { useProgress } from '../composables/useProgress'
 import { useAudio } from '../composables/useAudio'
+import { useAssessments } from '../composables/useAssessments'
 import { marked } from 'marked'
 
 const route = useRoute()
@@ -143,14 +264,140 @@ const { loadAllLessonsForTopic } = useLessons()
 const { settings } = useSettings()
 const { isItemLearned, toggleItemLearned, areAllItemsLearned, progress } = useProgress()
 const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanup, play, pause } = useAudio()
+const { getAnswer, saveAnswer, validateAnswer } = useAssessments()
 
 const lesson = ref(null)
+
+// Draft state for in-progress assessment answers (not persisted until submit)
+const drafts = reactive({})
 
 // Convert YouTube watch/short URLs to embed URLs
 function normalizeVideoUrl(url) {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
   if (match) return `https://www.youtube.com/embed/${match[1]}`
   return url
+}
+
+// Check if example is an assessment type (not plain qa)
+function isAssessmentType(example) {
+  return example.type && example.type !== 'qa'
+}
+
+// Display answer - handles both string and array formats
+function displayAnswer(a) {
+  if (Array.isArray(a)) return a[0]
+  return a
+}
+
+// --- Draft management ---
+
+function draftKey(example) {
+  return `${example._originalSectionIdx}-${example._originalExampleIdx}`
+}
+
+function getDraft(example) {
+  return drafts[draftKey(example)] || ''
+}
+
+function setDraft(example, value) {
+  drafts[draftKey(example)] = value
+}
+
+function getDraftSelect(example) {
+  const val = drafts[draftKey(example)]
+  return val !== undefined ? val : null
+}
+
+function setDraftSelect(example, optIdx) {
+  drafts[draftKey(example)] = optIdx
+}
+
+function isDraftOptionSelected(example, optIdx) {
+  const selected = drafts[draftKey(example)]
+  return Array.isArray(selected) && selected.includes(optIdx)
+}
+
+function toggleDraftOption(example, optIdx) {
+  const key = draftKey(example)
+  if (!Array.isArray(drafts[key])) {
+    drafts[key] = []
+  }
+  const idx = drafts[key].indexOf(optIdx)
+  if (idx === -1) {
+    drafts[key].push(optIdx)
+  } else {
+    drafts[key].splice(idx, 1)
+  }
+}
+
+function hasDraftOptions(example) {
+  const selected = drafts[draftKey(example)]
+  return Array.isArray(selected) && selected.length > 0
+}
+
+// --- Submission ---
+
+function getSubmission(example) {
+  return getAnswer(
+    learning.value, teaching.value, lessonNumber.value,
+    example._originalSectionIdx, example._originalExampleIdx
+  )
+}
+
+function submitAnswer(example) {
+  const type = example.type || 'qa'
+  let userAnswer
+
+  if (type === 'input') {
+    userAnswer = getDraft(example)
+    if (!userAnswer) return
+  } else if (type === 'multiple-choice') {
+    userAnswer = drafts[draftKey(example)]
+    if (!Array.isArray(userAnswer) || userAnswer.length === 0) return
+  } else if (type === 'select') {
+    userAnswer = getDraftSelect(example)
+    if (userAnswer === null) return
+  } else {
+    return
+  }
+
+  const correct = validateAnswer(example, userAnswer)
+
+  saveAnswer(
+    learning.value, teaching.value, lessonNumber.value,
+    example._originalSectionIdx, example._originalExampleIdx,
+    { type, answer: userAnswer, correct }
+  )
+}
+
+function resetAnswer(example) {
+  // Clear the persisted answer by saving null-like entry, then remove
+  const key = `${learning.value}:${teaching.value}:${lessonNumber.value}`
+  const itemKey = draftKey(example)
+
+  // Remove from assessments storage
+  const { assessments } = useAssessments()
+  if (assessments.value[key]) {
+    delete assessments.value[key][itemKey]
+    localStorage.setItem('assessments', JSON.stringify(assessments.value))
+  }
+
+  // Clear draft
+  delete drafts[itemKey]
+}
+
+// --- Restore drafts from saved answers on mount ---
+
+function restoreDraftsFromSaved() {
+  if (!lesson.value) return
+  lesson.value.sections.forEach((section, sIdx) => {
+    section.examples.forEach((example, eIdx) => {
+      const saved = getAnswer(learning.value, teaching.value, lessonNumber.value, sIdx, eIdx)
+      if (saved) {
+        drafts[`${sIdx}-${eIdx}`] = saved.answer
+      }
+    })
+  })
 }
 
 const learning = computed(() => route.params.learning)
@@ -197,16 +444,16 @@ function handleItemClick(itemId) {
   toggleItemLearned(learning.value, teaching.value, itemId)
 }
 
-// Handle example click for audio playback
+// Handle example click for audio playback (only for non-assessment types)
 function handleExampleClick(example) {
+  if (isAssessmentType(example)) return
+
   const originalSectionIdx = example._originalSectionIdx
   const originalExampleIdx = example._originalExampleIdx
 
   if (isPlaying.value) {
-    // If playing, jump to this example
     jumpToExample(originalSectionIdx, originalExampleIdx, settings.value)
   } else {
-    // If not playing, just read this example once
     jumpToExample(originalSectionIdx, originalExampleIdx, settings.value)
   }
 }
@@ -281,6 +528,9 @@ onMounted(async () => {
 
     // Initialize audio for this lesson (load voices once)
     await initializeAudio(lesson.value, currentLearning, currentTeaching, settings.value)
+
+    // Restore drafts from previously saved assessment answers
+    restoreDraftsFromSaved()
   }
 })
 

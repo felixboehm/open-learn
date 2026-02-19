@@ -4,13 +4,17 @@ import App from './App.vue'
 import router from './router'
 import { useSettings } from './composables/useSettings'
 import { useProgress } from './composables/useProgress'
+import { useAssessments } from './composables/useAssessments'
 
-// Initialize and load settings and progress before mounting the app
+// Initialize and load settings, progress, and assessments before mounting the app
 const { loadSettings } = useSettings()
 loadSettings()
 
 const { loadProgress } = useProgress()
 loadProgress()
+
+const { loadAssessments } = useAssessments()
+loadAssessments()
 
 const app = createApp(App)
 app.use(router)
