@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { useAssessments } from '../src/composables/useAssessments'
 
-describe('Coach Answer Forwarding', () => {
+describe('Coach Answer Forwarding (Batch)', () => {
   let assessments
 
   beforeEach(() => {
     localStorage.clear()
     assessments = useAssessments()
     assessments.assessments.value = {}
+    assessments.coachQueue.value = []
     global.fetch = vi.fn()
   })
 
@@ -15,136 +16,139 @@ describe('Coach Answer Forwarding', () => {
     vi.restoreAllMocks()
   })
 
-  it('does not forward when consent is disabled', async () => {
-    const result = await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { answer: { value: 'test' } },
-      { coachConsent: false, coachIdentifier: '' }
-    )
-    expect(result).toBeNull()
-    expect(fetch).not.toHaveBeenCalled()
+  describe('queueForCoach', () => {
+    it('adds an answer to the queue', () => {
+      assessments.queueForCoach(
+        { learning: 'en', teaching: 'test', number: 1 },
+        { section: { index: 0 }, answer: { value: 'test' } }
+      )
+      expect(assessments.coachQueue.value).toHaveLength(1)
+      expect(assessments.hasQueuedAnswers()).toBe(true)
+    })
+
+    it('accumulates multiple answers', () => {
+      const ctx = { learning: 'en', teaching: 'test', number: 1 }
+      assessments.queueForCoach(ctx, { answer: { value: 'a' } })
+      assessments.queueForCoach(ctx, { answer: { value: 'b' } })
+      assessments.queueForCoach(ctx, { answer: { value: 'c' } })
+      expect(assessments.coachQueue.value).toHaveLength(3)
+    })
   })
 
-  it('does not forward when no coach API is configured', async () => {
-    const result = await assessments.forwardToCoach(
-      null,
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
-    expect(result).toBeNull()
-    expect(fetch).not.toHaveBeenCalled()
-  })
+  describe('flushCoachQueue', () => {
+    it('does not flush when consent is disabled', async () => {
+      assessments.queueForCoach({ learning: 'en' }, { answer: { value: 'test' } })
+      const result = await assessments.flushCoachQueue(
+        { api: 'https://coach.example.com/api' },
+        { coachConsent: false, coachIdentifier: '' }
+      )
+      expect(result).toBeNull()
+      expect(fetch).not.toHaveBeenCalled()
+    })
 
-  it('does not forward when coach config has no api', async () => {
-    const result = await assessments.forwardToCoach(
-      { name: 'Coach' },
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
-    expect(result).toBeNull()
-    expect(fetch).not.toHaveBeenCalled()
-  })
+    it('does not flush when queue is empty', async () => {
+      const result = await assessments.flushCoachQueue(
+        { api: 'https://coach.example.com/api' },
+        { coachConsent: true, coachIdentifier: '' }
+      )
+      expect(result).toBeNull()
+      expect(fetch).not.toHaveBeenCalled()
+    })
 
-  it('forwards answer when consent is enabled', async () => {
-    fetch.mockResolvedValue({ ok: true })
+    it('does not flush when no coach API configured', async () => {
+      assessments.queueForCoach({ learning: 'en' }, { answer: { value: 'test' } })
+      const result = await assessments.flushCoachQueue(
+        null,
+        { coachConsent: true, coachIdentifier: '' }
+      )
+      expect(result).toBeNull()
+      expect(fetch).not.toHaveBeenCalled()
+    })
 
-    const result = await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { lesson: { number: 1 }, answer: { value: 'test', correct: true } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
+    it('sends batched answers and clears queue', async () => {
+      fetch.mockResolvedValue({ ok: true })
 
-    expect(result).toEqual({ ok: true })
-    expect(fetch).toHaveBeenCalledWith(
-      'https://coach.example.com/api',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      const ctx = { learning: 'en', teaching: 'test', number: 1, title: 'Test' }
+      assessments.queueForCoach(ctx, { answer: { value: 'a' } })
+      assessments.queueForCoach(ctx, { answer: { value: 'b' } })
+
+      const result = await assessments.flushCoachQueue(
+        { api: 'https://coach.example.com/api' },
+        { coachConsent: true, coachIdentifier: '' }
+      )
+
+      expect(result).toEqual({ ok: true, count: 2 })
+      expect(assessments.coachQueue.value).toHaveLength(0)
+
+      const body = JSON.parse(fetch.mock.calls[0][1].body)
+      expect(body.answers).toHaveLength(2)
+      expect(body.lesson).toEqual(ctx)
+      expect(body.timestamp).toBeDefined()
+    })
+
+    it('includes user identifier when provided', async () => {
+      fetch.mockResolvedValue({ ok: true })
+
+      assessments.queueForCoach({ learning: 'en' }, { answer: { value: 'test' } })
+      await assessments.flushCoachQueue(
+        { api: 'https://coach.example.com/api' },
+        { coachConsent: true, coachIdentifier: 'user@test.com' }
+      )
+
+      const body = JSON.parse(fetch.mock.calls[0][1].body)
+      expect(body.user).toBe('user@test.com')
+    })
+
+    it('omits user field when identifier is empty', async () => {
+      fetch.mockResolvedValue({ ok: true })
+
+      assessments.queueForCoach({ learning: 'en' }, { answer: { value: 'test' } })
+      await assessments.flushCoachQueue(
+        { api: 'https://coach.example.com/api' },
+        { coachConsent: true, coachIdentifier: '' }
+      )
+
+      const body = JSON.parse(fetch.mock.calls[0][1].body)
+      expect(body.user).toBeUndefined()
+    })
+
+    it('returns enrollUrl on 401 response', async () => {
+      fetch.mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: () => Promise.resolve({ enrollUrl: 'https://workshop.example.com/enroll' })
       })
-    )
-  })
 
-  it('includes user identifier when provided', async () => {
-    fetch.mockResolvedValue({ ok: true })
+      assessments.queueForCoach({ learning: 'en' }, { answer: { value: 'test' } })
+      const result = await assessments.flushCoachQueue(
+        { api: 'https://coach.example.com/api' },
+        { coachConsent: true, coachIdentifier: '' }
+      )
 
-    await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: 'user@test.com' }
-    )
-
-    const body = JSON.parse(fetch.mock.calls[0][1].body)
-    expect(body.user).toBe('user@test.com')
-  })
-
-  it('omits user field when identifier is empty', async () => {
-    fetch.mockResolvedValue({ ok: true })
-
-    await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
-
-    const body = JSON.parse(fetch.mock.calls[0][1].body)
-    expect(body.user).toBeUndefined()
-  })
-
-  it('returns enrollUrl on 401 response', async () => {
-    fetch.mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: () => Promise.resolve({ enrollUrl: 'https://workshop.example.com/enroll' })
+      expect(result).toEqual({ ok: false, enrollUrl: 'https://workshop.example.com/enroll' })
     })
 
-    const result = await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
+    it('returns null on network error', async () => {
+      fetch.mockRejectedValue(new Error('Network error'))
 
-    expect(result).toEqual({ ok: false, enrollUrl: 'https://workshop.example.com/enroll' })
-  })
+      assessments.queueForCoach({ learning: 'en' }, { answer: { value: 'test' } })
+      const result = await assessments.flushCoachQueue(
+        { api: 'https://coach.example.com/api' },
+        { coachConsent: true, coachIdentifier: '' }
+      )
 
-  it('handles 401 without enrollUrl', async () => {
-    fetch.mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: () => Promise.resolve({})
+      expect(result).toBeNull()
     })
-
-    const result = await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
-
-    expect(result).toEqual({ ok: false, enrollUrl: null })
   })
 
-  it('returns null on network error', async () => {
-    fetch.mockRejectedValue(new Error('Network error'))
+  describe('clearCoachQueue', () => {
+    it('clears the queue', () => {
+      assessments.queueForCoach({ learning: 'en' }, { answer: { value: 'test' } })
+      expect(assessments.hasQueuedAnswers()).toBe(true)
 
-    const result = await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
-
-    expect(result).toBeNull()
-  })
-
-  it('includes timestamp in payload', async () => {
-    fetch.mockResolvedValue({ ok: true })
-
-    await assessments.forwardToCoach(
-      { api: 'https://coach.example.com/api' },
-      { answer: { value: 'test' } },
-      { coachConsent: true, coachIdentifier: '' }
-    )
-
-    const body = JSON.parse(fetch.mock.calls[0][1].body)
-    expect(body.timestamp).toBeDefined()
-    expect(new Date(body.timestamp).getTime()).not.toBeNaN()
+      assessments.clearCoachQueue()
+      expect(assessments.hasQueuedAnswers()).toBe(false)
+      expect(assessments.coachQueue.value).toHaveLength(0)
+    })
   })
 })
