@@ -186,19 +186,6 @@
             </div>
           </template>
 
-          <!-- Coach rejection notice -->
-          <div v-if="coachStatus[draftKey(example)]?.rejected" class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border border-yellow-300 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
-            <span>{{ coachStatus[draftKey(example)].coachName || 'Coach' }} did not accept your submission. You may need to enroll in this workshop.</span>
-            <a
-              v-if="coachStatus[draftKey(example)].enrollUrl"
-              :href="coachStatus[draftKey(example)].enrollUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="ml-1 underline text-primary-500 dark:text-blue-400">
-              Enroll here
-            </a>
-          </div>
-
           <!-- Related items -->
           <div v-if="settings.showLearningItems && example.rel && example.rel.length > 0" class="flex flex-wrap gap-2 mb-3">
             <button
@@ -232,6 +219,50 @@
           </div>
         </div>
       </div>
+
+      <!-- End of lesson actions -->
+      <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-5 bg-white dark:bg-gray-800">
+        <!-- Coach rejection notice (shown once for the batch) -->
+        <div v-if="coachRejection" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border border-yellow-300 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
+          <span>{{ coachRejection.coachName || 'Coach' }} did not accept your submission. You may need to enroll in this workshop.</span>
+          <a
+            v-if="coachRejection.enrollUrl"
+            :href="coachRejection.enrollUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="ml-1 underline text-primary-500 dark:text-blue-400">
+            Enroll here
+          </a>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <!-- Send answers to coach button -->
+          <button
+            v-if="lesson.coach && settings.coachConsent"
+            @click="sendAnswersToCoach"
+            :disabled="!hasQueuedAnswers()"
+            class="px-5 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            {{ coachSendStatus === 'sent' ? 'Sent!' : coachSendStatus === 'sending' ? 'Sending...' : `Send Answers to Coach (${coachQueue.length})` }}
+          </button>
+
+          <!-- Next lesson button -->
+          <router-link
+            v-if="nextLessonNumber"
+            :to="`/${learning}/${teaching}/lesson/${nextLessonNumber}`"
+            @click.native="flushOnLeave"
+            class="px-5 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 transition inline-block">
+            Next Lesson
+          </router-link>
+
+          <!-- Back to overview -->
+          <router-link
+            :to="`/${learning}/${teaching}/lessons`"
+            @click.native="flushOnLeave"
+            class="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition inline-block">
+            All Lessons
+          </router-link>
+        </div>
+      </div>
     </div>
 
     <!-- Loading state -->
@@ -261,8 +292,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
 import { useSettings } from '../composables/useSettings'
 import { useProgress } from '../composables/useProgress'
@@ -271,18 +302,21 @@ import { useAssessments } from '../composables/useAssessments'
 import { marked } from 'marked'
 
 const route = useRoute()
+const router = useRouter()
 const emit = defineEmits(['update-title'])
 
 const { loadAllLessonsForTopic } = useLessons()
 const { settings } = useSettings()
 const { isItemLearned, toggleItemLearned, areAllItemsLearned, progress } = useProgress()
 const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanup, play, pause } = useAudio()
-const { getAnswer, saveAnswer, validateAnswer, forwardToCoach } = useAssessments()
-
-// Coach forwarding status per example (transient, not persisted)
-const coachStatus = reactive({})
+const { getAnswer, saveAnswer, validateAnswer, queueForCoach, hasQueuedAnswers, flushCoachQueue, flushCoachQueueSync, clearCoachQueue, coachQueue } = useAssessments()
 
 const lesson = ref(null)
+const allLessons = ref([])
+
+// Coach batch status
+const coachSendStatus = ref(null) // null | 'sending' | 'sent'
+const coachRejection = ref(null)
 
 // Draft state for in-progress assessment answers (not persisted until submit)
 const drafts = reactive({})
@@ -385,54 +419,74 @@ function submitAnswer(example) {
     { type, answer: userAnswer, correct }
   )
 
-  // Forward to coach if configured
+  // Queue for batch coach forwarding (instead of sending immediately)
   if (lesson.value?.coach) {
     const section = lesson.value.sections[example._originalSectionIdx]
-    const payload = {
-      lesson: {
+    queueForCoach(
+      {
         learning: learning.value,
         teaching: teaching.value,
         number: lessonNumber.value,
         title: lesson.value.title
       },
-      section: {
-        index: example._originalSectionIdx,
-        title: section?.title
-      },
-      example: {
-        index: example._originalExampleIdx,
-        type,
-        question: example.q
-      },
-      answer: {
-        value: userAnswer,
-        correct
+      {
+        section: { index: example._originalSectionIdx, title: section?.title },
+        example: { index: example._originalExampleIdx, type, question: example.q },
+        answer: { value: userAnswer, correct }
       }
-    }
-
-    const key = draftKey(example)
-    forwardToCoach(lesson.value.coach, payload, settings.value).then(result => {
-      if (result && !result.ok) {
-        coachStatus[key] = { rejected: true, enrollUrl: result.enrollUrl, coachName: lesson.value.coach.name }
-      }
-    })
+    )
+    // Reset send status when new answers are queued
+    coachSendStatus.value = null
   }
 }
 
 function resetAnswer(example) {
-  // Clear the persisted answer by saving null-like entry, then remove
   const key = `${learning.value}:${teaching.value}:${lessonNumber.value}`
   const itemKey = draftKey(example)
 
-  // Remove from assessments storage
   const { assessments } = useAssessments()
   if (assessments.value[key]) {
     delete assessments.value[key][itemKey]
     localStorage.setItem('assessments', JSON.stringify(assessments.value))
   }
 
-  // Clear draft
   delete drafts[itemKey]
+}
+
+// --- Coach batch sending ---
+
+async function sendAnswersToCoach() {
+  if (!lesson.value?.coach || !hasQueuedAnswers()) return
+
+  coachSendStatus.value = 'sending'
+  const result = await flushCoachQueue(lesson.value.coach, settings.value)
+
+  if (result?.ok) {
+    coachSendStatus.value = 'sent'
+    coachRejection.value = null
+  } else if (result && !result.ok) {
+    coachSendStatus.value = null
+    coachRejection.value = {
+      enrollUrl: result.enrollUrl,
+      coachName: lesson.value.coach.name
+    }
+  } else {
+    coachSendStatus.value = null
+  }
+}
+
+// Flush queue on page/tab close via sendBeacon
+function handleBeforeUnload() {
+  if (lesson.value?.coach) {
+    flushCoachQueueSync(lesson.value.coach, settings.value)
+  }
+}
+
+// Flush queue when navigating away from lesson
+function flushOnLeave() {
+  if (lesson.value?.coach && hasQueuedAnswers()) {
+    flushCoachQueue(lesson.value.coach, settings.value)
+  }
 }
 
 // --- Restore drafts from saved answers on mount ---
@@ -453,6 +507,17 @@ const learning = computed(() => route.params.learning)
 const teaching = computed(() => route.params.teaching)
 const lessonNumber = computed(() => parseInt(route.params.number))
 
+// Find the next lesson number (if exists)
+const nextLessonNumber = computed(() => {
+  if (!lesson.value || allLessons.value.length === 0) return null
+  const sorted = [...allLessons.value].sort((a, b) => a.number - b.number)
+  const currentIdx = sorted.findIndex(l => l.number === lesson.value.number)
+  if (currentIdx >= 0 && currentIdx < sorted.length - 1) {
+    return sorted[currentIdx + 1].number
+  }
+  return null
+})
+
 // Filter sections to show only examples that have unlearned items (if setting is enabled)
 const filteredSections = computed(() => {
   if (!lesson.value || !lesson.value.sections) {
@@ -467,16 +532,12 @@ const filteredSections = computed(() => {
         _originalExampleIdx: originalExampleIdx
       }))
       .filter(example => {
-        // If hideLearnedExamples is disabled, show all examples
         if (!settings.value.hideLearnedExamples) {
           return true
         }
-
-        // If example has no related items, always show it
         if (!example.rel || example.rel.length === 0) {
           return true
         }
-        // Hide example only if ALL items are learned
         return !areAllItemsLearned(learning.value, teaching.value, example.rel)
       })
 
@@ -485,7 +546,7 @@ const filteredSections = computed(() => {
       examples: filteredExamples,
       _originalSectionIdx: originalSectionIdx
     }
-  }).filter(section => section.examples.length > 0) // Only show sections with visible examples
+  }).filter(section => section.examples.length > 0)
 })
 
 // Handle item click to toggle learned status
@@ -566,8 +627,9 @@ onMounted(async () => {
   const currentTeaching = route.params.teaching
   const currentLessonNumber = parseInt(route.params.number)
 
-  // Load all lessons to find the correct file
+  // Load all lessons to find the correct file and determine next lesson
   const lessons = await loadAllLessonsForTopic(currentLearning, currentTeaching)
+  allLessons.value = lessons
 
   // Find the lesson with the matching number
   lesson.value = lessons.find(l => l.number === currentLessonNumber)
@@ -580,11 +642,22 @@ onMounted(async () => {
 
     // Restore drafts from previously saved assessment answers
     restoreDraftsFromSaved()
+
+    // Clear any leftover coach queue from a previous lesson
+    clearCoachQueue()
   }
+
+  // Flush coach queue on tab/window close
+  window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
-onUnmounted(() => {
-  // Cleanup audio when leaving the page
+onBeforeUnmount(() => {
   cleanup()
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+
+  // Flush remaining answers when navigating away
+  if (lesson.value?.coach && hasQueuedAnswers()) {
+    flushCoachQueue(lesson.value.coach, settings.value)
+  }
 })
 </script>

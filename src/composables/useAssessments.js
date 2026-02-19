@@ -4,6 +4,12 @@ import { ref, watch } from 'vue'
 // Structure: { "learning:teaching:lessonNumber": { "sectionIdx-exampleIdx": { type, answer, submittedAt, correct } } }
 const assessments = ref({})
 
+// Coach queue: answers waiting to be sent as a batch
+const coachQueue = ref([])
+
+// Lesson context for the current queue (set when queueing)
+let queueLessonContext = null
+
 let isInitialized = false
 
 function getKey(learning, teaching, lessonNumber) {
@@ -89,20 +95,39 @@ function validateAnswer(example, userAnswer) {
   return null
 }
 
-// Forward answer to coach API
-// Returns { ok: true } on success, { ok: false, enrollUrl? } on 401, or null on other errors
-async function forwardToCoach(coachConfig, answerPayload, settings) {
+// --- Coach Queue (batch mode) ---
+
+// Add an answer to the queue for later batch sending
+function queueForCoach(lessonContext, answerEntry) {
+  queueLessonContext = lessonContext
+  coachQueue.value.push(answerEntry)
+}
+
+// Check if there are unsent answers in the queue
+function hasQueuedAnswers() {
+  return coachQueue.value.length > 0
+}
+
+// Flush the queue: send all queued answers as one batch request
+// Returns { ok: true } on success, { ok: false, enrollUrl? } on 401, or null on error/skip
+async function flushCoachQueue(coachConfig, settings) {
   if (!coachConfig?.api) return null
   if (!settings.coachConsent) return null
+  if (coachQueue.value.length === 0) return null
 
   const payload = {
-    ...answerPayload,
+    lesson: queueLessonContext,
+    answers: [...coachQueue.value],
     timestamp: new Date().toISOString()
   }
 
   if (settings.coachIdentifier) {
     payload.user = settings.coachIdentifier
   }
+
+  // Clear queue before sending (prevent double-send)
+  const sentCount = coachQueue.value.length
+  coachQueue.value = []
 
   try {
     const response = await fetch(coachConfig.api, {
@@ -111,7 +136,7 @@ async function forwardToCoach(coachConfig, answerPayload, settings) {
       body: JSON.stringify(payload)
     })
 
-    if (response.ok) return { ok: true }
+    if (response.ok) return { ok: true, count: sentCount }
 
     if (response.status === 401) {
       let enrollUrl = null
@@ -129,6 +154,39 @@ async function forwardToCoach(coachConfig, answerPayload, settings) {
   }
 }
 
+// Flush using sendBeacon (for page/tab close — fire-and-forget, no async)
+function flushCoachQueueSync(coachConfig, settings) {
+  if (!coachConfig?.api) return
+  if (!settings.coachConsent) return
+  if (coachQueue.value.length === 0) return
+
+  const payload = {
+    lesson: queueLessonContext,
+    answers: [...coachQueue.value],
+    timestamp: new Date().toISOString()
+  }
+
+  if (settings.coachIdentifier) {
+    payload.user = settings.coachIdentifier
+  }
+
+  coachQueue.value = []
+
+  try {
+    navigator.sendBeacon(
+      coachConfig.api,
+      new Blob([JSON.stringify(payload)], { type: 'application/json' })
+    )
+  } catch (e) {
+    console.warn('sendBeacon failed:', e)
+  }
+}
+
+function clearCoachQueue() {
+  coachQueue.value = []
+  queueLessonContext = null
+}
+
 function initializeWatchers() {
   if (isInitialized) return
   isInitialized = true
@@ -143,11 +201,16 @@ export function useAssessments() {
 
   return {
     assessments,
+    coachQueue,
     loadAssessments,
     getAnswer,
     saveAnswer,
     clearAnswers,
     validateAnswer,
-    forwardToCoach
+    queueForCoach,
+    hasQueuedAnswers,
+    flushCoachQueue,
+    flushCoachQueueSync,
+    clearCoachQueue
   }
 }
