@@ -88,11 +88,17 @@ Each lesson contains 5-10 sections. Sections have:
 ```yaml
 sections:
   - title: "Section Title"          # Section title (string)
+    video: "https://youtube.com/watch?v=abc123"  # Optional video URL
     explanation: |                  # Optional markdown explanation
       This is an **explanation** of the section.
       It supports _markdown_ formatting.
     examples: [...]                 # Array of examples (see below)
 ```
+
+**Video Field** (optional):
+- Displayed above the explanation as an embedded video
+- YouTube watch URLs (`youtube.com/watch?v=...`) and short URLs (`youtu.be/...`) are automatically converted to embed URLs
+- Other URLs (e.g., Vimeo embed URLs) are used as-is in an iframe
 
 ### Example Structure
 

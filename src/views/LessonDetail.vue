@@ -18,6 +18,17 @@
           {{ section.title }}
         </div>
 
+        <!-- Video -->
+        <div v-if="section.video" class="mb-4">
+          <iframe
+            :src="normalizeVideoUrl(section.video)"
+            class="w-full aspect-video rounded"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+
         <!-- Explanation -->
         <div
           v-if="section.explanation"
@@ -134,6 +145,13 @@ const { isItemLearned, toggleItemLearned, areAllItemsLearned, progress } = usePr
 const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanup, play, pause } = useAudio()
 
 const lesson = ref(null)
+
+// Convert YouTube watch/short URLs to embed URLs
+function normalizeVideoUrl(url) {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
+  if (match) return `https://www.youtube.com/embed/${match[1]}`
+  return url
+}
 
 const learning = computed(() => route.params.learning)
 const teaching = computed(() => route.params.teaching)
