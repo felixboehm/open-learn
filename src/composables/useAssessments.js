@@ -196,6 +196,22 @@ function initializeWatchers() {
   }, { deep: true })
 }
 
+// Return raw assessments object
+function getAssessments() {
+  return assessments.value
+}
+
+// Merge imported assessments into existing (additive)
+function mergeAssessments(imported) {
+  for (const [lessonKey, answers] of Object.entries(imported)) {
+    if (!assessments.value[lessonKey]) {
+      assessments.value[lessonKey] = {}
+    }
+    Object.assign(assessments.value[lessonKey], answers)
+  }
+  saveAssessments()
+}
+
 export function useAssessments() {
   initializeWatchers()
 
@@ -211,6 +227,8 @@ export function useAssessments() {
     hasQueuedAnswers,
     flushCoachQueue,
     flushCoachQueueSync,
-    clearCoachQueue
+    clearCoachQueue,
+    getAssessments,
+    mergeAssessments
   }
 }

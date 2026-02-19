@@ -76,6 +76,22 @@ function initializeWatchers() {
   }, { deep: true })
 }
 
+// Return raw progress object
+function getProgress() {
+  return progress.value
+}
+
+// Merge imported progress into existing (additive)
+function mergeProgress(imported) {
+  for (const [topicKey, items] of Object.entries(imported)) {
+    if (!progress.value[topicKey]) {
+      progress.value[topicKey] = {}
+    }
+    Object.assign(progress.value[topicKey], items)
+  }
+  saveProgress()
+}
+
 export function useProgress() {
   // Initialize watchers on first use
   initializeWatchers()
@@ -85,6 +101,8 @@ export function useProgress() {
     loadProgress,
     isItemLearned,
     toggleItemLearned,
-    areAllItemsLearned
+    areAllItemsLearned,
+    getProgress,
+    mergeProgress
   }
 }
