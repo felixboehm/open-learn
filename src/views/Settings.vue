@@ -177,6 +177,48 @@
       </label>
     </div>
     </div>
+
+    <!-- Workshop Section -->
+    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 pb-3 border-b-2 border-gray-300 dark:border-gray-600">
+        Workshop
+      </h2>
+
+      <!-- Coach Consent Toggle -->
+      <div class="mb-6">
+        <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
+          Share Answers with Coach
+        </label>
+        <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+          Allow sending your assessment answers to the workshop coach's server.
+          This only applies to lessons that have a coach configured.
+        </div>
+        <label class="relative inline-block w-14 h-8 cursor-pointer">
+          <input
+            type="checkbox"
+            v-model="settings.coachConsent"
+            class="opacity-0 w-0 h-0 peer" />
+          <span
+            class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
+          </span>
+        </label>
+      </div>
+
+      <!-- Coach Identifier -->
+      <div v-if="settings.coachConsent" class="mb-6">
+        <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
+          Your Name or Email (optional)
+        </label>
+        <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+          Identify yourself to the coach. Leave empty for anonymous submissions.
+        </div>
+        <input
+          type="text"
+          v-model="settings.coachIdentifier"
+          class="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200"
+          placeholder="your@email.com or username" />
+      </div>
+    </div>
   </div>
 </template>
 

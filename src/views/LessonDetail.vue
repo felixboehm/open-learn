@@ -186,6 +186,19 @@
             </div>
           </template>
 
+          <!-- Coach rejection notice -->
+          <div v-if="coachStatus[draftKey(example)]?.rejected" class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border border-yellow-300 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
+            <span>{{ coachStatus[draftKey(example)].coachName || 'Coach' }} did not accept your submission. You may need to enroll in this workshop.</span>
+            <a
+              v-if="coachStatus[draftKey(example)].enrollUrl"
+              :href="coachStatus[draftKey(example)].enrollUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="ml-1 underline text-primary-500 dark:text-blue-400">
+              Enroll here
+            </a>
+          </div>
+
           <!-- Related items -->
           <div v-if="settings.showLearningItems && example.rel && example.rel.length > 0" class="flex flex-wrap gap-2 mb-3">
             <button
@@ -264,7 +277,10 @@ const { loadAllLessonsForTopic } = useLessons()
 const { settings } = useSettings()
 const { isItemLearned, toggleItemLearned, areAllItemsLearned, progress } = useProgress()
 const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanup, play, pause } = useAudio()
-const { getAnswer, saveAnswer, validateAnswer } = useAssessments()
+const { getAnswer, saveAnswer, validateAnswer, forwardToCoach } = useAssessments()
+
+// Coach forwarding status per example (transient, not persisted)
+const coachStatus = reactive({})
 
 const lesson = ref(null)
 
@@ -368,6 +384,39 @@ function submitAnswer(example) {
     example._originalSectionIdx, example._originalExampleIdx,
     { type, answer: userAnswer, correct }
   )
+
+  // Forward to coach if configured
+  if (lesson.value?.coach) {
+    const section = lesson.value.sections[example._originalSectionIdx]
+    const payload = {
+      lesson: {
+        learning: learning.value,
+        teaching: teaching.value,
+        number: lessonNumber.value,
+        title: lesson.value.title
+      },
+      section: {
+        index: example._originalSectionIdx,
+        title: section?.title
+      },
+      example: {
+        index: example._originalExampleIdx,
+        type,
+        question: example.q
+      },
+      answer: {
+        value: userAnswer,
+        correct
+      }
+    }
+
+    const key = draftKey(example)
+    forwardToCoach(lesson.value.coach, payload, settings.value).then(result => {
+      if (result && !result.ok) {
+        coachStatus[key] = { rejected: true, enrollUrl: result.enrollUrl, coachName: lesson.value.coach.name }
+      }
+    })
+  }
 }
 
 function resetAnswer(example) {

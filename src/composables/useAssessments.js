@@ -89,6 +89,46 @@ function validateAnswer(example, userAnswer) {
   return null
 }
 
+// Forward answer to coach API
+// Returns { ok: true } on success, { ok: false, enrollUrl? } on 401, or null on other errors
+async function forwardToCoach(coachConfig, answerPayload, settings) {
+  if (!coachConfig?.api) return null
+  if (!settings.coachConsent) return null
+
+  const payload = {
+    ...answerPayload,
+    timestamp: new Date().toISOString()
+  }
+
+  if (settings.coachIdentifier) {
+    payload.user = settings.coachIdentifier
+  }
+
+  try {
+    const response = await fetch(coachConfig.api, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (response.ok) return { ok: true }
+
+    if (response.status === 401) {
+      let enrollUrl = null
+      try {
+        const body = await response.json()
+        enrollUrl = body.enrollUrl || null
+      } catch { /* ignore parse errors */ }
+      return { ok: false, enrollUrl }
+    }
+
+    return null
+  } catch (e) {
+    console.warn('Failed to forward to coach:', e)
+    return null
+  }
+}
+
 function initializeWatchers() {
   if (isInitialized) return
   isInitialized = true
@@ -107,6 +147,7 @@ export function useAssessments() {
     getAnswer,
     saveAnswer,
     clearAnswers,
-    validateAnswer
+    validateAnswer,
+    forwardToCoach
   }
 }
