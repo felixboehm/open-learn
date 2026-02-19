@@ -65,14 +65,15 @@
                   {{ getTopicSourceLabel(topic) }}
                 </div>
               </div>
-              <div v-if="isRemoteTopic(topic)" class="flex items-center gap-1 flex-shrink-0">
+              <div class="flex items-center gap-1 flex-shrink-0">
                 <button
-                  @click.stop="copyShareLink(topic)"
+                  @click.stop="copyWorkshopLink(topic)"
                   class="p-1.5 rounded text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
-                  title="Copy share link">
+                  title="Copy link to workshop">
                   <span class="text-sm">{{ copiedTopic === topic ? '✓' : '🔗' }}</span>
                 </button>
                 <button
+                  v-if="isRemoteTopic(topic)"
                   @click.stop="removeSource(topic)"
                   class="p-1.5 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition"
                   title="Remove external source">
@@ -133,7 +134,7 @@ import { useLessons } from '../composables/useLessons'
 import { formatLangName } from '../utils/formatters'
 
 const router = useRouter()
-const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug, getTopicMeta, getShareUrl, getContentSources } = useLessons()
+const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug, getTopicMeta, getContentSources } = useLessons()
 
 const selectedLearning = ref(null)
 const selectedTeaching = ref(null)
@@ -186,9 +187,9 @@ function getTopicSourceLabel(topic) {
   }
 }
 
-async function copyShareLink(topic) {
-  const url = getShareUrl(topic)
-  if (!url) return
+async function copyWorkshopLink(topic) {
+  const base = window.location.href.replace(/#.*$/, '')
+  const url = `${base}#/${selectedLearning.value}/${topic}/lessons`
   try {
     await navigator.clipboard.writeText(url)
     copiedTopic.value = topic

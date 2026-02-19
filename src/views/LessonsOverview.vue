@@ -62,7 +62,7 @@ const router = useRouter()
 const route = useRoute()
 const emit = defineEmits(['update-title'])
 
-const { loadAllLessonsForTopic, isRemoteTopic, getSourceForSlug, getTopicMeta, getShareUrl } = useLessons()
+const { loadAllLessonsForTopic, isRemoteTopic, getSourceForSlug, getTopicMeta } = useLessons()
 
 const lessons = ref([])
 const isLoading = ref(true)
@@ -87,8 +87,8 @@ const sourceLabel = computed(() => {
 })
 
 async function copyShareLink() {
-  const url = getShareUrl(teaching.value)
-  if (!url) return
+  const base = window.location.href.replace(/#.*$/, '')
+  const url = `${base}#/${learning.value}/${teaching.value}/lessons`
   try {
     await navigator.clipboard.writeText(url)
     copied.value = true
