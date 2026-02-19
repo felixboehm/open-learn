@@ -1,0 +1,131 @@
+version: 2
+number: 3
+title: "Open Learn — Your Feedback"
+description: "Help shape the future of Open Learn! Share your thoughts on this free, open, and extensible learning platform. Your answers are stored locally — and optionally shared with us if you enable it in Settings."
+
+sections:
+  - title: "First Impressions"
+    explanation: |
+      **Open Learn** is a free, open-source platform for learning anything — languages, science, trivia, you name it.
+
+      It's:
+      - **Free** — no ads, no subscriptions, no tracking
+      - **Open** — anyone can create and share workshops
+      - **Extensible** — load content from URLs, IPFS, or your own server
+      - **Offline-friendly** — runs as a static site, no backend needed
+
+      We'd love to hear what you think. Your answers are saved in your browser for you to revisit.
+      If you'd like to share them with us, enable "Share Answers with Coach" in Settings.
+    examples:
+      - type: select
+        q: "How did you discover Open Learn?"
+        options:
+          - text: "GitHub"
+          - text: "A friend or colleague shared it"
+          - text: "Social media"
+          - text: "Search engine"
+
+      - type: select
+        q: "What is your overall first impression?"
+        options:
+          - text: "Looks great, I want to use it!"
+          - text: "Interesting concept, needs more content"
+          - text: "I like it but the UI needs work"
+          - text: "Not sure yet, still exploring"
+
+      - type: input
+        q: "In one sentence — what do you think makes Open Learn different from other learning platforms?"
+
+  - title: "How Would You Use It?"
+    explanation: |
+      Open Learn is designed to be a **general-purpose learning platform**.
+      The same system that teaches Portuguese vocabulary can also teach:
+      - Math formulas
+      - Driver's license theory
+      - Pilot ground school
+      - Cooking techniques
+      - Music theory
+      - ...anything with a question/answer structure
+    examples:
+      - type: multiple-choice
+        q: "What would you most like to learn with Open Learn? (pick all that apply)"
+        options:
+          - text: "A new language"
+          - text: "Professional skills or certifications"
+          - text: "Fun trivia and general knowledge"
+          - text: "School or university material"
+
+      - type: select
+        q: "Would you create your own workshop content?"
+        options:
+          - text: "Yes, I'd love to create workshops for others"
+          - text: "Maybe, if there were a visual editor"
+          - text: "No, I prefer to consume content others create"
+          - text: "I'm not sure yet"
+
+      - type: input
+        q: "What specific topic would you love to see a workshop for?"
+
+  - title: "Features & Wishes"
+    explanation: |
+      We're always looking for ideas. Here's what Open Learn already supports:
+      - **Lessons** with sections, examples, and explanations
+      - **Audio playback** with adjustable speed
+      - **Progress tracking** via learning items
+      - **Video embeds** per section
+      - **Assessment types** (quizzes with text input, multiple choice, single select)
+      - **External content** loaded from any URL or IPFS
+      - **Dark mode** and customizable display settings
+      - **Coach forwarding** so workshop creators can receive answers
+
+      What else would make it better?
+    examples:
+      - type: multiple-choice
+        q: "Which features are most important to you? (pick all that apply)"
+        options:
+          - text: "Audio / pronunciation support"
+          - text: "Progress tracking and statistics"
+          - text: "Quizzes and self-assessment"
+          - text: "Mobile-friendly design"
+
+      - type: select
+        q: "How important is it that Open Learn stays completely free and open-source?"
+        options:
+          - text: "Essential — that's the main appeal"
+          - text: "Important, but I'd pay for premium features"
+          - text: "Doesn't matter much to me"
+          - text: "I'd prefer a polished paid product"
+
+      - type: input
+        q: "What feature do you wish Open Learn had that it doesn't have yet?"
+
+      - type: input
+        q: "Any other thoughts, ideas, or feedback? We're all ears!"
+
+  - title: "About You (Optional)"
+    explanation: |
+      Totally optional — but it helps us understand who uses Open Learn.
+    examples:
+      - type: select
+        q: "What best describes you?"
+        options:
+          - text: "Student"
+          - text: "Teacher or trainer"
+          - text: "Self-learner / hobbyist"
+          - text: "Developer or tech enthusiast"
+
+      - type: select
+        q: "How tech-savvy would you say you are?"
+        options:
+          - text: "I can edit YAML files and host a static site"
+          - text: "I'm comfortable with computers but not coding"
+          - text: "I just want to click and learn"
+          - text: "I'm a developer and could contribute to Open Learn"
+
+      - type: select
+        q: "Would you recommend Open Learn to someone?"
+        options:
+          - text: "Absolutely!"
+          - text: "Probably, once there's more content"
+          - text: "Maybe, depends on their needs"
+          - text: "Not yet, it needs more work"
