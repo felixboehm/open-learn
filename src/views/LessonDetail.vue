@@ -100,25 +100,24 @@
                 :key="optIdx"
                 :class="[
                   'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
-                  getSubmission(example) && option.correct
+                  isDraftOptionSelected(example, optIdx) && option.correct
                     ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
+                    : isDraftOptionSelected(example, optIdx) && option.correct === false
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:bg-opacity-20'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
                 ]">
                 <input
                   type="checkbox"
                   :checked="isDraftOptionSelected(example, optIdx)"
                   @change="toggleDraftOption(example, optIdx)"
-                  :disabled="!!getSubmission(example)"
+                  :disabled="getMcLive(example) === true"
                   class="w-4 h-4 accent-primary-500" />
                 <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
               </label>
             </div>
-            <div v-if="isMcPending(example)" class="mt-2 text-sm text-gray-400 dark:text-gray-500">...</div>
-            <div v-else-if="getSubmission(example)" class="mt-2 text-sm font-semibold flex items-center gap-2">
-              <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
-              <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">Incorrect</span>
-              <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
-              <button @click.stop="resetAnswer(example)" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
+            <div v-if="getMcLive(example) === true" class="mt-2 text-sm font-semibold flex items-center gap-2">
+              <span class="text-green-600 dark:text-green-400">Correct</span>
+              <button @click.stop="resetAnswer(example); delete mcLive[draftKey(example)]" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
             </div>
           </template>
 
@@ -287,10 +286,8 @@ const coachRejection = ref(null)
 // Draft state for in-progress assessment answers (not persisted until submit)
 const drafts = reactive({})
 
-// Debounce timers for multiple-choice auto-submit
-const mcDebounceTimers = {}
-// Track which examples are pending debounce submission
-const mcPending = reactive({})
+// Live validation state for multiple-choice (reactive per-example)
+const mcLive = reactive({})
 
 // Convert YouTube watch/short URLs to embed URLs
 function normalizeVideoUrl(url) {
@@ -350,24 +347,26 @@ function toggleDraftOption(example, optIdx) {
   } else {
     drafts[key].splice(idx, 1)
   }
-  submitWithDebounce(example)
+  validateMcLive(example)
 }
 
-function submitWithDebounce(example, delayMs = 800) {
+function validateMcLive(example) {
   const key = draftKey(example)
-  if (mcDebounceTimers[key]) {
-    clearTimeout(mcDebounceTimers[key])
+  const selected = drafts[key]
+  if (!Array.isArray(selected) || selected.length === 0) {
+    delete mcLive[key]
+    return
   }
-  mcPending[key] = true
-  mcDebounceTimers[key] = setTimeout(() => {
-    mcPending[key] = false
-    delete mcDebounceTimers[key]
+  const correct = validateAnswer(example, selected)
+  mcLive[key] = correct
+  if (correct) {
     submitAnswer(example)
-  }, delayMs)
+  }
 }
 
-function isMcPending(example) {
-  return !!mcPending[draftKey(example)]
+function getMcLive(example) {
+  const key = draftKey(example)
+  return mcLive[key] ?? null
 }
 
 function onInputBlur(example) {
