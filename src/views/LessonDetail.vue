@@ -78,17 +78,15 @@
                 @input="setDraft(example, $event.target.value)"
                 @keyup.enter="submitAnswer(example)"
                 @blur="onInputBlur(example)"
-                :disabled="!!getSubmission(example)"
-                class="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 disabled:opacity-60"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200"
                 placeholder="Type your answer..." />
             </div>
-            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold flex items-center gap-2">
+            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
               <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
               <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">
                 Incorrect — {{ displayAnswer(example.a) }}
               </span>
               <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
-              <button @click.stop="resetAnswer(example)" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
             </div>
           </template>
 
@@ -110,14 +108,12 @@
                   type="checkbox"
                   :checked="isDraftOptionSelected(example, optIdx)"
                   @change="toggleDraftOption(example, optIdx)"
-                  :disabled="getMcLive(example) === true"
                   class="w-4 h-4 accent-primary-500" />
                 <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
               </label>
             </div>
-            <div v-if="getMcLive(example) === true" class="mt-2 text-sm font-semibold flex items-center gap-2">
+            <div v-if="getMcLive(example) === true" class="mt-2 text-sm font-semibold">
               <span class="text-green-600 dark:text-green-400">Correct</span>
-              <button @click.stop="resetAnswer(example); delete mcLive[draftKey(example)]" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
             </div>
           </template>
 
@@ -129,25 +125,25 @@
                 :key="optIdx"
                 :class="[
                   'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
-                  getSubmission(example) && option.correct
+                  getDraftSelect(example) === optIdx && option.correct
                     ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
+                    : getDraftSelect(example) === optIdx && option.correct === false
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:bg-opacity-20'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
                 ]">
                 <input
                   type="radio"
                   :name="`select-${example._originalSectionIdx}-${example._originalExampleIdx}`"
                   :checked="getDraftSelect(example) === optIdx"
                   @change="setDraftSelect(example, optIdx)"
-                  :disabled="!!getSubmission(example)"
                   class="w-4 h-4 accent-primary-500" />
                 <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
               </label>
             </div>
-            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold flex items-center gap-2">
+            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
               <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
               <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">Incorrect</span>
               <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
-              <button @click.stop="resetAnswer(example)" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
             </div>
           </template>
 
@@ -370,7 +366,6 @@ function getMcLive(example) {
 }
 
 function onInputBlur(example) {
-  if (getSubmission(example)) return
   if (!getDraft(example)) return
   submitAnswer(example)
 }
@@ -390,7 +385,6 @@ function getSubmission(example) {
 }
 
 function submitAnswer(example) {
-  if (getSubmission(example)) return
   const type = example.type || 'qa'
   let userAnswer
 
@@ -434,19 +428,6 @@ function submitAnswer(example) {
     // Reset send status when new answers are queued
     coachSendStatus.value = null
   }
-}
-
-function resetAnswer(example) {
-  const key = `${learning.value}:${teaching.value}:${lessonNumber.value}`
-  const itemKey = draftKey(example)
-
-  const { assessments } = useAssessments()
-  if (assessments.value[key]) {
-    delete assessments.value[key][itemKey]
-    localStorage.setItem('assessments', JSON.stringify(assessments.value))
-  }
-
-  delete drafts[itemKey]
 }
 
 // --- Coach batch sending ---
