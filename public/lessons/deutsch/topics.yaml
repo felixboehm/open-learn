@@ -3,3 +3,5 @@
 topics:
   - folder: portugiesisch
     code: pt-PT
+    coach:
+      email: "open-learn@felixboehm.it"
