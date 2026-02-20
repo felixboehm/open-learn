@@ -77,29 +77,18 @@
                 :value="getDraft(example)"
                 @input="setDraft(example, $event.target.value)"
                 @keyup.enter="submitAnswer(example)"
+                @blur="onInputBlur(example)"
                 :disabled="!!getSubmission(example)"
                 class="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 disabled:opacity-60"
                 placeholder="Type your answer..." />
-              <button
-                v-if="!getSubmission(example)"
-                @click="submitAnswer(example)"
-                :disabled="!getDraft(example)"
-                class="mt-2 px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition disabled:opacity-50">
-                Submit
-              </button>
-              <button
-                v-else
-                @click="resetAnswer(example)"
-                class="mt-2 px-3 py-1 text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                Reset
-              </button>
             </div>
-            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
+            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold flex items-center gap-2">
               <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
               <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">
                 Incorrect — {{ displayAnswer(example.a) }}
               </span>
               <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
+              <button @click.stop="resetAnswer(example)" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
             </div>
           </template>
 
@@ -123,24 +112,13 @@
                   class="w-4 h-4 accent-primary-500" />
                 <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
               </label>
-              <button
-                v-if="!getSubmission(example)"
-                @click="submitAnswer(example)"
-                :disabled="!hasDraftOptions(example)"
-                class="mt-2 px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition disabled:opacity-50">
-                Submit
-              </button>
-              <button
-                v-else
-                @click="resetAnswer(example)"
-                class="mt-2 px-3 py-1 text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                Reset
-              </button>
             </div>
-            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
+            <div v-if="isMcPending(example)" class="mt-2 text-sm text-gray-400 dark:text-gray-500">...</div>
+            <div v-else-if="getSubmission(example)" class="mt-2 text-sm font-semibold flex items-center gap-2">
               <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
               <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">Incorrect</span>
               <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
+              <button @click.stop="resetAnswer(example)" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
             </div>
           </template>
 
@@ -165,24 +143,12 @@
                   class="w-4 h-4 accent-primary-500" />
                 <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
               </label>
-              <button
-                v-if="!getSubmission(example)"
-                @click="submitAnswer(example)"
-                :disabled="getDraftSelect(example) === null"
-                class="mt-2 px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition disabled:opacity-50">
-                Submit
-              </button>
-              <button
-                v-else
-                @click="resetAnswer(example)"
-                class="mt-2 px-3 py-1 text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                Reset
-              </button>
             </div>
-            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
+            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold flex items-center gap-2">
               <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
               <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">Incorrect</span>
               <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
+              <button @click.stop="resetAnswer(example)" class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition">↺ Retry</button>
             </div>
           </template>
 
@@ -321,6 +287,11 @@ const coachRejection = ref(null)
 // Draft state for in-progress assessment answers (not persisted until submit)
 const drafts = reactive({})
 
+// Debounce timers for multiple-choice auto-submit
+const mcDebounceTimers = {}
+// Track which examples are pending debounce submission
+const mcPending = reactive({})
+
 // Convert YouTube watch/short URLs to embed URLs
 function normalizeVideoUrl(url) {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
@@ -360,6 +331,7 @@ function getDraftSelect(example) {
 
 function setDraftSelect(example, optIdx) {
   drafts[draftKey(example)] = optIdx
+  submitAnswer(example)
 }
 
 function isDraftOptionSelected(example, optIdx) {
@@ -378,6 +350,30 @@ function toggleDraftOption(example, optIdx) {
   } else {
     drafts[key].splice(idx, 1)
   }
+  submitWithDebounce(example)
+}
+
+function submitWithDebounce(example, delayMs = 800) {
+  const key = draftKey(example)
+  if (mcDebounceTimers[key]) {
+    clearTimeout(mcDebounceTimers[key])
+  }
+  mcPending[key] = true
+  mcDebounceTimers[key] = setTimeout(() => {
+    mcPending[key] = false
+    delete mcDebounceTimers[key]
+    submitAnswer(example)
+  }, delayMs)
+}
+
+function isMcPending(example) {
+  return !!mcPending[draftKey(example)]
+}
+
+function onInputBlur(example) {
+  if (getSubmission(example)) return
+  if (!getDraft(example)) return
+  submitAnswer(example)
 }
 
 function hasDraftOptions(example) {
@@ -395,6 +391,7 @@ function getSubmission(example) {
 }
 
 function submitAnswer(example) {
+  if (getSubmission(example)) return
   const type = example.type || 'qa'
   let userAnswer
 
