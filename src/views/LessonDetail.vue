@@ -173,34 +173,11 @@
 
       <!-- End of lesson actions -->
       <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-5 bg-white dark:bg-gray-800">
-        <!-- Coach rejection notice (shown once for the batch) -->
-        <div v-if="coachRejection" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border border-yellow-300 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
-          <span>{{ coachRejection.coachName || 'Coach' }} did not accept your submission. You may need to enroll in this workshop.</span>
-          <a
-            v-if="coachRejection.enrollUrl"
-            :href="coachRejection.enrollUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="ml-1 underline text-primary-500 dark:text-blue-400">
-            Enroll here
-          </a>
-        </div>
-
         <div class="flex flex-wrap gap-3">
-          <!-- Send answers to coach button -->
-          <button
-            v-if="lesson.coach && settings.coachConsent"
-            @click="sendAnswersToCoach"
-            :disabled="!hasQueuedAnswers()"
-            class="px-5 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
-            {{ coachSendStatus === 'sent' ? 'Sent!' : coachSendStatus === 'sending' ? 'Sending...' : `Send Answers to Coach (${coachQueue.length})` }}
-          </button>
-
           <!-- Next lesson button -->
           <router-link
             v-if="nextLessonNumber"
             :to="`/${learning}/${teaching}/lesson/${nextLessonNumber}`"
-            @click.native="flushOnLeave"
             class="px-5 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 transition inline-block">
             Next Lesson
           </router-link>
@@ -208,7 +185,6 @@
           <!-- Back to overview -->
           <router-link
             :to="`/${learning}/${teaching}/lessons`"
-            @click.native="flushOnLeave"
             class="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition inline-block">
             All Lessons
           </router-link>
@@ -260,14 +236,10 @@ const { loadAllLessonsForTopic } = useLessons()
 const { settings } = useSettings()
 const { isItemLearned, toggleItemLearned, areAllItemsLearned, progress } = useProgress()
 const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanup, play, pause } = useAudio()
-const { getAnswer, saveAnswer, validateAnswer, queueForCoach, hasQueuedAnswers, flushCoachQueue, flushCoachQueueSync, clearCoachQueue, coachQueue } = useAssessments()
+const { getAnswer, saveAnswer, validateAnswer } = useAssessments()
 
 const lesson = ref(null)
 const allLessons = ref([])
-
-// Coach batch status
-const coachSendStatus = ref(null) // null | 'sending' | 'sent'
-const coachRejection = ref(null)
 
 // Draft state for in-progress assessment answers (not persisted until submit)
 const drafts = reactive({})
@@ -406,62 +378,6 @@ function submitAnswer(example) {
     example._originalSectionIdx, example._originalExampleIdx,
     { type, answer: userAnswer, correct }
   )
-
-  // Queue for batch coach forwarding (instead of sending immediately)
-  if (lesson.value?.coach) {
-    const section = lesson.value.sections[example._originalSectionIdx]
-    queueForCoach(
-      {
-        learning: learning.value,
-        teaching: teaching.value,
-        number: lessonNumber.value,
-        title: lesson.value.title
-      },
-      {
-        section: { index: example._originalSectionIdx, title: section?.title },
-        example: { index: example._originalExampleIdx, type, question: example.q },
-        answer: { value: userAnswer, correct }
-      }
-    )
-    // Reset send status when new answers are queued
-    coachSendStatus.value = null
-  }
-}
-
-// --- Coach batch sending ---
-
-async function sendAnswersToCoach() {
-  if (!lesson.value?.coach || !hasQueuedAnswers()) return
-
-  coachSendStatus.value = 'sending'
-  const result = await flushCoachQueue(lesson.value.coach, settings.value)
-
-  if (result?.ok) {
-    coachSendStatus.value = 'sent'
-    coachRejection.value = null
-  } else if (result && !result.ok) {
-    coachSendStatus.value = null
-    coachRejection.value = {
-      enrollUrl: result.enrollUrl,
-      coachName: lesson.value.coach.name
-    }
-  } else {
-    coachSendStatus.value = null
-  }
-}
-
-// Flush queue on page/tab close via sendBeacon
-function handleBeforeUnload() {
-  if (lesson.value?.coach) {
-    flushCoachQueueSync(lesson.value.coach, settings.value)
-  }
-}
-
-// Flush queue when navigating away from lesson
-function flushOnLeave() {
-  if (lesson.value?.coach && hasQueuedAnswers()) {
-    flushCoachQueue(lesson.value.coach, settings.value)
-  }
 }
 
 // --- Restore drafts from saved answers on mount ---
@@ -617,22 +533,10 @@ onMounted(async () => {
 
     // Restore drafts from previously saved assessment answers
     restoreDraftsFromSaved()
-
-    // Clear any leftover coach queue from a previous lesson
-    clearCoachQueue()
   }
-
-  // Flush coach queue on tab/window close
-  window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 onBeforeUnmount(() => {
   cleanup()
-  window.removeEventListener('beforeunload', handleBeforeUnload)
-
-  // Flush remaining answers when navigating away
-  if (lesson.value?.coach && hasQueuedAnswers()) {
-    flushCoachQueue(lesson.value.coach, settings.value)
-  }
 })
 </script>

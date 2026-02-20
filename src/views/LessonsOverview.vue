@@ -36,6 +36,15 @@
       </div>
     </div>
 
+    <!-- Assessment results link -->
+    <div v-if="!isLoading && lessons.length > 0" class="mt-6">
+      <router-link
+        :to="`/${learning}/${teaching}/results`"
+        class="inline-block px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+        Assessment Results
+      </router-link>
+    </div>
+
     <!-- Loading state -->
     <div v-else-if="isLoading" class="text-center py-8">
       <div class="text-2xl font-bold text-primary-500 dark:text-blue-400 mb-4">

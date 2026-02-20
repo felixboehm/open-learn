@@ -9,9 +9,7 @@ const settings = ref({
   audioSpeed: 1.0, // Audio playback speed: 0.6, 0.8, 1.0
   readAnswers: true, // Whether to read the answer/translation during auto-play
   hideLearnedExamples: true, // Whether to hide examples where all items are learned
-  showDebugOverlay: false, // Show debug overlay for audio playback
-  coachConsent: false, // Global consent to forward answers to coach APIs
-  coachIdentifier: '' // Optional email/username for coach identification
+  showDebugOverlay: false // Show debug overlay for audio playback
 })
 
 let isInitialized = false
@@ -84,14 +82,6 @@ function initializeWatchers() {
   })
 
   watch(() => settings.value.showDebugOverlay, () => {
-    saveSettings()
-  })
-
-  watch(() => settings.value.coachConsent, () => {
-    saveSettings()
-  })
-
-  watch(() => settings.value.coachIdentifier, () => {
     saveSettings()
   })
 }
