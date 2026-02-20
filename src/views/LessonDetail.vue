@@ -51,13 +51,15 @@
             isCurrentlyReading(example) && isPaused
               ? 'ring-4 ring-orange-400 dark:ring-orange-600'
               : '',
-            example.labels
-              ? 'bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border-l-4 border-blue-500'
-              : 'bg-orange-50 dark:bg-orange-900 dark:bg-opacity-20 border-l-4 border-orange-500'
+            isAssessmentCorrect(example)
+              ? 'bg-green-50 dark:bg-green-900 dark:bg-opacity-30 border-l-4 border-green-500'
+              : example.labels
+                ? 'bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border-l-4 border-blue-500'
+                : 'bg-orange-50 dark:bg-orange-900 dark:bg-opacity-20 border-l-4 border-orange-500'
           ]">
           <!-- Question -->
           <div class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-            {{ example.q }}
+            <span v-if="isAssessmentCorrect(example)" class="text-green-600 dark:text-green-400 mr-1">✓</span>{{ example.q }}
           </div>
 
           <!-- Type: qa (default) -->
@@ -81,12 +83,8 @@
                 class="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200"
                 placeholder="Type your answer..." />
             </div>
-            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
-              <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
-              <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">
-                Incorrect — {{ displayAnswer(example.a) }}
-              </span>
-              <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
+            <div v-if="getSubmission(example) && getSubmission(example).correct === false" class="mt-2 text-sm font-semibold text-red-600 dark:text-red-400">
+              {{ displayAnswer(example.a) }}
             </div>
           </template>
 
@@ -112,9 +110,6 @@
                 <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
               </label>
             </div>
-            <div v-if="getMcLive(example) === true" class="mt-2 text-sm font-semibold">
-              <span class="text-green-600 dark:text-green-400">Correct</span>
-            </div>
           </template>
 
           <!-- Type: select -->
@@ -139,11 +134,6 @@
                   class="w-4 h-4 accent-primary-500" />
                 <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
               </label>
-            </div>
-            <div v-if="getSubmission(example)" class="mt-2 text-sm font-semibold">
-              <span v-if="getSubmission(example).correct === true" class="text-green-600 dark:text-green-400">Correct</span>
-              <span v-else-if="getSubmission(example).correct === false" class="text-red-600 dark:text-red-400">Incorrect</span>
-              <span v-else class="text-gray-500 dark:text-gray-400">Submitted</span>
             </div>
           </template>
 
@@ -295,6 +285,14 @@ function normalizeVideoUrl(url) {
 // Check if example is an assessment type (not plain qa)
 function isAssessmentType(example) {
   return example.type && example.type !== 'qa'
+}
+
+// Check if an assessment example is answered correctly
+function isAssessmentCorrect(example) {
+  if (!isAssessmentType(example)) return false
+  if (example.type === 'multiple-choice') return getMcLive(example) === true
+  const sub = getSubmission(example)
+  return sub?.correct === true
 }
 
 // Display answer - handles both string and array formats
