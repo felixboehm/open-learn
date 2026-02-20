@@ -248,6 +248,7 @@ function generateReport() {
     }
 
     for (const section of entry.sections) {
+      lines.push('')
       lines.push(`  Section: ${section.title}`)
       for (const ex of section.examples) {
         if (ex.answered) {
@@ -258,6 +259,7 @@ function generateReport() {
         } else {
           lines.push(`    [  ] ${ex.question} -> (not answered)`)
         }
+        lines.push('')
       }
     }
     lines.push('')
