@@ -19,10 +19,10 @@ function parseSource(source) {
   }
   if (typeof source === 'object') {
     if (source.folder) {
-      return { type: 'folder', path: source.folder, code: source.code, title: source.title || null, description: source.description || null }
+      return { type: 'folder', path: source.folder, code: source.code, title: source.title || null, description: source.description || null, coach: source.coach || null }
     }
     if (source.url) {
-      return { type: 'url', path: resolveUrl(source.url), code: source.code, title: source.title || null, description: source.description || null }
+      return { type: 'url', path: resolveUrl(source.url), code: source.code, title: source.title || null, description: source.description || null, coach: source.coach || null }
     }
   }
   return null
@@ -168,7 +168,8 @@ export function useLessons() {
             }
             topicMeta.value[langKey][slug] = {
               title: topicSource.title || null,
-              description: topicSource.description || null
+              description: topicSource.description || null,
+              coach: topicSource.coach || null
             }
 
             console.log(`  ✓ Remote topic: ${slug} → ${topicUrl} (${topicSource.code || 'no code'})`)
@@ -286,7 +287,8 @@ export function useLessons() {
         }
         topicMeta.value[lang][key] = {
           title: source.title || null,
-          description: source.description || null
+          description: source.description || null,
+          coach: source.coach || null
         }
 
         console.log(`  ✓ Topic: ${key} (${source.type}) (${source.code || 'no code'})`)

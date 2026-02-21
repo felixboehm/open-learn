@@ -120,8 +120,14 @@ topics:
   - string                      # Backward compatible: folder name
   - folder: string              # Local folder source
     code: string
+    coach:                      # Optional: workshop coach
+      email: string
+      name: string
   - url: string                 # Remote URL source (HTTP/HTTPS/IPFS)
     code: string
+    coach:                      # Optional: workshop coach
+      email: string
+      name: string
 ```
 
 ### Fields
@@ -131,11 +137,17 @@ topics:
   - **Object format with `folder`**:
     - **folder** (string, required): Directory name for this topic (e.g., "portugiesisch", "math-algebra")
     - **code** (string, optional): Language/locale code for text-to-speech (BCP 47 format)
+    - **coach** (object, optional): Workshop coach configuration
+      - **email** (string, required): Coach's email address for `mailto:` results
+      - **name** (string, optional): Coach or workshop name displayed in the UI
   - **Object format with `url`**:
     - **url** (string, required): Remote URL to the topic folder
     - **code** (string, optional): Language/locale code for text-to-speech
+    - **coach** (object, optional): Workshop coach configuration (same fields as above)
 
 For language topics, use the target language code (e.g., "pt-PT" for Portuguese). For non-language topics, use the base language code.
+
+When `coach` is configured, the Assessment Results page (`/:learning/:teaching/results`) shows a "Send Results via Email" button that opens the user's email client with a plain-text report.
 
 ### Example
 
@@ -143,9 +155,11 @@ For language topics, use the target language code (e.g., "pt-PT" for Portuguese)
 # Available topics for German language
 # This file lists all topics available in the German interface
 topics:
-  # Object format with folder
+  # Object format with folder + coach
   - folder: portugiesisch
     code: pt-PT
+    coach:
+      email: "coach@example.com"
 
   # String format (backward compatible)
   - englisch

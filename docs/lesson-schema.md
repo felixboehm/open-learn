@@ -71,9 +71,6 @@ version: 2                          # Lesson format version (integer, optional)
 number: 1                           # Lesson number (integer)
 title: "Lesson Title"               # Lesson title (string)
 description: "Brief description"    # Optional lesson description
-coach:                              # Optional: coach API for answer forwarding
-  api: "https://coach.example.com/api/answers"
-  name: "Coach Name"                # Optional: displayed in UI
 sections: [...]                     # Array of sections (see below)
 ```
 
@@ -83,37 +80,6 @@ sections: [...]                     # Array of sections (see below)
 - Used to track lesson format changes and ensure compatibility
 - Version 1 content is fully backward compatible
 - If omitted, assumed to be version 1
-
-### Coach Configuration (Optional)
-
-The `coach` field enables answer forwarding to a workshop coach's server:
-
-- **api** (string, required): HTTP endpoint that receives POST requests with answer data
-- **name** (string, optional): Coach or workshop name displayed in the UI
-
-The user must opt-in via Settings > Workshop > "Share Answers with Coach" before any data is sent. Users can optionally provide an email/username for identification.
-
-**API Contract — `POST {coach.api}`:**
-
-```json
-{
-  "lesson": {
-    "learning": "deutsch",
-    "teaching": "portugiesisch",
-    "number": 1,
-    "title": "Lesson Title"
-  },
-  "section": { "index": 0, "title": "Section Title" },
-  "example": { "index": 0, "type": "input", "question": "Translate: ..." },
-  "answer": { "value": "user's answer", "correct": true },
-  "user": "user@example.com",
-  "timestamp": "2026-02-19T10:30:00.000Z"
-}
-```
-
-- `user` is only included if the user provided an identifier in settings
-- `answer.correct` is `null` if no correct answer is defined
-- Coach can return `401` to reject unauthorized users; optionally include `{ "enrollUrl": "https://..." }` in the response body
 
 ### Section Structure
 
