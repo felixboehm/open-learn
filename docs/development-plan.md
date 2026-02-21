@@ -4,69 +4,60 @@
 
 This plan covers documentation improvements, bug fixes, and code quality improvements for the Open Learn project. It was created after a comprehensive code audit in February 2026.
 
----
-
-## Priority 1: Documentation (Reza Onboarding)
-
-### 1.1 Feature List (`docs/features.md`)
-Comprehensive inventory of all features with status, location, and description. Allows Reza (and future contributors) to quickly see what exists.
-
-### 1.2 Architecture Decision Records (`docs/adr/`)
-Document key decisions that shaped the project:
-- Frontend-only, no backend
-- localStorage for persistence
-- YAML for content
-- Hash-based routing for GitHub Pages
-- Composable singleton pattern
-- Coach as optional external service
-
-### 1.3 Update CLAUDE.md
-Missing from current documentation:
-- `useAssessments.js` composable (not mentioned at all)
-- Click-to-save assessment behavior
-- Coach system overview
-- Route `/add` (AddSource)
-- Settings: `coachConsent`, `coachIdentifier`
-- Terminology: Workshop vs Topic vs Lesson
-
-### 1.4 Update README.md
-Add to features list:
-- Assessment system (input, multiple-choice, select)
-- Coach answer forwarding
-- Export/Import user data
-- Click-to-save auto-validation
+**Last updated**: 2026-02-21
 
 ---
 
-## Priority 2: Bug Fixes
+## Completed Work
 
-### 2.1 MC Checkmark Lost on Reload
-**File**: `src/views/LessonDetail.vue`
-**Bug**: `isAssessmentCorrect()` for multiple-choice only checks `mcLive` (in-memory reactive object), not the persisted submission in localStorage. After page reload, `mcLive` is empty, so the green checkmark and card styling disappear.
-**Fix**: Also check `getSubmission(example)?.correct` as fallback.
+### PR #32 — Documentation, Bug Fixes, Security, Accessibility
 
-### 2.2 `@click.native` Vue 2 Syntax
-**File**: `src/views/LessonDetail.vue`
-**Bug**: `@click.native="flushOnLeave"` on `<router-link>` is Vue 2 syntax. Vue 3 emits native events by default — `.native` modifier is silently ignored, meaning `flushOnLeave` never fires.
-**Fix**: Replace with `@click="flushOnLeave"`.
+#### Documentation (Reza Onboarding)
+- [x] `docs/features.md` — comprehensive feature inventory
+- [x] `docs/adr/` — 7 Architecture Decision Records (frontend-only, localStorage, YAML, hash routing, singleton pattern, coach external, keep-it-simple)
+- [x] `CLAUDE.md` — added useAssessments, coach system, `/add` route, terminology, settings
+- [x] `README.md` — updated features list (assessments, coach, export/import, workshops)
+
+#### Bug Fixes
+- [x] MC checkmark lost on reload — `isAssessmentCorrect()` now falls back to `getSubmission()?.correct`
+- [x] `@click.native` Vue 2 syntax — replaced with `@click` (2 occurrences in LessonDetail.vue)
+
+#### Security
+- [x] DOMPurify sanitization for `v-html="marked(section.explanation)"` (remote lesson XSS protection)
+
+#### Accessibility
+- [x] `aria-label` on all emoji buttons in `App.vue` and `LessonDetail.vue`
+
+### PR #33 — Unit Test Coverage
+
+- [x] `tests/progress.test.js` — 22 tests (toggle, areAllItemsLearned, load, merge, localStorage)
+- [x] `tests/lessons.test.js` — 24 tests (content sources CRUD, topic resolution, codes, YAML loading)
+- [x] `tests/audio.test.js` — 18 tests (initial state, play/pause/stop, queue building, audio URLs)
+- [x] `tests/formatters.test.js` — 6 tests (formatLangName with known names, URLs, hyphens)
+- Total: **26 → 96 unit tests**
 
 ---
 
-## Priority 3: Security
+## Remaining Work
 
-### 3.1 Sanitize Markdown Output
-**File**: `src/views/LessonDetail.vue`
-**Risk**: `v-html="marked(section.explanation)"` renders unsanitized HTML. Remote lessons could inject scripts.
-**Fix**: Add DOMPurify: `v-html="DOMPurify.sanitize(marked(section.explanation))"`.
+### Test Coverage Gaps
 
----
+| File | Coverage | Priority | Notes |
+|------|----------|----------|-------|
+| useProgress.js | ~90% | Done | PR #33 |
+| useLessons.js | ~70% | Done | PR #33 — remote source loading untested |
+| useAudio.js | ~60% | Done | PR #33 — playback flow partially tested |
+| formatters.js | ~100% | Done | PR #33 |
+| useSettings.js | ~30% | Low | Only dark-mode toggle tested |
+| useAssessments.js | ~60% | Medium | Validation + persistence tested, coach queue tested |
+| LessonDetail.vue | 0% | Medium | Component tests not yet written |
+| E2E assessment flow | 0% | Medium | No E2E for click-to-save assessment UX |
 
-## Priority 4: Accessibility
+### Code Quality (nice-to-have)
 
-### 4.1 Aria Labels for Emoji Buttons
-**File**: `src/App.vue`, `src/views/LessonDetail.vue`
-**Issue**: Buttons with emoji-only text (🏠, ←, ▶️, ⏸, ⚙️, ✓) are not screen-reader accessible.
-**Fix**: Add `aria-label` to each button.
+- [ ] localStorage quota handling (try/catch around setItem)
+- [ ] Cross-tab sync for progress/settings (storage event listener)
+- [ ] Mobile keyboard blur issue on input assessments
 
 ---
 
@@ -80,13 +71,3 @@ Add to features list:
 | #29 | Assessment Results button in top nav | Low |
 | #30 | Result Page improvements (sent tracking, change detection) | Medium |
 | #31 | Enable/fix section videos (local + YouTube) | Low |
-
-## Test Coverage Gaps (for future improvement)
-
-| File | Current Coverage | Priority |
-|------|-----------------|----------|
-| useProgress.js | 0% | High — simple, good first task |
-| useLessons.js | 0% | High — core content loading |
-| useAudio.js | 0% | Medium — complex, 727 lines |
-| LessonDetail.vue | 0% | Medium — main user flow |
-| E2E assessment flow | 0% | High — critical path |
