@@ -10,7 +10,8 @@
             v-if="canGoBack && route.name !== 'lesson-detail'"
             @click="goHome"
             class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-10 h-10 rounded-full text-xl hover:bg-opacity-30 transition-all flex items-center justify-center flex-shrink-0"
-            title="Go to home">
+            title="Go to home"
+            aria-label="Go to home">
             🏠
           </button>
 
@@ -19,7 +20,8 @@
             v-if="route.name === 'lesson-detail'"
             @click="goBackToLessons"
             class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-all flex items-center gap-1 text-sm flex-shrink-0"
-            title="Back to lessons">
+            title="Back to lessons"
+            aria-label="Back to lessons">
             ←
           </button>
         </div>
@@ -36,7 +38,8 @@
             v-if="isLessonPage"
             @click="togglePlayPause"
             class="hidden md:flex bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all items-center justify-center flex-shrink-0"
-            :title="isPlaying ? 'Pause' : 'Play'">
+            :title="isPlaying ? 'Pause' : 'Play'"
+            :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
             {{ isPlaying ? '⏸' : '▶️' }}
           </button>
 
@@ -45,7 +48,8 @@
             v-if="canShowItemsButton"
             @click="goToItems"
             class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all flex-shrink-0"
-            title="Learning Items">
+            title="Learning Items"
+            aria-label="Learning items">
             📚
           </button>
 
@@ -54,7 +58,8 @@
             v-if="route.name !== 'settings'"
             @click="goToSettings"
             class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all hover:rotate-90 flex-shrink-0"
-            title="Settings">
+            title="Settings"
+            aria-label="Settings">
             ⚙️
           </button>
 
@@ -63,7 +68,8 @@
             v-if="route.name === 'settings'"
             @click="goBack"
             class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all flex-shrink-0"
-            title="Done">
+            title="Done"
+            aria-label="Done">
             ✓
           </button>
         </div>

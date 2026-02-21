@@ -6,11 +6,15 @@ A modern, static single-page web application for learning any topic through prac
 
 - **📚 Topic-Based Learning**: Organized lessons with sections and examples for any subject
 - **🌐 Multi-Language Interface**: Learn any topic in your preferred language
-- **🔊 Audio Reading**: Pre-recorded MP3 audio for listening to examples
-- **📊 Progress Tracking**: Mark items as learned with LocalStorage persistence
+- **🔊 Audio Reading**: Pre-recorded MP3 audio with variable speed and lock screen controls
+- **📊 Progress Tracking**: Mark vocabulary items as learned with LocalStorage persistence
+- **✅ Interactive Assessments**: Text input, multiple-choice, and single-select with auto-validation (click-to-save)
+- **🤝 Coach Integration**: Optional batch forwarding of assessment answers to external coach services
+- **🌍 External Workshops**: Add remote content sources hosted on GitHub Pages, IPFS, or any CDN
+- **💾 Export / Import**: Per-topic backup and restore of progress and assessment data
 - **🌓 Dark Mode**: Toggle between light and dark themes
 - **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
-- **🚀 Static Deployment**: Easy deployment to GitHub Pages
+- **🚀 Static Deployment**: No backend required — easy deployment to GitHub Pages
 - **📝 YAML-Based Content**: Simple, human-readable lesson format
 
 ## 🛠 Tech Stack

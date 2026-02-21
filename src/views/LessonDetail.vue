@@ -33,7 +33,7 @@
         <div
           v-if="section.explanation"
           class="bg-gray-100 dark:bg-gray-900 p-4 rounded mb-4 prose prose-sm dark:prose-invert max-w-none"
-          v-html="marked(section.explanation)">
+          v-html="DOMPurify.sanitize(marked(section.explanation))">
         </div>
 
         <!-- Examples -->
@@ -200,7 +200,7 @@
           <router-link
             v-if="nextLessonNumber"
             :to="`/${learning}/${teaching}/lesson/${nextLessonNumber}`"
-            @click.native="flushOnLeave"
+            @click="flushOnLeave"
             class="px-5 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 transition inline-block">
             Next Lesson
           </router-link>
@@ -208,7 +208,7 @@
           <!-- Back to overview -->
           <router-link
             :to="`/${learning}/${teaching}/lessons`"
-            @click.native="flushOnLeave"
+            @click="flushOnLeave"
             class="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition inline-block">
             All Lessons
           </router-link>
@@ -236,7 +236,8 @@
       v-if="lesson"
       @click="togglePlayPause"
       class="md:hidden fixed bottom-6 right-6 w-16 h-16 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all flex items-center justify-center text-3xl z-50"
-      :title="isPlaying ? 'Pause' : 'Play'">
+      :title="isPlaying ? 'Pause' : 'Play'"
+      :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
       {{ isPlaying ? '⏸' : '▶️' }}
     </button>
   </div>
@@ -251,6 +252,7 @@ import { useProgress } from '../composables/useProgress'
 import { useAudio } from '../composables/useAudio'
 import { useAssessments } from '../composables/useAssessments'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -290,8 +292,10 @@ function isAssessmentType(example) {
 // Check if an assessment example is answered correctly
 function isAssessmentCorrect(example) {
   if (!isAssessmentType(example)) return false
-  if (example.type === 'multiple-choice') return getMcLive(example) === true
   const sub = getSubmission(example)
+  if (example.type === 'multiple-choice') {
+    return getMcLive(example) === true || sub?.correct === true
+  }
   return sub?.correct === true
 }
 

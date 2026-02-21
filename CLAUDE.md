@@ -40,13 +40,15 @@ open-learn/
 │   ├── views/             # Page components
 │   │   ├── Home.vue       # Topic selection page
 │   │   ├── LessonsOverview.vue  # Lessons grid page
-│   │   ├── LessonDetail.vue     # Individual lesson page
+│   │   ├── LessonDetail.vue     # Individual lesson page (assessments, audio, progress)
 │   │   ├── LearningItems.vue    # Learning items browser
-│   │   └── Settings.vue   # Settings page
-│   ├── composables/       # Reusable composition functions
-│   │   ├── useLessons.js  # Lesson loading logic with js-yaml
+│   │   ├── Settings.vue   # Settings page (preferences, coach, export/import)
+│   │   └── AddSource.vue  # Add external workshop page
+│   ├── composables/       # Reusable composition functions (singleton pattern)
+│   │   ├── useLessons.js  # Lesson loading logic with js-yaml + remote sources
 │   │   ├── useSettings.js # Settings persistence logic
-│   │   ├── useProgress.js # Progress tracking logic
+│   │   ├── useProgress.js # Progress tracking logic (learning items)
+│   │   ├── useAssessments.js  # Assessment answers, validation, coach queue
 │   │   └── useAudio.js    # Audio playback system
 │   └── utils/
 │       └── formatters.js  # Display name formatting
@@ -66,12 +68,19 @@ open-learn/
 │       │       └── ...
 │       └── README.md      # Lesson system documentation
 ├── docs/
+│   ├── features.md        # Complete feature inventory
+│   ├── development-plan.md # Current development plan
 │   ├── lesson-schema.md   # Individual lesson YAML schema documentation
 │   ├── yaml-schemas.md    # Index YAML schemas (languages/topics/lessons)
-│   └── audio-system.md    # Audio playback documentation
+│   ├── audio-system.md    # Audio playback documentation
+│   ├── external-workshop-guide.md  # Guide for creating external workshops
+│   ├── lesson-plan-template.md     # Lesson planning guide
+│   └── adr/               # Architecture Decision Records
 ├── tests/
-│   ├── basic.test.js      # Unit tests
+│   ├── basic.test.js      # Basic sanity tests
 │   ├── dark-mode.test.js  # Dark mode toggle tests
+│   ├── assessments.test.js      # Assessment validation + persistence tests
+│   ├── coach-forwarding.test.js # Coach batch queue + API tests
 │   └── e2e/
 │       └── app.spec.js    # Playwright E2E tests
 ├── vite.config.js         # Vite config (base: '/open-learn/')
@@ -122,20 +131,28 @@ pnpm test:e2e
 - `LessonDetail.vue` - Individual lesson page (route: `/:learning/:teaching/lesson/:number`)
 - `LearningItems.vue` - Learning items browser (route: `/:learning/:teaching/items/:number?`)
 - `Settings.vue` - Settings page (route: `/settings`)
+- `AddSource.vue` - Add external workshop (route: `/add?source=URL`)
 
-**Composables** (Reusable logic):
+**Composables** (Reusable logic, all use singleton pattern — see `docs/adr/005`):
 - `useLessons()` - Lesson loading with js-yaml parser
-  - `loadAvailableContent()` - Load main lesson index
+  - `loadAvailableContent()` - Load main lesson index + registered content sources
   - `loadTopicsForLanguage(lang)` - Load topics for a language
   - `loadAllLessonsForTopic(lang, topic)` - Load all lessons for a topic
-- `useSettings()` - Settings management (singleton pattern)
+  - Content source management (add/remove external workshops)
+  - IPFS URL resolution
+- `useSettings()` - Settings management
   - Shared reactive state across all components
   - Automatic localStorage persistence via watchers
   - Dark mode toggle with DOM class manipulation
   - Settings loaded on app initialization in `main.js`
-- `useProgress()` - Progress tracking (singleton pattern)
+- `useProgress()` - Progress tracking
   - Track learned items per language/topic combination
   - Persisted to localStorage
+- `useAssessments()` - Assessment system
+  - Answer validation for input, multiple-choice, select types
+  - Save/load answers to/from localStorage
+  - Coach queue: batch answer forwarding to external coach API
+  - `flushCoachQueue()` (async POST) and `flushCoachQueueSync()` (sendBeacon for page close)
 - `useAudio()` - Audio playback system
   - Pre-loads MP3 files per lesson
   - Media Session API for lock screen controls
@@ -147,6 +164,7 @@ pnpm test:e2e
 - `#/:learning/:teaching/lesson/:number` - Lesson detail view
 - `#/:learning/:teaching/items/:number?` - Learning items
 - `#/settings` - Settings panel
+- `#/add?source=URL` - Add external workshop
 
 Uses hash-based routing (`createWebHashHistory`) for GitHub Pages compatibility.
 
@@ -233,6 +251,8 @@ See `docs/lesson-schema.md` for individual lesson documentation and `docs/yaml-s
 - `readAnswers` (boolean): Include answers in audio playback
 - `hideLearnedExamples` (boolean): Filter out learned examples
 - `showDebugOverlay` (boolean): Debug info overlay
+- `coachConsent` (boolean): Opt-in to forward answers to workshop coach
+- `coachIdentifier` (string): Name/email sent with coach submissions
 
 ## Adding New Content
 
@@ -279,14 +299,44 @@ See `docs/lesson-schema.md` for individual lesson documentation and `docs/yaml-s
 
 See `docs/yaml-schemas.md` for detailed documentation on all index file schemas.
 
+## Terminology
+
+| Term | Code variable | Meaning |
+|------|--------------|---------|
+| **Language** | `learning` | Interface language the user knows (e.g. `deutsch`) |
+| **Topic** | `teaching` | Subject being learned (e.g. `portugiesisch`) |
+| **Lesson** | `lesson` | Single learning unit, numbered (e.g. `01-essential-verbs`) |
+| **Workshop** | — | External topic from a remote URL (synonym for "external content source") |
+| **Learning Item** | `rel` | Vocabulary/concept from examples, tracked as learned/unlearned |
+| **Coach** | `lesson.coach` | Optional external service receiving assessment answers |
+
+## Assessment System
+
+Examples can have a `type` field for interactive assessments (default is `qa` which just shows question + answer).
+
+**Types**: `input` (text field), `multiple-choice` (checkboxes), `select` (radio buttons)
+
+**Click-to-Save**: No submit buttons. Answers auto-validate on interaction:
+- `input`: validates on Enter key or blur
+- `select`: validates immediately on radio click
+- `multiple-choice`: live per-option feedback (green/red borders), saves when all correct
+
+**Visual feedback**: Correct assessments show ✓ before the question and a green card background. Answers are always re-editable (no locked state).
+
+**Coach integration**: If `lesson.coach` is defined and user has `coachConsent`, answers are queued and batch-sent to the coach API.
+
+See `docs/features.md` for the complete feature inventory and `docs/adr/` for architectural decisions.
+
 ## Testing
 
 ### Unit Tests (Vitest)
-- `tests/basic.test.js`: Basic app initialization
-- `tests/dark-mode.test.js`: Dark mode toggle functionality
+- `tests/basic.test.js`: Basic sanity checks
+- `tests/dark-mode.test.js`: Dark mode toggle + persistence
+- `tests/assessments.test.js`: Assessment validation, save/load, clear (15 tests)
+- `tests/coach-forwarding.test.js`: Coach queue, batch sending, consent (11 tests)
 
 ### E2E Tests (Playwright)
-- `tests/e2e/app.spec.js`: Full user flow testing
+- `tests/e2e/app.spec.js`: Page load, HTML structure, dark mode
 
 ## Deployment
 
@@ -312,6 +362,6 @@ See `docs/yaml-schemas.md` for detailed documentation on all index file schemas.
 - Dark mode: Tailwind `dark:` classes + `<html class="dark">` toggle via useSettings composable
 - YAML parsing uses js-yaml library for full spec support
 - Markdown rendering uses marked library for section explanations
-- Composables pattern for shared logic (useLessons, useSettings, useProgress, useAudio)
+- Composables pattern for shared logic (useLessons, useSettings, useProgress, useAssessments, useAudio)
 - Navigation state is managed by Vue Router - no manual view switching
 - Dynamic page titles based on route and content
