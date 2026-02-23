@@ -22,13 +22,23 @@
         <CardContent class="p-0">
           <!-- Video -->
           <div v-if="section.video" class="mb-4">
+            <!-- YouTube embed -->
             <iframe
+              v-if="isYouTubeUrl(section.video)"
               :src="normalizeVideoUrl(section.video)"
               class="w-full aspect-video rounded"
               frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen>
             </iframe>
+            <!-- Local video file -->
+            <video
+              v-else
+              :src="resolveVideoPath(section.video)"
+              class="w-full aspect-video rounded"
+              controls
+              preload="metadata">
+            </video>
           </div>
 
           <!-- Explanation -->
@@ -261,11 +271,33 @@ const drafts = reactive({})
 // Live validation state for multiple-choice (reactive per-example)
 const mcLive = reactive({})
 
+// Check if a URL is a YouTube link
+function isYouTubeUrl(url) {
+  return /(?:youtube\.com|youtu\.be)/.test(url)
+}
+
 // Convert YouTube watch/short URLs to embed URLs
 function normalizeVideoUrl(url) {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)
   if (match) return `https://www.youtube.com/embed/${match[1]}`
+  // Already an embed URL
+  if (url.includes('youtube.com/embed/')) return url
   return url
+}
+
+// Resolve local video path relative to the lesson's content folder
+function resolveVideoPath(videoPath) {
+  // Already absolute or full URL
+  if (videoPath.startsWith('http://') || videoPath.startsWith('https://') || videoPath.startsWith('/')) {
+    return videoPath
+  }
+  // Relative path — resolve based on lesson source
+  const baseUrl = import.meta.env.BASE_URL
+  if (lesson.value?._source?.type === 'url') {
+    return `${lesson.value._source.path}/${videoPath}`
+  }
+  const filename = lesson.value?._filename || `${String(lesson.value?.number).padStart(2, '0')}-lesson`
+  return `${baseUrl}lessons/${learning.value}/${teaching.value}/${filename}/${videoPath}`
 }
 
 // Check if example is an assessment type (not plain qa)
