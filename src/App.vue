@@ -48,6 +48,18 @@
             {{ isPlaying ? '⏸' : '▶️' }}
           </Button>
 
+          <!-- Assessment Results button (visible when topic context exists) -->
+          <Button
+            v-if="canShowResultsButton"
+            variant="ghost"
+            size="icon"
+            @click="goToResults"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
+            title="Assessment Results"
+            aria-label="Assessment Results">
+            📋
+          </Button>
+
           <!-- Items button (visible on lesson pages and overview page) -->
           <Button
             v-if="canShowItemsButton"
@@ -121,6 +133,12 @@ const isLessonPage = computed(() => {
   return route.name === 'lesson-detail'
 })
 
+const canShowResultsButton = computed(() => {
+  return route.name === 'lesson-detail' ||
+         route.name === 'lessons-overview' ||
+         route.name === 'learning-items'
+})
+
 const canShowItemsButton = computed(() => {
   return route.name === 'lesson-detail' ||
          route.name === 'lessons-overview' ||
@@ -147,6 +165,17 @@ function goBack() {
 function goToSettings() {
   if (route.name !== 'settings') {
     router.push({ name: 'settings' })
+  }
+}
+
+function goToResults() {
+  const learning = route.params.learning
+  const teaching = route.params.teaching
+  if (learning && teaching) {
+    router.push({
+      name: 'assessment-results',
+      params: { learning, teaching }
+    })
   }
 }
 

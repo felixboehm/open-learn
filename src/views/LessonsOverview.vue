@@ -37,16 +37,6 @@
       </Card>
     </div>
 
-    <!-- Assessment results link -->
-    <div v-if="!isLoading && lessons.length > 0" class="mt-6">
-      <router-link
-        :to="`/${learning}/${teaching}/results`">
-        <Button variant="secondary">
-          Assessment Results
-        </Button>
-      </router-link>
-    </div>
-
     <!-- Loading state -->
     <div v-else-if="isLoading" class="text-center py-8">
       <div class="text-2xl font-bold text-primary mb-4">
