@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue'
+import { useGun } from './useGun'
 
 // Shared progress state (singleton pattern)
 // Structure: { "learning:teaching": { "itemId": true, ... } }
@@ -11,9 +12,13 @@ function getTopicKey(learning, teaching) {
   return `${learning}:${teaching}`
 }
 
-// Save progress to localStorage
+// Save progress to localStorage and sync to Gun
 function saveProgress() {
   localStorage.setItem('progress', JSON.stringify(progress.value))
+  const { isLoggedIn, syncToGun } = useGun()
+  if (isLoggedIn.value) {
+    syncToGun('progress', progress.value)
+  }
 }
 
 // Load progress from localStorage

@@ -1,5 +1,52 @@
 <template>
   <div class="space-y-8">
+    <!-- Gun Account Section -->
+    <Card>
+      <CardHeader>
+        <CardTitle class="text-2xl">Account &amp; Sync</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <template v-if="!isLoggedIn">
+          <p class="text-sm text-muted-foreground mb-4">
+            Sign in to sync your progress across devices in the same network. No server required.
+          </p>
+          <div class="space-y-3">
+            <div>
+              <Label class="text-sm font-medium mb-1 block">Username</Label>
+              <Input v-model="gunUsername" placeholder="Username" />
+            </div>
+            <div>
+              <Label class="text-sm font-medium mb-1 block">Password</Label>
+              <Input v-model="gunPassword" type="password" placeholder="Password" />
+            </div>
+            <div class="flex gap-3">
+              <Button @click="handleLogin" :disabled="!gunUsername || !gunPassword">Login</Button>
+              <Button variant="secondary" @click="handleRegister" :disabled="!gunUsername || !gunPassword">Register</Button>
+            </div>
+          </div>
+        </template>
+
+        <template v-else>
+          <p class="text-sm text-muted-foreground mb-4">
+            Signed in as <span class="font-semibold text-foreground">{{ gunUser }}</span>
+          </p>
+          <div class="flex gap-3">
+            <Button @click="handleSync" :disabled="isSyncing">
+              {{ isSyncing ? 'Syncing...' : 'Sync Now' }}
+            </Button>
+            <Button variant="secondary" @click="handleLogout">Logout</Button>
+          </div>
+        </template>
+
+        <div v-if="authError" class="mt-3 text-sm text-red-500">
+          {{ authError }}
+        </div>
+        <div v-if="syncMessage" class="mt-3 text-sm text-green-600 dark:text-green-400">
+          {{ syncMessage }}
+        </div>
+      </CardContent>
+    </Card>
+
     <!-- Appearance Section -->
     <Card>
       <CardHeader>
@@ -162,19 +209,74 @@ import { computed, ref } from 'vue'
 import { useSettings } from '../composables/useSettings'
 import { useProgress } from '../composables/useProgress'
 import { useAssessments } from '../composables/useAssessments'
+import { useGun } from '../composables/useGun'
 import { formatLangName } from '../utils/formatters'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 
 const { settings } = useSettings()
 const { progress, getProgress, mergeProgress } = useProgress()
 const { assessments, getAssessments, mergeAssessments } = useAssessments()
+const { isLoggedIn, username: gunUser, authError, isSyncing, login, register, logout, syncAll, loadFromGun } = useGun()
 
 const importMessage = ref('')
 const importMessageError = ref(false)
 const selectedTopic = ref('')
+
+// Gun auth state
+const gunUsername = ref('')
+const gunPassword = ref('')
+const syncMessage = ref('')
+
+async function handleLogin() {
+  syncMessage.value = ''
+  const ok = await login(gunUsername.value, gunPassword.value)
+  if (ok) {
+    gunUsername.value = ''
+    gunPassword.value = ''
+    // Load remote data and merge
+    const remote = await loadFromGun()
+    if (remote) {
+      if (remote.progress) mergeProgress(remote.progress)
+      if (remote.assessments) mergeAssessments(remote.assessments)
+      if (remote.settings) {
+        Object.assign(settings, remote.settings)
+      }
+    }
+    syncMessage.value = 'Logged in and synced.'
+  }
+}
+
+async function handleRegister() {
+  syncMessage.value = ''
+  const ok = await register(gunUsername.value, gunPassword.value)
+  if (ok) {
+    gunUsername.value = ''
+    gunPassword.value = ''
+    // Push local data to Gun after registration
+    await syncAll()
+    syncMessage.value = 'Registered and synced.'
+  }
+}
+
+function handleLogout() {
+  logout()
+  syncMessage.value = ''
+}
+
+async function handleSync() {
+  syncMessage.value = ''
+  await syncAll()
+  const remote = await loadFromGun()
+  if (remote) {
+    if (remote.progress) mergeProgress(remote.progress)
+    if (remote.assessments) mergeAssessments(remote.assessments)
+  }
+  syncMessage.value = 'Sync complete.'
+}
 
 // Collect all unique topic keys (learning:teaching) from progress + assessments
 const availableTopics = computed(() => {
