@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import basicSsl from '@vitejs/plugin-basic-ssl'
+import path from 'path'
 
 export default defineConfig(({ command }) => ({
   plugins: [
@@ -18,12 +19,14 @@ export default defineConfig(({ command }) => ({
   },
   resolve: {
     alias: {
-      'vue': 'vue/dist/vue.esm-bundler.js'
+      'vue': 'vue/dist/vue.esm-bundler.js',
+      '@': path.resolve(__dirname, './src')
     }
   },
   test: {
     globals: true,
-    environment: 'happy-dom',
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.js'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**']
   }
 }))

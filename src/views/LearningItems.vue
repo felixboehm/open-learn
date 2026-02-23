@@ -1,93 +1,95 @@
 <template>
   <div v-if="allItems.length > 0">
     <!-- Controls -->
-    <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-5 flex flex-wrap gap-4 items-center">
-      <!-- Lesson Filter -->
-      <select
-        v-model="selectedLesson"
-        class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-gray-800 dark:text-gray-200 max-w-full">
-        <option value="all">All Lessons</option>
-        <option v-for="lesson in availableLessons" :key="lesson.number" :value="lesson.number">
-          Lesson {{ lesson.number }}: {{ lesson.title }}
-        </option>
-      </select>
+    <Card class="p-4 mb-5">
+      <div class="flex flex-wrap gap-4 items-center">
+        <!-- Lesson Filter -->
+        <Select :model-value="String(selectedLesson)" @update:model-value="selectedLesson = $event === 'all' ? 'all' : parseInt($event)">
+          <SelectTrigger class="w-auto min-w-[200px]">
+            <SelectValue placeholder="All Lessons" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Lessons</SelectItem>
+            <SelectItem v-for="lesson in availableLessons" :key="lesson.number" :value="String(lesson.number)">
+              Lesson {{ lesson.number }}: {{ lesson.title }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
-      <!-- Group by toggles -->
-      <div class="flex items-center gap-4">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            v-model="groupByLearnStatus"
-            class="w-4 h-4 text-primary-500" />
-          <span class="text-gray-800 dark:text-gray-200">Group by Status</span>
-        </label>
+        <!-- Group by toggles -->
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <Checkbox :checked="groupByLearnStatus" @update:checked="groupByLearnStatus = $event" />
+            <Label>Group by Status</Label>
+          </label>
 
-        <label v-if="showGroupByLessonOption" class="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            v-model="groupByLesson"
-            class="w-4 h-4 text-primary-500" />
-          <span class="text-gray-800 dark:text-gray-200">Group by Lesson</span>
-        </label>
+          <label v-if="showGroupByLessonOption" class="flex items-center gap-2 cursor-pointer">
+            <Checkbox :checked="groupByLesson" @update:checked="groupByLesson = $event" />
+            <Label>Group by Lesson</Label>
+          </label>
+        </div>
       </div>
-    </div>
+    </Card>
 
     <!-- Items Display -->
     <div v-if="!groupByLesson && !groupByLearnStatus">
       <!-- Flat list -->
       <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-        <button
+        <Badge
           v-for="item in filteredItems"
           :key="item.id"
+          variant="outline"
           @click="toggleItemLearned(learning, teaching, item.term)"
           :class="[
-            'px-3 py-2 rounded text-sm transition cursor-pointer border',
+            'px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto',
             isItemLearned(learning, teaching, item.term)
               ? 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60'
-              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600'
+              : 'hover:border-green-400 dark:hover:border-green-600'
           ]">
-          <div class="font-semibold text-primary-500 dark:text-blue-400">{{ item.term }}</div>
-          <div class="text-gray-800 dark:text-gray-200">{{ item.translation }}</div>
-          <div v-if="item.context" class="text-gray-600 dark:text-gray-400 text-xs">{{ item.context }}</div>
+          <div class="font-semibold text-primary">{{ item.term }}</div>
+          <div class="text-foreground">{{ item.translation }}</div>
+          <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
           <span v-if="isItemLearned(learning, teaching, item.term)" class="ml-1">✓</span>
-        </button>
+        </Badge>
       </div>
     </div>
 
     <div v-else-if="groupByLearnStatus && !groupByLesson">
       <!-- Group by learned/unlearned -->
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+        <h2 class="text-2xl font-bold text-foreground mb-3">
           Unlearned ({{ unlearnedItems.length }})
         </h2>
         <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-          <button
+          <Badge
             v-for="item in unlearnedItems"
             :key="item.id"
+            variant="outline"
             @click="toggleItemLearned(learning, teaching, item.term)"
-            class="px-3 py-2 rounded text-sm transition cursor-pointer border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600">
-            <div class="font-semibold text-primary-500 dark:text-blue-400">{{ item.term }}</div>
-            <div class="text-gray-800 dark:text-gray-200">{{ item.translation }}</div>
-            <div v-if="item.context" class="text-gray-600 dark:text-gray-400 text-xs">{{ item.context }}</div>
-          </button>
+            class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto hover:border-green-400 dark:hover:border-green-600">
+            <div class="font-semibold text-primary">{{ item.term }}</div>
+            <div class="text-foreground">{{ item.translation }}</div>
+            <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
+          </Badge>
         </div>
       </div>
 
       <div>
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+        <h2 class="text-2xl font-bold text-foreground mb-3">
           Learned ({{ learnedItems.length }})
         </h2>
         <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-          <button
+          <Badge
             v-for="item in learnedItems"
             :key="item.id"
+            variant="outline"
             @click="toggleItemLearned(learning, teaching, item.term)"
-            class="px-3 py-2 rounded text-sm transition cursor-pointer border bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60">
-            <div class="font-semibold text-primary-500 dark:text-blue-400">{{ item.term }}</div>
-            <div class="text-gray-800 dark:text-gray-200">{{ item.translation }}</div>
-            <div v-if="item.context" class="text-gray-600 dark:text-gray-400 text-xs">{{ item.context }}</div>
+            class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60">
+            <div class="font-semibold text-primary">{{ item.term }}</div>
+            <div class="text-foreground">{{ item.translation }}</div>
+            <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
             <span class="ml-1">✓</span>
-          </button>
+          </Badge>
         </div>
       </div>
     </div>
@@ -95,44 +97,46 @@
     <div v-else-if="groupByLesson">
       <!-- Group by lesson (and optionally by learn status) -->
       <div v-for="lesson in lessonsWithItems" :key="lesson.number" class="mb-6">
-        <h2 class="text-2xl font-bold text-primary-500 dark:text-blue-400 mb-3">
+        <h2 class="text-2xl font-bold text-primary mb-3">
           Lesson {{ lesson.number }}: {{ lesson.title }}
         </h2>
 
         <div v-if="groupByLearnStatus">
           <!-- Group by both lesson and status -->
           <div class="mb-4">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+            <h3 class="text-lg font-semibold text-foreground mb-2">
               Unlearned ({{ lesson.unlearnedItems.length }})
             </h3>
             <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-              <button
+              <Badge
                 v-for="item in lesson.unlearnedItems"
                 :key="item.id"
+                variant="outline"
                 @click="toggleItemLearned(learning, teaching, item.term)"
-                class="px-3 py-2 rounded text-sm transition cursor-pointer border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600">
-                <div class="font-semibold text-primary-500 dark:text-blue-400">{{ item.term }}</div>
-                <div class="text-gray-800 dark:text-gray-200">{{ item.translation }}</div>
-                <div v-if="item.context" class="text-gray-600 dark:text-gray-400 text-xs">{{ item.context }}</div>
-              </button>
+                class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto hover:border-green-400 dark:hover:border-green-600">
+                <div class="font-semibold text-primary">{{ item.term }}</div>
+                <div class="text-foreground">{{ item.translation }}</div>
+                <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
+              </Badge>
             </div>
           </div>
 
           <div>
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+            <h3 class="text-lg font-semibold text-foreground mb-2">
               Learned ({{ lesson.learnedItems.length }})
             </h3>
             <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-              <button
+              <Badge
                 v-for="item in lesson.learnedItems"
                 :key="item.id"
+                variant="outline"
                 @click="toggleItemLearned(learning, teaching, item.term)"
-                class="px-3 py-2 rounded text-sm transition cursor-pointer border bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60">
-                <div class="font-semibold text-primary-500 dark:text-blue-400">{{ item.term }}</div>
-                <div class="text-gray-800 dark:text-gray-200">{{ item.translation }}</div>
-                <div v-if="item.context" class="text-gray-600 dark:text-gray-400 text-xs">{{ item.context }}</div>
+                class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60">
+                <div class="font-semibold text-primary">{{ item.term }}</div>
+                <div class="text-foreground">{{ item.translation }}</div>
+                <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
                 <span class="ml-1">✓</span>
-              </button>
+              </Badge>
             </div>
           </div>
         </div>
@@ -140,21 +144,22 @@
         <div v-else>
           <!-- Group by lesson only -->
           <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-            <button
+            <Badge
               v-for="item in lesson.items"
               :key="item.id"
+              variant="outline"
               @click="toggleItemLearned(learning, teaching, item.term)"
               :class="[
-                'px-3 py-2 rounded text-sm transition cursor-pointer border',
+                'px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto',
                 isItemLearned(learning, teaching, item.term)
                   ? 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60'
-                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600'
+                  : 'hover:border-green-400 dark:hover:border-green-600'
               ]">
-              <div class="font-semibold text-primary-500 dark:text-blue-400">{{ item.term }}</div>
-              <div class="text-gray-800 dark:text-gray-200">{{ item.translation }}</div>
-              <div v-if="item.context" class="text-gray-600 dark:text-gray-400 text-xs">{{ item.context }}</div>
+              <div class="font-semibold text-primary">{{ item.term }}</div>
+              <div class="text-foreground">{{ item.translation }}</div>
+              <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
               <span v-if="isItemLearned(learning, teaching, item.term)" class="ml-1">✓</span>
-            </button>
+            </Badge>
           </div>
         </div>
       </div>
@@ -163,7 +168,7 @@
 
   <!-- Loading or empty state -->
   <div v-else class="text-center py-8">
-    <div class="text-2xl font-bold text-primary-500 dark:text-blue-400 mb-4">
+    <div class="text-2xl font-bold text-primary mb-4">
       {{ allItems.length === 0 && !loading ? 'No learning items found' : 'Loading items...' }}
     </div>
   </div>
@@ -174,6 +179,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
 import { useProgress } from '../composables/useProgress'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
 
 const route = useRoute()
 const router = useRouter()

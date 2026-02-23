@@ -1,244 +1,206 @@
 <template>
   <div class="space-y-8">
-    <!-- Appearance Section -->
-    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 pb-3 border-b-2 border-gray-300 dark:border-gray-600">
-        🎨 Appearance
-      </h2>
+    <!-- Gun Account Section -->
+    <Card>
+      <CardHeader>
+        <CardTitle class="text-2xl">Account &amp; Sync</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <template v-if="!isLoggedIn">
+          <p class="text-sm text-muted-foreground mb-4">
+            Sign in to sync your progress across devices in the same network. No server required.
+          </p>
+          <div class="space-y-3">
+            <div>
+              <Label class="text-sm font-medium mb-1 block">Username</Label>
+              <Input v-model="gunUsername" placeholder="Username" />
+            </div>
+            <div>
+              <Label class="text-sm font-medium mb-1 block">Password</Label>
+              <Input v-model="gunPassword" type="password" placeholder="Password" />
+            </div>
+            <div class="flex gap-3">
+              <Button @click="handleLogin" :disabled="!gunUsername || !gunPassword">Login</Button>
+              <Button variant="secondary" @click="handleRegister" :disabled="!gunUsername || !gunPassword">Register</Button>
+            </div>
+          </div>
+        </template>
 
-      <!-- Dark Mode Toggle -->
-      <div class="mb-6">
-        <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-          Dark Mode
-        </label>
-        <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-          Dark color scheme for comfortable reading at night
+        <template v-else>
+          <p class="text-sm text-muted-foreground mb-4">
+            Signed in as <span class="font-semibold text-foreground">{{ gunUser }}</span>
+          </p>
+          <div class="flex gap-3">
+            <Button @click="handleSync" :disabled="isSyncing">
+              {{ isSyncing ? 'Syncing...' : 'Sync Now' }}
+            </Button>
+            <Button variant="secondary" @click="handleLogout">Logout</Button>
+          </div>
+        </template>
+
+        <div v-if="authError" class="mt-3 text-sm text-red-500">
+          {{ authError }}
         </div>
-        <label class="relative inline-block w-14 h-8 cursor-pointer">
-          <input
-            type="checkbox"
-            v-model="settings.darkMode"
-            class="opacity-0 w-0 h-0 peer" />
-          <span
-            class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
-          </span>
-        </label>
-      </div>
-    </div>
+        <div v-if="syncMessage" class="mt-3 text-sm text-green-600 dark:text-green-400">
+          {{ syncMessage }}
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- Appearance Section -->
+    <Card>
+      <CardHeader>
+        <CardTitle class="text-2xl">🎨 Appearance</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <!-- Dark Mode Toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <Label class="text-lg font-semibold">Dark Mode</Label>
+            <p class="text-sm text-muted-foreground">Dark color scheme for comfortable reading at night</p>
+          </div>
+          <Switch :checked="settings.darkMode" @update:checked="settings.darkMode = $event" />
+        </div>
+      </CardContent>
+    </Card>
 
     <!-- Display Settings Section -->
-    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 pb-3 border-b-2 border-gray-300 dark:border-gray-600">
-        📖 Lesson Display
-      </h2>
+    <Card>
+      <CardHeader>
+        <CardTitle class="text-2xl">📖 Lesson Display</CardTitle>
+      </CardHeader>
+      <CardContent class="space-y-6">
+        <!-- Show Answers Toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <Label class="text-lg font-semibold">Show Answers</Label>
+            <p class="text-sm text-muted-foreground">Show or hide answer translations in lessons</p>
+          </div>
+          <Switch :checked="settings.showAnswers" @update:checked="settings.showAnswers = $event" />
+        </div>
 
-      <!-- Show Answers Toggle -->
-      <div class="mb-6">
-      <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-        Show Answers
-      </label>
-      <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-        Show or hide answer translations in lessons
-      </div>
-      <label class="relative inline-block w-14 h-8 cursor-pointer">
-        <input
-          type="checkbox"
-          v-model="settings.showAnswers"
-          class="opacity-0 w-0 h-0 peer" />
-        <span
-          class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
-        </span>
-      </label>
-    </div>
+        <!-- Show Learning Items Toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <Label class="text-lg font-semibold">Show Learning Items</Label>
+            <p class="text-sm text-muted-foreground">Show or hide vocabulary and related items</p>
+          </div>
+          <Switch :checked="settings.showLearningItems" @update:checked="settings.showLearningItems = $event" />
+        </div>
 
-    <!-- Show Learning Items Toggle -->
-    <div class="mb-6">
-      <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-        Show Learning Items
-      </label>
-      <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-        Show or hide vocabulary and related items
-      </div>
-      <label class="relative inline-block w-14 h-8 cursor-pointer">
-        <input
-          type="checkbox"
-          v-model="settings.showLearningItems"
-          class="opacity-0 w-0 h-0 peer" />
-        <span
-          class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
-        </span>
-      </label>
-    </div>
+        <!-- Show Labels Toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <Label class="text-lg font-semibold">Show Labels</Label>
+            <p class="text-sm text-muted-foreground">Show or hide grammar labels (Futur, Gerundium, etc.)</p>
+          </div>
+          <Switch :checked="settings.showLabels" @update:checked="settings.showLabels = $event" />
+        </div>
 
-    <!-- Show Labels Toggle -->
-    <div class="mb-6">
-      <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-        Show Labels
-      </label>
-      <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-        Show or hide grammar labels (Futur, Gerundium, etc.)
-      </div>
-      <label class="relative inline-block w-14 h-8 cursor-pointer">
-        <input
-          type="checkbox"
-          v-model="settings.showLabels"
-          class="opacity-0 w-0 h-0 peer" />
-        <span
-          class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
-        </span>
-      </label>
-    </div>
-
-    <!-- Hide Learned Examples Toggle -->
-    <div class="mb-6">
-      <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-        Hide Learned Examples
-      </label>
-      <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-        Automatically hide examples where all vocabulary items are learned
-      </div>
-      <label class="relative inline-block w-14 h-8 cursor-pointer">
-        <input
-          type="checkbox"
-          v-model="settings.hideLearnedExamples"
-          class="opacity-0 w-0 h-0 peer" />
-        <span
-          class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
-        </span>
-      </label>
-    </div>
-    </div>
+        <!-- Hide Learned Examples Toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <Label class="text-lg font-semibold">Hide Learned Examples</Label>
+            <p class="text-sm text-muted-foreground">Automatically hide examples where all vocabulary items are learned</p>
+          </div>
+          <Switch :checked="settings.hideLearnedExamples" @update:checked="settings.hideLearnedExamples = $event" />
+        </div>
+      </CardContent>
+    </Card>
 
     <!-- Audio Settings Section -->
-    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 pb-3 border-b-2 border-gray-300 dark:border-gray-600">
-        🔊 Audio Settings
-      </h2>
-
-      <!-- Audio Speed Selection -->
-      <div class="mb-6">
-      <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-        Audio Speed
-      </label>
-      <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-        Playback speed for auto-reading audio
-      </div>
-      <div class="flex gap-3">
-        <button
-          v-for="speed in [0.6, 0.8, 1.0]"
-          :key="speed"
-          @click="settings.audioSpeed = speed"
-          :class="[
-            'px-4 py-2 rounded font-semibold transition',
-            settings.audioSpeed === speed
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-          ]">
-          {{ speed }}×
-        </button>
-      </div>
-    </div>
-
-    <!-- Read Answers Toggle -->
-    <div class="mb-6">
-      <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-        Read Answers
-      </label>
-      <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-        Include answer translations when auto-reading lessons
-      </div>
-      <label class="relative inline-block w-14 h-8 cursor-pointer">
-        <input
-          type="checkbox"
-          v-model="settings.readAnswers"
-          class="opacity-0 w-0 h-0 peer" />
-        <span
-          class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
-        </span>
-      </label>
-    </div>
-
-    <!-- Debug Overlay Toggle -->
-    <div class="mb-6">
-      <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-        Show Debug Overlay
-      </label>
-      <div class="text-gray-600 dark:text-gray-400 text-sm mb-3">
-        Display playback information overlay (for troubleshooting)
-      </div>
-      <label class="relative inline-block w-14 h-8 cursor-pointer">
-        <input
-          type="checkbox"
-          v-model="settings.showDebugOverlay"
-          class="opacity-0 w-0 h-0 peer" />
-        <span
-          class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 dark:bg-gray-600 transition rounded-full peer-checked:bg-primary-500 before:content-[''] before:absolute before:h-6 before:w-6 before:left-1 before:bottom-1 before:bg-white before:transition before:rounded-full peer-checked:before:translate-x-6">
-        </span>
-      </label>
-    </div>
-    </div>
-
-    <!-- Data Section -->
-    <div class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6 pb-3 border-b-2 border-gray-300 dark:border-gray-600">
-        Data
-      </h2>
-
-      <div v-if="availableTopics.length === 0" class="text-gray-600 dark:text-gray-400 text-sm mb-4">
-        No data yet. Start learning to track your progress.
-      </div>
-
-      <template v-else>
-        <!-- Topic selector -->
-        <div class="mb-4">
-          <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2 text-lg">
-            Topic
-          </label>
-          <div class="flex gap-2 flex-wrap">
-            <button
-              v-for="topic in availableTopics"
-              :key="topic.key"
-              @click="selectedTopic = topic.key"
-              :class="[
-                'px-3 py-1.5 rounded font-semibold transition text-sm',
-                selectedTopic === topic.key
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-              ]">
-              {{ topic.label }}
-            </button>
+    <Card>
+      <CardHeader>
+        <CardTitle class="text-2xl">🔊 Audio Settings</CardTitle>
+      </CardHeader>
+      <CardContent class="space-y-6">
+        <!-- Audio Speed Selection -->
+        <div>
+          <Label class="text-lg font-semibold">Audio Speed</Label>
+          <p class="text-sm text-muted-foreground mb-3">Playback speed for auto-reading audio</p>
+          <div class="flex gap-3">
+            <Button
+              v-for="speed in [0.6, 0.8, 1.0]"
+              :key="speed"
+              :variant="settings.audioSpeed === speed ? 'default' : 'outline'"
+              @click="settings.audioSpeed = speed">
+              {{ speed }}×
+            </Button>
           </div>
         </div>
 
-        <div class="text-gray-600 dark:text-gray-400 text-sm mb-4">
-          {{ dataSummary }}
+        <!-- Read Answers Toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <Label class="text-lg font-semibold">Read Answers</Label>
+            <p class="text-sm text-muted-foreground">Include answer translations when auto-reading lessons</p>
+          </div>
+          <Switch :checked="settings.readAnswers" @update:checked="settings.readAnswers = $event" />
         </div>
 
-        <div class="flex gap-3 flex-wrap">
-          <button
-            @click="exportData"
-            class="px-4 py-2 rounded font-semibold transition bg-primary-500 text-white hover:bg-primary-600">
-            Export
-          </button>
-
-          <button
-            @click="$refs.fileInput.click()"
-            class="px-4 py-2 rounded font-semibold transition bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">
-            Import
-          </button>
-          <input
-            ref="fileInput"
-            type="file"
-            accept=".json"
-            class="hidden"
-            @change="importData" />
+        <!-- Debug Overlay Toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <Label class="text-lg font-semibold">Show Debug Overlay</Label>
+            <p class="text-sm text-muted-foreground">Display playback information overlay (for troubleshooting)</p>
+          </div>
+          <Switch :checked="settings.showDebugOverlay" @update:checked="settings.showDebugOverlay = $event" />
         </div>
-      </template>
+      </CardContent>
+    </Card>
 
-      <div v-if="importMessage" class="mt-3 text-sm" :class="importMessageError ? 'text-red-500' : 'text-green-600 dark:text-green-400'">
-        {{ importMessage }}
-      </div>
-    </div>
+    <!-- Data Section -->
+    <Card>
+      <CardHeader>
+        <CardTitle class="text-2xl">Data</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div v-if="availableTopics.length === 0" class="text-sm text-muted-foreground mb-4">
+          No data yet. Start learning to track your progress.
+        </div>
+
+        <template v-else>
+          <!-- Topic selector -->
+          <div class="mb-4">
+            <Label class="text-lg font-semibold mb-2 block">Topic</Label>
+            <div class="flex gap-2 flex-wrap">
+              <Button
+                v-for="topic in availableTopics"
+                :key="topic.key"
+                :variant="selectedTopic === topic.key ? 'default' : 'outline'"
+                size="sm"
+                @click="selectedTopic = topic.key">
+                {{ topic.label }}
+              </Button>
+            </div>
+          </div>
+
+          <div class="text-sm text-muted-foreground mb-4">
+            {{ dataSummary }}
+          </div>
+
+          <div class="flex gap-3 flex-wrap">
+            <Button @click="exportData">
+              Export
+            </Button>
+
+            <Button variant="secondary" @click="$refs.fileInput.click()">
+              Import
+            </Button>
+            <input
+              ref="fileInput"
+              type="file"
+              accept=".json"
+              class="hidden"
+              @change="importData" />
+          </div>
+        </template>
+
+        <div v-if="importMessage" class="mt-3 text-sm" :class="importMessageError ? 'text-red-500' : 'text-green-600 dark:text-green-400'">
+          {{ importMessage }}
+        </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
@@ -247,15 +209,74 @@ import { computed, ref } from 'vue'
 import { useSettings } from '../composables/useSettings'
 import { useProgress } from '../composables/useProgress'
 import { useAssessments } from '../composables/useAssessments'
+import { useGun } from '../composables/useGun'
 import { formatLangName } from '../utils/formatters'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 
 const { settings } = useSettings()
 const { progress, getProgress, mergeProgress } = useProgress()
 const { assessments, getAssessments, mergeAssessments } = useAssessments()
+const { isLoggedIn, username: gunUser, authError, isSyncing, login, register, logout, syncAll, loadFromGun } = useGun()
 
 const importMessage = ref('')
 const importMessageError = ref(false)
 const selectedTopic = ref('')
+
+// Gun auth state
+const gunUsername = ref('')
+const gunPassword = ref('')
+const syncMessage = ref('')
+
+async function handleLogin() {
+  syncMessage.value = ''
+  const ok = await login(gunUsername.value, gunPassword.value)
+  if (ok) {
+    gunUsername.value = ''
+    gunPassword.value = ''
+    // Load remote data and merge
+    const remote = await loadFromGun()
+    if (remote) {
+      if (remote.progress) mergeProgress(remote.progress)
+      if (remote.assessments) mergeAssessments(remote.assessments)
+      if (remote.settings) {
+        Object.assign(settings, remote.settings)
+      }
+    }
+    syncMessage.value = 'Logged in and synced.'
+  }
+}
+
+async function handleRegister() {
+  syncMessage.value = ''
+  const ok = await register(gunUsername.value, gunPassword.value)
+  if (ok) {
+    gunUsername.value = ''
+    gunPassword.value = ''
+    // Push local data to Gun after registration
+    await syncAll()
+    syncMessage.value = 'Registered and synced.'
+  }
+}
+
+function handleLogout() {
+  logout()
+  syncMessage.value = ''
+}
+
+async function handleSync() {
+  syncMessage.value = ''
+  await syncAll()
+  const remote = await loadFromGun()
+  if (remote) {
+    if (remote.progress) mergeProgress(remote.progress)
+    if (remote.assessments) mergeAssessments(remote.assessments)
+  }
+  syncMessage.value = 'Sync complete.'
+}
 
 // Collect all unique topic keys (learning:teaching) from progress + assessments
 const availableTopics = computed(() => {

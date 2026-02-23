@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue'
+import { useGun } from './useGun'
 
 // Shared assessment state (singleton pattern)
 // Structure: { "learning:teaching:lessonNumber": { "sectionIdx-exampleIdx": { type, answer, submittedAt, correct } } }
@@ -16,6 +17,10 @@ function getItemKey(sectionIdx, exampleIdx) {
 
 function saveAssessments() {
   localStorage.setItem('assessments', JSON.stringify(assessments.value))
+  const { isLoggedIn, syncToGun } = useGun()
+  if (isLoggedIn.value) {
+    syncToGun('assessments', assessments.value)
+  }
 }
 
 function loadAssessments() {

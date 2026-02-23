@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue'
+import { useGun } from './useGun'
 
 // Shared state across all component instances (singleton pattern)
 const settings = ref({
@@ -23,9 +24,13 @@ function applyDarkMode(enabled) {
   }
 }
 
-// Save settings to localStorage
+// Save settings to localStorage and sync to Gun
 function saveSettings() {
   localStorage.setItem('settings', JSON.stringify(settings.value))
+  const { isLoggedIn, syncToGun } = useGun()
+  if (isLoggedIn.value) {
+    syncToGun('settings', settings.value)
+  }
 }
 
 // Load settings from localStorage

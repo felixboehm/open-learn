@@ -3,58 +3,60 @@
     <!-- Source indicator for remote topics -->
     <div v-if="!isLoading && isRemote" class="mb-4 flex items-center justify-between text-sm">
       <div>
-        <span v-if="topicDescription" class="text-gray-600 dark:text-gray-400">{{ topicDescription }}</span>
-        <span v-if="topicDescription && sourceLabel" class="text-gray-300 dark:text-gray-600 mx-2">·</span>
-        <span v-if="sourceLabel" class="text-gray-400 dark:text-gray-500">{{ sourceLabel }}</span>
+        <span v-if="topicDescription" class="text-muted-foreground">{{ topicDescription }}</span>
+        <span v-if="topicDescription && sourceLabel" class="text-muted-foreground/40 mx-2">·</span>
+        <span v-if="sourceLabel" class="text-muted-foreground/60">{{ sourceLabel }}</span>
       </div>
-      <button
-        @click="copyShareLink"
-        class="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:text-primary-500 hover:border-primary-500 transition text-xs">
+      <Button
+        variant="outline"
+        size="sm"
+        @click="copyShareLink">
         {{ copied ? 'Copied!' : 'Share' }}
-      </button>
+      </Button>
     </div>
 
     <!-- Lessons grid -->
     <div v-if="!isLoading && lessons.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div
+      <Card
         v-for="lesson in lessons"
         :key="lesson.number"
         @click="openLesson(lesson.number)"
-        class="border-3 border-primary-500 dark:border-gray-600 rounded-xl p-6 cursor-pointer transition hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-800">
-        <div class="text-6xl font-bold opacity-20 text-primary-500 dark:text-blue-400">
+        class="p-6 cursor-pointer transition hover:-translate-y-1 hover:shadow-xl">
+        <div class="text-6xl font-bold opacity-20 text-primary">
           {{ lesson.number }}
         </div>
-        <div class="text-2xl font-semibold my-2 text-gray-800 dark:text-gray-200">
+        <div class="text-2xl font-semibold my-2 text-foreground">
           {{ lesson.title }}
         </div>
-        <div class="text-gray-600 dark:text-gray-400 mb-2">
+        <div class="text-muted-foreground mb-2">
           {{ lesson.description || '' }}
         </div>
-        <div class="text-primary-500 dark:text-blue-400 font-semibold">
+        <div class="text-primary font-semibold">
           {{ lesson.sections.length }} sections
         </div>
-      </div>
+      </Card>
     </div>
 
     <!-- Assessment results link -->
     <div v-if="!isLoading && lessons.length > 0" class="mt-6">
       <router-link
-        :to="`/${learning}/${teaching}/results`"
-        class="inline-block px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-        Assessment Results
+        :to="`/${learning}/${teaching}/results`">
+        <Button variant="secondary">
+          Assessment Results
+        </Button>
       </router-link>
     </div>
 
     <!-- Loading state -->
     <div v-else-if="isLoading" class="text-center py-8">
-      <div class="text-2xl font-bold text-primary-500 dark:text-blue-400 mb-4">
+      <div class="text-2xl font-bold text-primary mb-4">
         Loading lessons...
       </div>
     </div>
 
     <!-- Empty state -->
     <div v-else class="text-center py-8">
-      <div class="text-xl text-gray-600 dark:text-gray-400">
+      <div class="text-xl text-muted-foreground">
         No lessons found
       </div>
     </div>
@@ -66,6 +68,8 @@ import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
 import { formatLangName } from '../utils/formatters'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 const router = useRouter()
 const route = useRoute()

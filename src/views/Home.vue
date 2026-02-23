@@ -1,129 +1,128 @@
 <template>
   <div>
     <!-- Loading state -->
-    <div v-if="isLoading" class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg text-center">
-      <div class="text-2xl font-bold text-primary-500 dark:text-blue-400 mb-4">
-        Loading available content...
-      </div>
-      <div class="text-gray-600 dark:text-gray-400">
-        Please wait while we load the lesson catalog.
-      </div>
-    </div>
+    <Card v-if="isLoading" class="p-6 text-center">
+      <CardContent class="p-0">
+        <div class="text-2xl font-bold text-primary mb-4">
+          Loading available content...
+        </div>
+        <div class="text-muted-foreground">
+          Please wait while we load the lesson catalog.
+        </div>
+      </CardContent>
+    </Card>
 
     <!-- Language selection -->
-    <div v-else class="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg">
-      <h2 class="text-3xl font-bold mb-4 text-primary-500 dark:text-blue-400">
-        Select Learning Options
-      </h2>
+    <Card v-else class="p-6">
+      <CardContent class="p-0">
+        <h2 class="text-3xl font-bold mb-4 text-primary">
+          Select Learning Options
+        </h2>
 
-      <!-- Learning language selection -->
-      <div class="mb-4">
-        <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-3">
-          I want to learn in:
-        </label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="lang in learningLanguages"
-            :key="lang"
-            @click="selectLearning(lang)"
-            :class="[
-              'px-5 py-2 border-2 rounded-md font-semibold transition',
-              selectedLearning === lang
-                ? 'bg-primary-500 text-white border-primary-500'
-                : 'bg-white dark:bg-gray-900 text-primary-500 dark:text-gray-200 border-primary-500 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700'
-            ]">
-            {{ formatLangName(lang) }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Teaching topic selection -->
-      <div class="mb-4">
-        <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-3">
-          What I want to learn:
-        </label>
-        <div v-if="teachingTopics.length > 0" class="flex flex-col gap-3">
-          <div
-            v-for="topic in teachingTopics"
-            :key="topic"
-            @click="selectTeaching(topic)"
-            :class="[
-              'p-4 rounded-lg border-2 cursor-pointer transition',
-              selectedTeaching === topic
-                ? 'border-primary-500 bg-blue-50 dark:bg-gray-700'
-                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-primary-300 dark:hover:border-gray-500'
-            ]">
-            <div class="flex items-start justify-between gap-2">
-              <div class="flex-grow min-w-0">
-                <div class="font-semibold text-gray-800 dark:text-gray-200">
-                  {{ getTopicTitle(topic) }}
-                </div>
-                <div v-if="getTopicDescription(topic)" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {{ getTopicDescription(topic) }}
-                </div>
-                <div v-if="isRemoteTopic(topic)" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  {{ getTopicSourceLabel(topic) }}
-                </div>
-              </div>
-              <div class="flex items-center gap-1 flex-shrink-0">
-                <button
-                  @click.stop="copyWorkshopLink(topic)"
-                  class="p-1.5 rounded text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-600 transition"
-                  title="Copy link to workshop">
-                  <span class="text-sm">{{ copiedTopic === topic ? '✓' : '🔗' }}</span>
-                </button>
-                <button
-                  v-if="isRemoteTopic(topic)"
-                  @click.stop="removeSource(topic)"
-                  class="p-1.5 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition"
-                  title="Remove external source">
-                  <span class="text-sm">✕</span>
-                </button>
-              </div>
-            </div>
+        <!-- Learning language selection -->
+        <div class="mb-4">
+          <Label class="block font-semibold mb-3">
+            I want to learn in:
+          </Label>
+          <div class="flex flex-wrap gap-2">
+            <Button
+              v-for="lang in learningLanguages"
+              :key="lang"
+              :variant="selectedLearning === lang ? 'default' : 'outline'"
+              @click="selectLearning(lang)">
+              {{ formatLangName(lang) }}
+            </Button>
           </div>
         </div>
-        <p v-else class="text-gray-500 dark:text-gray-400">
-          Select a learning language first
-        </p>
-      </div>
 
-      <!-- Workshop discovery -->
-      <div v-if="availableWorkshops.length > 0" class="mb-4">
-        <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-3">
-          Discover Workshops
-        </label>
-        <div class="flex flex-col gap-2">
-          <div
-            v-for="workshop in availableWorkshops"
-            :key="workshop.url"
-            class="flex items-center justify-between p-3 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900">
-            <div>
-              <div class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ workshop.title }}</div>
-              <div class="text-xs text-gray-400 dark:text-gray-500">{{ workshop.host }}</div>
-            </div>
-            <a
-              :href="'#/add?source=' + encodeURIComponent(workshop.url)"
-              class="px-3 py-1 rounded text-sm font-semibold text-primary-500 border border-primary-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition">
-              Add
-            </a>
+        <!-- Teaching topic selection -->
+        <div class="mb-4">
+          <Label class="block font-semibold mb-3">
+            What I want to learn:
+          </Label>
+          <div v-if="teachingTopics.length > 0" class="flex flex-col gap-3">
+            <Card
+              v-for="topic in teachingTopics"
+              :key="topic"
+              @click="selectTeaching(topic)"
+              :class="[
+                'p-4 cursor-pointer transition',
+                selectedTeaching === topic
+                  ? 'ring-2 ring-primary bg-accent'
+                  : 'hover:border-primary/50'
+              ]">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-grow min-w-0">
+                  <div class="font-semibold text-foreground">
+                    {{ getTopicTitle(topic) }}
+                  </div>
+                  <div v-if="getTopicDescription(topic)" class="text-sm text-muted-foreground mt-1">
+                    {{ getTopicDescription(topic) }}
+                  </div>
+                  <div v-if="isRemoteTopic(topic)" class="text-xs text-muted-foreground/60 mt-1">
+                    {{ getTopicSourceLabel(topic) }}
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    @click.stop="copyWorkshopLink(topic)"
+                    class="p-1.5 rounded text-muted-foreground hover:text-primary hover:bg-accent transition"
+                    title="Copy link to workshop">
+                    <span class="text-sm">{{ copiedTopic === topic ? '✓' : '🔗' }}</span>
+                  </button>
+                  <button
+                    v-if="isRemoteTopic(topic)"
+                    @click.stop="removeSource(topic)"
+                    class="p-1.5 rounded text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition"
+                    title="Remove external source">
+                    <span class="text-sm">✕</span>
+                  </button>
+                </div>
+              </div>
+            </Card>
+          </div>
+          <p v-else class="text-muted-foreground">
+            Select a learning language first
+          </p>
+        </div>
+
+        <!-- Workshop discovery -->
+        <div v-if="availableWorkshops.length > 0" class="mb-4">
+          <Label class="block font-semibold mb-3">
+            Discover Workshops
+          </Label>
+          <div class="flex flex-col gap-2">
+            <Card
+              v-for="workshop in availableWorkshops"
+              :key="workshop.url"
+              class="flex items-center justify-between p-3 border-dashed">
+              <div>
+                <div class="font-semibold text-foreground text-sm">{{ workshop.title }}</div>
+                <div class="text-xs text-muted-foreground">{{ workshop.host }}</div>
+              </div>
+              <a
+                :href="'#/add?source=' + encodeURIComponent(workshop.url)"
+                class="px-3 py-1 rounded text-sm font-semibold text-primary border border-primary hover:bg-accent transition">
+                Add
+              </a>
+            </Card>
           </div>
         </div>
-      </div>
 
-      <!-- Load lessons button -->
-      <button
-        @click="loadLessons"
-        :disabled="!canLoadLessons"
-        :class="[
-          'px-8 py-4 rounded-lg text-lg font-semibold transition mt-2',
-          canLoadLessons
-            ? 'bg-green-500 text-white hover:bg-green-600 hover:-translate-y-0.5'
-            : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-        ]">
-        Load Lessons
-      </button>
-    </div>
+        <!-- Load lessons button -->
+        <Button
+          @click="loadLessons"
+          :disabled="!canLoadLessons"
+          :class="[
+            'mt-2 text-lg px-8 py-4 h-auto',
+            canLoadLessons
+              ? 'bg-green-500 hover:bg-green-600 text-white hover:-translate-y-0.5'
+              : ''
+          ]">
+          Load Lessons
+        </Button>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
@@ -132,6 +131,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
 import { formatLangName } from '../utils/formatters'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 
 const router = useRouter()
 const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug, getTopicMeta, getContentSources } = useLessons()
