@@ -103,6 +103,57 @@ function initializeWatchers() {
   }, { deep: true })
 }
 
+// --- Sent history tracking ---
+// Structure: { "learning:teaching:lessonNumber": [{ timestamp, channel, hash }] }
+const sentHistory = ref({})
+
+function loadSentHistory() {
+  const saved = localStorage.getItem('sentHistory')
+  if (saved) {
+    try {
+      sentHistory.value = JSON.parse(saved)
+    } catch {
+      sentHistory.value = {}
+    }
+  }
+}
+
+function saveSentHistory() {
+  localStorage.setItem('sentHistory', JSON.stringify(sentHistory.value))
+}
+
+function recordSent(lessonKey, channel, hash) {
+  if (!sentHistory.value[lessonKey]) {
+    sentHistory.value[lessonKey] = []
+  }
+  sentHistory.value[lessonKey].push({
+    timestamp: new Date().toISOString(),
+    channel,
+    hash
+  })
+  saveSentHistory()
+}
+
+function getLastSent(lessonKey) {
+  const entries = sentHistory.value[lessonKey]
+  return entries && entries.length > 0 ? entries[entries.length - 1] : null
+}
+
+// Simple hash of a string (djb2)
+function computeHash(str) {
+  let hash = 5381
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i)
+  }
+  return (hash >>> 0).toString(36)
+}
+
+function getLessonHash(lessonKey, progressData) {
+  const answersStr = JSON.stringify(assessments.value[lessonKey] || {})
+  const progressStr = JSON.stringify(progressData || {})
+  return computeHash(answersStr + progressStr)
+}
+
 // Return raw assessments object
 function getAssessments() {
   return assessments.value
@@ -130,6 +181,12 @@ export function useAssessments() {
     clearAnswers,
     validateAnswer,
     getAssessments,
-    mergeAssessments
+    mergeAssessments,
+    sentHistory,
+    loadSentHistory,
+    recordSent,
+    getLastSent,
+    computeHash,
+    getLessonHash
   }
 }

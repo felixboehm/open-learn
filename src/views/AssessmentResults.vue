@@ -35,14 +35,46 @@
       <!-- Per-lesson cards -->
       <Card v-for="entry in filteredEntries" :key="entry.lesson.number" class="p-5 mb-5">
         <CardHeader class="p-0 pb-3">
-          <CardTitle class="text-xl">
-            Lesson {{ entry.lesson.number }}: {{ entry.lesson.title }}
-          </CardTitle>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <router-link
+              :to="{ name: 'lesson-detail', params: { learning, teaching, number: entry.lesson.number } }"
+              class="text-xl font-semibold text-primary hover:underline">
+              Lesson {{ entry.lesson.number }}: {{ entry.lesson.title }}
+            </router-link>
+
+            <!-- Sent status badge -->
+            <Badge :variant="entry.sentStatus === 'changed' ? 'destructive' : entry.sentStatus === 'up-to-date' ? 'default' : 'secondary'">
+              {{ entry.sentStatusLabel }}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent class="p-0">
+          <!-- Last sent info -->
+          <div v-if="entry.lastSent" class="text-xs text-muted-foreground mb-2">
+            Last sent: {{ formatDate(entry.lastSent.timestamp) }} via {{ entry.lastSent.channel }}
+          </div>
+
           <!-- Learning items stats -->
           <div v-if="entry.totalItems > 0" class="text-sm text-muted-foreground mb-3">
             {{ entry.learnedItems }}/{{ entry.totalItems }} learning items learned
+          </div>
+
+          <!-- Unlearned learning items (max 10) -->
+          <div v-if="entry.unlearnedItems.length > 0" class="mb-3">
+            <div class="text-sm font-medium text-muted-foreground mb-1">Unlearned items:</div>
+            <div class="flex flex-wrap gap-1.5">
+              <Badge
+                v-for="item in entry.unlearnedItems.slice(0, 10)"
+                :key="item.id"
+                variant="outline"
+                class="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                @click="toggleItem(item.id)">
+                {{ item.term }}
+              </Badge>
+              <span v-if="entry.unlearnedItems.length > 10" class="text-xs text-muted-foreground self-center">
+                +{{ entry.unlearnedItems.length - 10 }} more
+              </span>
+            </div>
           </div>
 
           <!-- Assessment answers per section -->
@@ -79,7 +111,7 @@
         <div class="text-sm text-muted-foreground mb-3">
           Send your results to <strong class="text-foreground">{{ coachName || coachEmail }}</strong> via email.
         </div>
-        <a :href="mailtoLink">
+        <a :href="mailtoLink" @click="onSendEmail">
           <Button class="bg-green-600 hover:bg-green-700 text-white">
             Send Results via Email
           </Button>
@@ -112,13 +144,14 @@ import { useProgress } from '../composables/useProgress'
 import { formatLangName } from '../utils/formatters'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 const route = useRoute()
 const emit = defineEmits(['update-title'])
 
 const { loadAllLessonsForTopic, getTopicMeta } = useLessons()
-const { getAnswer } = useAssessments()
-const { isItemLearned } = useProgress()
+const { getAnswer, getLastSent, recordSent, getLessonHash } = useAssessments()
+const { isItemLearned, toggleItemLearned, progress } = useProgress()
 
 const lessons = ref([])
 const isLoading = ref(true)
@@ -138,14 +171,30 @@ const coachName = computed(() => {
   return meta.coach?.name || null
 })
 
+function formatDate(iso) {
+  try {
+    const d = new Date(iso)
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return iso
+  }
+}
+
+// Toggle a learning item
+function toggleItem(itemId) {
+  toggleItemLearned(learning.value, teaching.value, itemId)
+}
+
 // Build structured data for each lesson
 const allEntries = computed(() => {
   return lessons.value.map(lesson => {
+    const lessonKey = `${learning.value}:${teaching.value}:${lesson.number}`
     const sections = []
     let assessmentCount = 0
     let totalItems = 0
     let learnedItems = 0
     const itemsSeen = new Set()
+    const unlearnedItems = []
 
     lesson.sections.forEach((section, sIdx) => {
       const examples = []
@@ -160,6 +209,8 @@ const allEntries = computed(() => {
               totalItems++
               if (isItemLearned(learning.value, teaching.value, id)) {
                 learnedItems++
+              } else {
+                unlearnedItems.push({ id, term: item[0], translation: item[1] || '' })
               }
             }
           })
@@ -192,12 +243,34 @@ const allEntries = computed(() => {
       }
     })
 
+    // Sent status tracking
+    const topicProgress = progress.value[`${learning.value}:${teaching.value}`] || {}
+    const currentHash = getLessonHash(lessonKey, topicProgress)
+    const lastSent = getLastSent(lessonKey)
+    let sentStatus = 'never-sent'
+    let sentStatusLabel = 'Never sent'
+    if (lastSent) {
+      if (lastSent.hash === currentHash) {
+        sentStatus = 'up-to-date'
+        sentStatusLabel = 'Up to date'
+      } else {
+        sentStatus = 'changed'
+        sentStatusLabel = 'Changed'
+      }
+    }
+
     return {
       lesson,
       sections,
       assessmentCount,
       totalItems,
-      learnedItems
+      learnedItems,
+      unlearnedItems,
+      lastSent,
+      sentStatus,
+      sentStatusLabel,
+      currentHash,
+      lessonKey
     }
   })
 })
@@ -218,6 +291,13 @@ const totalWrong = computed(() => filteredEntries.value.reduce((sum, e) =>
   sum + e.sections.reduce((s, sec) => s + sec.examples.filter(ex => ex.correct === false).length, 0), 0))
 const totalUnanswered = computed(() => totalAssessments.value - totalAnswered.value)
 const totalLearnedItems = computed(() => filteredEntries.value.reduce((sum, e) => sum + e.learnedItems, 0))
+
+// Record sent when email is clicked
+function onSendEmail() {
+  for (const entry of filteredEntries.value) {
+    recordSent(entry.lessonKey, 'email', entry.currentHash)
+  }
+}
 
 // Generate plain-text report (uses filtered view)
 function generateReport() {
