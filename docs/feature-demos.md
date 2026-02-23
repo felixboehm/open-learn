@@ -73,3 +73,18 @@ Sections koennen jetzt sowohl YouTube-Videos als auch lokale Videodateien (MP4, 
 3. **Lokales Video** — Section mit `video: "video/intro.mp4"` → HTML5-Video mit Controls wird angezeigt.
 4. **Responsive** — Videos passen sich der Breite an (aspect-video).
 5. **Kein Video** — Sections ohne `video`-Feld bleiben unveraendert.
+
+---
+
+## #28 — Connect Workshop to Service Agent as Coach
+
+Workshops mit konfiguriertem `coach.api` Endpoint werden mit einem KI-Service-Agent verbunden. Die Coach-Seite bietet eine Chat-Oberflaeche, ueber die Lernende Fragen stellen, Feedback zu ihren Antworten erhalten und Hilfe anfordern koennen. Der Agent erhaelt automatisch den Kontext (Assessment-Ergebnisse, Lernfortschritt) als Plain Text.
+
+### Demo
+
+1. **Coach Button** — Workshop mit `coach.api` in topics.yaml laden → 🤖 Icon erscheint in der Top-Navigation.
+2. **Kein Coach** — Workshop ohne `coach.api` → 🤖 Icon ist NICHT sichtbar.
+3. **Chat** — Coach-Seite oeffnen → Vorschlaege ("How am I doing?", etc.) klicken oder eigene Frage tippen → Agent antwortet.
+4. **Kontext** — Agent erhaelt automatisch Assessment-Ergebnisse und Lernfortschritt als Kontext.
+5. **Chat-Verlauf** — Nachrichten bleiben in localStorage erhalten. "Clear chat" loescht den Verlauf.
+6. **Fehlerbehandlung** — Bei Netzwerkfehler wird eine Fehlermeldung im Chat angezeigt.

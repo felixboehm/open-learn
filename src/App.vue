@@ -60,6 +60,18 @@
             📋
           </Button>
 
+          <!-- Coach button (visible when coach API is configured for topic) -->
+          <Button
+            v-if="hasCoach"
+            variant="ghost"
+            size="icon"
+            @click="goToCoach"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
+            title="Coach"
+            aria-label="Coach">
+            🤖
+          </Button>
+
           <!-- Items button (visible on lesson pages and overview page) -->
           <Button
             v-if="canShowItemsButton"
@@ -115,6 +127,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAudio } from './composables/useAudio'
 import { useSettings } from './composables/useSettings'
+import { useLessons } from './composables/useLessons'
 import { Button } from '@/components/ui/button'
 
 const router = useRouter()
@@ -124,6 +137,7 @@ const pageTitle = ref('🎓 Open Learn')
 
 const { isPlaying, play, pause, resume } = useAudio()
 const { settings } = useSettings()
+const { getTopicMeta } = useLessons()
 
 const canGoBack = computed(() => {
   return route.name !== 'home'
@@ -137,6 +151,14 @@ const canShowResultsButton = computed(() => {
   return route.name === 'lesson-detail' ||
          route.name === 'lessons-overview' ||
          route.name === 'learning-items'
+})
+
+const hasCoach = computed(() => {
+  const learning = route.params.learning
+  const teaching = route.params.teaching
+  if (!learning || !teaching) return false
+  const meta = getTopicMeta(learning, teaching)
+  return !!(meta.coach?.api)
 })
 
 const canShowItemsButton = computed(() => {
@@ -174,6 +196,17 @@ function goToResults() {
   if (learning && teaching) {
     router.push({
       name: 'assessment-results',
+      params: { learning, teaching }
+    })
+  }
+}
+
+function goToCoach() {
+  const learning = route.params.learning
+  const teaching = route.params.teaching
+  if (learning && teaching) {
+    router.push({
+      name: 'coach',
       params: { learning, teaching }
     })
   }
