@@ -52,8 +52,7 @@ test.describe('Open Learn App', () => {
 
     // Find the Dark Mode toggle by finding the label that contains "Dark Mode" text
     // then finding its associated toggle label
-    const darkModeSection = page.locator('text=Dark Mode').locator('..');
-    const darkModeToggle = darkModeSection.locator('label.relative.inline-block');
+    const darkModeToggle = page.locator('text=Dark Mode').locator('..').locator('..').locator('button[role="switch"]');
     await darkModeToggle.click();
     await page.waitForTimeout(500);
 
@@ -78,8 +77,7 @@ test.describe('Open Learn App', () => {
     await page.waitForTimeout(500);
 
     // Find the Dark Mode toggle
-    const darkModeSection = page.locator('text=Dark Mode').locator('..');
-    const darkModeToggle = darkModeSection.locator('label.relative.inline-block');
+    const darkModeToggle = page.locator('text=Dark Mode').locator('..').locator('..').locator('button[role="switch"]');
     await darkModeToggle.click();
     await page.waitForTimeout(500);
 
