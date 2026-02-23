@@ -30,3 +30,17 @@ Lernfortschritt, Assessment-Antworten und Einstellungen werden ueber GunDB zwisc
 4. **Sync Now** — Manuell "Sync Now" klicken → bestaetigt Sync.
 5. **Offline** — Ohne Login arbeiten → App funktioniert wie bisher (nur localStorage).
 6. **Logout** — "Logout" klicken → Account-Sektion zeigt Login-Formular.
+
+---
+
+## #29 — Assessment Results Button in Top Navigation
+
+Der Assessment-Results-Button wurde aus der Lessons-Uebersicht entfernt und als Icon (📋) in die obere Navigationsleiste verschoben. Sichtbar auf allen Seiten mit Topic-Kontext (Lessons Overview, Lesson Detail, Learning Items).
+
+### Demo
+
+1. **Lessons Overview** — Topic laden → oben rechts erscheint das 📋 Icon neben 📚 und ⚙️.
+2. **Lesson Detail** — Lektion oeffnen → 📋 Icon ist sichtbar, klicken → Assessment Results Seite.
+3. **Learning Items** — Items-Seite → 📋 Icon ist sichtbar.
+4. **Home / Settings** — 📋 Icon ist NICHT sichtbar (kein Topic-Kontext).
+5. **Alter Button weg** — Auf der Lessons-Uebersicht gibt es keinen "Assessment Results" Button mehr unten.
