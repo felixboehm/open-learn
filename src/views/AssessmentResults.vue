@@ -3,105 +3,100 @@
     <div v-if="!isLoading && lessons.length > 0">
       <!-- Lesson filter -->
       <div v-if="lessons.length > 1" class="flex flex-wrap gap-2 mb-5">
-        <button
-          @click="selectedLesson = null"
-          :class="[
-            'px-3 py-1.5 rounded font-semibold transition text-sm',
-            selectedLesson === null
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-          ]">
+        <Button
+          :variant="selectedLesson === null ? 'default' : 'outline'"
+          size="sm"
+          @click="selectedLesson = null">
           All Lessons
-        </button>
-        <button
+        </Button>
+        <Button
           v-for="lesson in lessons"
           :key="lesson.number"
-          @click="selectedLesson = lesson.number"
-          :class="[
-            'px-3 py-1.5 rounded font-semibold transition text-sm',
-            selectedLesson === lesson.number
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
-          ]">
+          :variant="selectedLesson === lesson.number ? 'default' : 'outline'"
+          size="sm"
+          @click="selectedLesson = lesson.number">
           {{ lesson.number }}
-        </button>
+        </Button>
       </div>
 
       <!-- Summary header -->
-      <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-5 mb-6">
-        <div class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+      <Card class="p-5 mb-6">
+        <div class="text-lg font-semibold text-foreground mb-2">
           {{ totalAnswered }} of {{ totalAssessments }} assessments answered
         </div>
-        <div class="text-sm text-gray-600 dark:text-gray-400">
+        <div class="text-sm text-muted-foreground">
           {{ totalCorrect }} correct, {{ totalWrong }} incorrect, {{ totalUnanswered }} missing
         </div>
-        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <div class="text-sm text-muted-foreground mt-1">
           {{ totalLearnedItems }} learning items marked as learned
         </div>
-      </div>
+      </Card>
 
       <!-- Per-lesson cards -->
-      <div v-for="entry in filteredEntries" :key="entry.lesson.number" class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-5 bg-white dark:bg-gray-800">
-        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-1">
-          Lesson {{ entry.lesson.number }}: {{ entry.lesson.title }}
-        </h3>
-
-        <!-- Learning items stats -->
-        <div v-if="entry.totalItems > 0" class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-          {{ entry.learnedItems }}/{{ entry.totalItems }} learning items learned
-        </div>
-
-        <!-- Assessment answers per section -->
-        <div v-for="section in entry.sections" :key="section.index" class="mb-4">
-          <div class="font-semibold text-primary-500 dark:text-blue-400 mb-2">{{ section.title }}</div>
-
-          <div v-for="ex in section.examples" :key="ex.key" class="ml-4 mb-1 text-sm">
-            <template v-if="ex.answered">
-              <span v-if="ex.correct === true" class="text-green-600 dark:text-green-400 font-mono">[ok]</span>
-              <span v-else-if="ex.correct === false" class="text-red-600 dark:text-red-400 font-mono">[!!]</span>
-              <span v-else class="text-gray-500 font-mono">[--]</span>
-              <span class="text-gray-800 dark:text-gray-200 ml-1">{{ ex.question }}</span>
-              <span class="text-gray-500 mx-1">&rarr;</span>
-              <span class="text-gray-700 dark:text-gray-300 italic">{{ ex.displayAnswer }}</span>
-              <span v-if="ex.correct === false && ex.expected" class="text-red-500 dark:text-red-400 ml-1">(expected: {{ ex.expected }})</span>
-            </template>
-            <template v-else>
-              <span class="text-gray-400 font-mono">[  ]</span>
-              <span class="text-gray-500 ml-1">{{ ex.question }}</span>
-              <span class="text-gray-400 ml-1">(not answered)</span>
-            </template>
+      <Card v-for="entry in filteredEntries" :key="entry.lesson.number" class="p-5 mb-5">
+        <CardHeader class="p-0 pb-3">
+          <CardTitle class="text-xl">
+            Lesson {{ entry.lesson.number }}: {{ entry.lesson.title }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="p-0">
+          <!-- Learning items stats -->
+          <div v-if="entry.totalItems > 0" class="text-sm text-muted-foreground mb-3">
+            {{ entry.learnedItems }}/{{ entry.totalItems }} learning items learned
           </div>
-        </div>
 
-        <!-- No assessments in this lesson -->
-        <div v-if="entry.assessmentCount === 0" class="text-sm text-gray-400 italic">
-          No assessments in this lesson
-        </div>
-      </div>
+          <!-- Assessment answers per section -->
+          <div v-for="section in entry.sections" :key="section.index" class="mb-4">
+            <div class="font-semibold text-primary mb-2">{{ section.title }}</div>
+
+            <div v-for="ex in section.examples" :key="ex.key" class="ml-4 mb-1 text-sm">
+              <template v-if="ex.answered">
+                <span v-if="ex.correct === true" class="text-green-600 dark:text-green-400 font-mono">[ok]</span>
+                <span v-else-if="ex.correct === false" class="text-red-600 dark:text-red-400 font-mono">[!!]</span>
+                <span v-else class="text-muted-foreground font-mono">[--]</span>
+                <span class="text-foreground ml-1">{{ ex.question }}</span>
+                <span class="text-muted-foreground mx-1">&rarr;</span>
+                <span class="text-foreground/80 italic">{{ ex.displayAnswer }}</span>
+                <span v-if="ex.correct === false && ex.expected" class="text-red-500 dark:text-red-400 ml-1">(expected: {{ ex.expected }})</span>
+              </template>
+              <template v-else>
+                <span class="text-muted-foreground font-mono">[  ]</span>
+                <span class="text-muted-foreground ml-1">{{ ex.question }}</span>
+                <span class="text-muted-foreground ml-1">(not answered)</span>
+              </template>
+            </div>
+          </div>
+
+          <!-- No assessments in this lesson -->
+          <div v-if="entry.assessmentCount === 0" class="text-sm text-muted-foreground italic">
+            No assessments in this lesson
+          </div>
+        </CardContent>
+      </Card>
 
       <!-- Send to coach button -->
-      <div v-if="coachEmail" class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-5 bg-white dark:bg-gray-800">
-        <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-          Send your results to <strong class="text-gray-800 dark:text-gray-200">{{ coachName || coachEmail }}</strong> via email.
+      <Card v-if="coachEmail" class="p-5 mb-5">
+        <div class="text-sm text-muted-foreground mb-3">
+          Send your results to <strong class="text-foreground">{{ coachName || coachEmail }}</strong> via email.
         </div>
-        <a
-          :href="mailtoLink"
-          class="inline-block px-5 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
-          Send Results via Email
+        <a :href="mailtoLink">
+          <Button class="bg-green-600 hover:bg-green-700 text-white">
+            Send Results via Email
+          </Button>
         </a>
-      </div>
+      </Card>
     </div>
 
     <!-- Loading state -->
     <div v-else-if="isLoading" class="text-center py-8">
-      <div class="text-2xl font-bold text-primary-500 dark:text-blue-400 mb-4">
+      <div class="text-2xl font-bold text-primary mb-4">
         Loading results...
       </div>
     </div>
 
     <!-- Empty state -->
     <div v-else class="text-center py-8">
-      <div class="text-xl text-gray-600 dark:text-gray-400">
+      <div class="text-xl text-muted-foreground">
         No lessons found
       </div>
     </div>
@@ -115,6 +110,8 @@ import { useLessons } from '../composables/useLessons'
 import { useAssessments } from '../composables/useAssessments'
 import { useProgress } from '../composables/useProgress'
 import { formatLangName } from '../utils/formatters'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 const route = useRoute()
 const emit = defineEmits(['update-title'])

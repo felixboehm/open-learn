@@ -2,201 +2,203 @@
   <div>
     <div v-if="lesson">
       <!-- Lesson title and description -->
-      <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+      <h2 class="text-3xl font-bold text-foreground mb-3">
         {{ lesson.title }}
       </h2>
-      <p v-if="lesson.description" class="text-gray-600 dark:text-gray-400 mb-5 text-lg">
+      <p v-if="lesson.description" class="text-muted-foreground mb-5 text-lg">
         {{ lesson.description }}
       </p>
 
       <!-- Sections -->
-      <div
+      <Card
         v-for="(section, idx) in filteredSections"
         :key="idx"
-        class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-5 bg-white dark:bg-gray-800">
-        <div class="text-2xl text-primary-500 dark:text-blue-400 font-bold mb-4">
-          {{ section.title }}
-        </div>
-
-        <!-- Video -->
-        <div v-if="section.video" class="mb-4">
-          <iframe
-            :src="normalizeVideoUrl(section.video)"
-            class="w-full aspect-video rounded"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen>
-          </iframe>
-        </div>
-
-        <!-- Explanation -->
-        <div
-          v-if="section.explanation"
-          class="bg-gray-100 dark:bg-gray-900 p-4 rounded mb-4 prose prose-sm dark:prose-invert max-w-none"
-          v-html="DOMPurify.sanitize(marked(section.explanation))">
-        </div>
-
-        <!-- Examples -->
-        <div
-          v-for="(example, exIdx) in section.examples"
-          :key="exIdx"
-          :id="`example-${example._originalSectionIdx}-${example._originalExampleIdx}`"
-          @click="handleExampleClick(example)"
-          :class="[
-            'p-4 mb-3 rounded transition',
-            isAssessmentType(example) ? '' : 'cursor-pointer',
-            isCurrentlyReading(example) && isPlaying
-              ? 'ring-4 ring-yellow-400 dark:ring-yellow-600'
-              : '',
-            isCurrentlyReading(example) && isPaused
-              ? 'ring-4 ring-orange-400 dark:ring-orange-600'
-              : '',
-            isAssessmentCorrect(example)
-              ? 'bg-green-50 dark:bg-green-900 dark:bg-opacity-30 border-l-4 border-green-500'
-              : example.labels
-                ? 'bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border-l-4 border-blue-500'
-                : 'bg-orange-50 dark:bg-orange-900 dark:bg-opacity-20 border-l-4 border-orange-500'
-          ]">
-          <!-- Question -->
-          <div class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-            <span v-if="isAssessmentCorrect(example)" class="text-green-600 dark:text-green-400 mr-1">✓</span>{{ example.q }}
+        class="p-5 mb-5">
+        <CardHeader class="p-0 pb-4">
+          <CardTitle class="text-2xl text-primary">
+            {{ section.title }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="p-0">
+          <!-- Video -->
+          <div v-if="section.video" class="mb-4">
+            <iframe
+              :src="normalizeVideoUrl(section.video)"
+              class="w-full aspect-video rounded"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
           </div>
 
-          <!-- Type: qa (default) -->
-          <template v-if="!example.type || example.type === 'qa'">
-            <div
-              v-show="settings.showAnswers"
-              class="text-gray-600 dark:text-gray-400 italic mb-3">
-              {{ displayAnswer(example.a) }}
-            </div>
-          </template>
+          <!-- Explanation -->
+          <div
+            v-if="section.explanation"
+            class="bg-muted p-4 rounded mb-4 prose prose-sm dark:prose-invert max-w-none"
+            v-html="DOMPurify.sanitize(marked(section.explanation))">
+          </div>
 
-          <!-- Type: input -->
-          <template v-else-if="example.type === 'input'">
-            <div class="mt-2" @click.stop>
-              <input
-                type="text"
-                :value="getDraft(example)"
-                @input="setDraft(example, $event.target.value)"
-                @keyup.enter="submitAnswer(example)"
-                @blur="onInputBlur(example)"
-                class="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200"
-                placeholder="Type your answer..." />
+          <!-- Examples -->
+          <div
+            v-for="(example, exIdx) in section.examples"
+            :key="exIdx"
+            :id="`example-${example._originalSectionIdx}-${example._originalExampleIdx}`"
+            @click="handleExampleClick(example)"
+            :class="[
+              'p-4 mb-3 rounded transition',
+              isAssessmentType(example) ? '' : 'cursor-pointer',
+              isCurrentlyReading(example) && isPlaying
+                ? 'ring-4 ring-yellow-400 dark:ring-yellow-600'
+                : '',
+              isCurrentlyReading(example) && isPaused
+                ? 'ring-4 ring-orange-400 dark:ring-orange-600'
+                : '',
+              isAssessmentCorrect(example)
+                ? 'bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500'
+                : example.labels
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500'
+                  : 'bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500'
+            ]">
+            <!-- Question -->
+            <div class="text-lg font-semibold text-foreground mb-2">
+              <span v-if="isAssessmentCorrect(example)" class="text-green-600 dark:text-green-400 mr-1">✓</span>{{ example.q }}
             </div>
-            <div v-if="getSubmission(example) && getSubmission(example).correct === false" class="mt-2 text-sm font-semibold text-red-600 dark:text-red-400">
-              {{ displayAnswer(example.a) }}
-            </div>
-          </template>
 
-          <!-- Type: multiple-choice -->
-          <template v-else-if="example.type === 'multiple-choice'">
-            <div class="mt-2 space-y-2" @click.stop>
-              <label
-                v-for="(option, optIdx) in example.options"
-                :key="optIdx"
+            <!-- Type: qa (default) -->
+            <template v-if="!example.type || example.type === 'qa'">
+              <div
+                v-show="settings.showAnswers"
+                class="text-muted-foreground italic mb-3">
+                {{ displayAnswer(example.a) }}
+              </div>
+            </template>
+
+            <!-- Type: input -->
+            <template v-else-if="example.type === 'input'">
+              <div class="mt-2" @click.stop>
+                <Input
+                  type="text"
+                  :model-value="getDraft(example)"
+                  @update:model-value="setDraft(example, $event)"
+                  @keyup.enter="submitAnswer(example)"
+                  @blur="onInputBlur(example)"
+                  class="w-full"
+                  placeholder="Type your answer..." />
+              </div>
+              <div v-if="getSubmission(example) && getSubmission(example).correct === false" class="mt-2 text-sm font-semibold text-red-600 dark:text-red-400">
+                {{ displayAnswer(example.a) }}
+              </div>
+            </template>
+
+            <!-- Type: multiple-choice -->
+            <template v-else-if="example.type === 'multiple-choice'">
+              <div class="mt-2 space-y-2" @click.stop>
+                <label
+                  v-for="(option, optIdx) in example.options"
+                  :key="optIdx"
+                  :class="[
+                    'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
+                    isDraftOptionSelected(example, optIdx) && option.correct
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                      : isDraftOptionSelected(example, optIdx) && option.correct === false
+                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                        : 'border-input hover:border-primary/50'
+                  ]">
+                  <Checkbox
+                    :checked="isDraftOptionSelected(example, optIdx)"
+                    @update:checked="toggleDraftOption(example, optIdx)" />
+                  <Label class="cursor-pointer">{{ option.text }}</Label>
+                </label>
+              </div>
+            </template>
+
+            <!-- Type: select -->
+            <template v-else-if="example.type === 'select'">
+              <div class="mt-2 space-y-2" @click.stop>
+                <RadioGroup
+                  :model-value="getDraftSelect(example) !== null ? String(getDraftSelect(example)) : undefined"
+                  @update:model-value="setDraftSelect(example, parseInt($event))">
+                  <label
+                    v-for="(option, optIdx) in example.options"
+                    :key="optIdx"
+                    :class="[
+                      'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
+                      getDraftSelect(example) === optIdx && option.correct
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                        : getDraftSelect(example) === optIdx && option.correct === false
+                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                          : 'border-input hover:border-primary/50'
+                    ]">
+                    <RadioGroupItem :value="String(optIdx)" />
+                    <Label class="cursor-pointer">{{ option.text }}</Label>
+                  </label>
+                </RadioGroup>
+              </div>
+            </template>
+
+            <!-- Related items -->
+            <div v-if="settings.showLearningItems && example.rel && example.rel.length > 0" class="flex flex-wrap gap-2 mb-3">
+              <Badge
+                v-for="(item, relIdx) in example.rel"
+                :key="relIdx"
+                variant="outline"
+                @click.stop="handleItemClick(item[0])"
                 :class="[
-                  'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
-                  isDraftOptionSelected(example, optIdx) && option.correct
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20'
-                    : isDraftOptionSelected(example, optIdx) && option.correct === false
-                      ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:bg-opacity-20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
+                  'cursor-pointer transition',
+                  isItemLearned(learning, teaching, item[0])
+                    ? 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60'
+                    : 'hover:border-green-400 dark:hover:border-green-600'
                 ]">
-                <input
-                  type="checkbox"
-                  :checked="isDraftOptionSelected(example, optIdx)"
-                  @change="toggleDraftOption(example, optIdx)"
-                  class="w-4 h-4 accent-primary-500" />
-                <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
-              </label>
+                <span class="font-semibold text-primary">
+                  {{ item[0] }}
+                </span>
+                <span class="text-foreground ml-1">
+                  • {{ item.slice(1).join(' • ') }}
+                </span>
+                <span v-if="isItemLearned(learning, teaching, item[0])" class="ml-1">✓</span>
+              </Badge>
             </div>
-          </template>
 
-          <!-- Type: select -->
-          <template v-else-if="example.type === 'select'">
-            <div class="mt-2 space-y-2" @click.stop>
-              <label
-                v-for="(option, optIdx) in example.options"
-                :key="optIdx"
-                :class="[
-                  'flex items-center gap-2 p-2 rounded border cursor-pointer transition',
-                  getDraftSelect(example) === optIdx && option.correct
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20'
-                    : getDraftSelect(example) === optIdx && option.correct === false
-                      ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:bg-opacity-20'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-primary-400'
-                ]">
-                <input
-                  type="radio"
-                  :name="`select-${example._originalSectionIdx}-${example._originalExampleIdx}`"
-                  :checked="getDraftSelect(example) === optIdx"
-                  @change="setDraftSelect(example, optIdx)"
-                  class="w-4 h-4 accent-primary-500" />
-                <span class="text-gray-800 dark:text-gray-200">{{ option.text }}</span>
-              </label>
+            <!-- Labels -->
+            <div v-if="settings.showLabels && example.labels" class="flex gap-1">
+              <Badge
+                v-for="label in example.labels"
+                :key="label">
+                {{ label }}
+              </Badge>
             </div>
-          </template>
-
-          <!-- Related items -->
-          <div v-if="settings.showLearningItems && example.rel && example.rel.length > 0" class="flex flex-wrap gap-2 mb-3">
-            <button
-              v-for="(item, relIdx) in example.rel"
-              :key="relIdx"
-              @click.stop="handleItemClick(item[0])"
-              :class="[
-                'px-2 py-1 rounded text-sm transition cursor-pointer border',
-                isItemLearned(learning, teaching, item[0])
-                  ? 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60'
-                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600'
-              ]">
-              <span class="font-semibold text-primary-500 dark:text-blue-400">
-                {{ item[0] }}
-              </span>
-              <span class="text-gray-800 dark:text-gray-200">
-                • {{ item.slice(1).join(' • ') }}
-              </span>
-              <span v-if="isItemLearned(learning, teaching, item[0])" class="ml-1">✓</span>
-            </button>
           </div>
-
-          <!-- Labels -->
-          <div v-if="settings.showLabels && example.labels" class="flex gap-1">
-            <span
-              v-for="label in example.labels"
-              :key="label"
-              class="bg-blue-500 text-white px-2 py-0.5 rounded text-xs font-semibold">
-              {{ label }}
-            </span>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <!-- End of lesson actions -->
-      <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-5 bg-white dark:bg-gray-800">
+      <Card class="p-5 mb-5">
         <div class="flex flex-wrap gap-3">
           <!-- Next lesson button -->
           <router-link
             v-if="nextLessonNumber"
             :to="`/${learning}/${teaching}/lesson/${nextLessonNumber}`"
-            @click="flushOnLeave"
-            class="px-5 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 transition inline-block">
-            Next Lesson
+            @click="flushOnLeave">
+            <Button>
+              Next Lesson
+            </Button>
           </router-link>
 
           <!-- Back to overview -->
           <router-link
             :to="`/${learning}/${teaching}/lessons`"
-            @click="flushOnLeave"
-            class="px-5 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition inline-block">
-            All Lessons
+            @click="flushOnLeave">
+            <Button variant="secondary">
+              All Lessons
+            </Button>
           </router-link>
         </div>
-      </div>
+      </Card>
     </div>
 
     <!-- Loading state -->
     <div v-else class="text-center py-8">
-      <div class="text-2xl font-bold text-primary-500 dark:text-blue-400 mb-4">
+      <div class="text-2xl font-bold text-primary mb-4">
         Loading lesson...
       </div>
     </div>
@@ -210,14 +212,15 @@
     </div>
 
     <!-- Floating play/pause button for mobile -->
-    <button
+    <Button
       v-if="lesson"
+      size="icon"
       @click="togglePlayPause"
-      class="md:hidden fixed bottom-6 right-6 w-16 h-16 bg-primary-500 text-white rounded-full shadow-lg hover:bg-primary-600 transition-all flex items-center justify-center text-3xl z-50"
+      class="md:hidden fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-lg text-3xl z-50"
       :title="isPlaying ? 'Pause' : 'Play'"
       :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
       {{ isPlaying ? '⏸' : '▶️' }}
-    </button>
+    </Button>
   </div>
 </template>
 
@@ -231,6 +234,13 @@ import { useAudio } from '../composables/useAudio'
 import { useAssessments } from '../composables/useAssessments'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
 
 const route = useRoute()
 const router = useRouter()

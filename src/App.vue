@@ -1,29 +1,32 @@
 <template>
-  <div class="w-full md:max-w-6xl md:mx-auto bg-white dark:bg-gray-900 md:rounded-xl md:shadow-2xl">
+  <div class="w-full md:max-w-6xl md:mx-auto bg-background md:rounded-xl md:shadow-2xl">
     <!-- Header with unified navigation - sticky on desktop -->
-    <header class="bg-gradient-to-br from-primary-500 to-secondary-500 text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
+    <header class="bg-gradient-to-br from-primary to-secondary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
       <div class="flex items-center justify-between gap-4">
         <!-- Left side buttons (fixed width container) -->
         <div class="flex items-center gap-2 min-w-fit">
           <!-- Home button (visible except on home page and lesson detail page) -->
-          <button
+          <Button
             v-if="canGoBack && route.name !== 'lesson-detail'"
+            variant="ghost"
+            size="icon"
             @click="goHome"
-            class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-10 h-10 rounded-full text-xl hover:bg-opacity-30 transition-all flex items-center justify-center flex-shrink-0"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-10 h-10 text-xl flex-shrink-0"
             title="Go to home"
             aria-label="Go to home">
             🏠
-          </button>
+          </Button>
 
           <!-- Back button (only on lesson detail page) -->
-          <button
+          <Button
             v-if="route.name === 'lesson-detail'"
+            variant="ghost"
             @click="goBackToLessons"
-            class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white px-3 py-1.5 rounded-lg hover:bg-opacity-30 transition-all flex items-center gap-1 text-sm flex-shrink-0"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-lg text-sm flex-shrink-0"
             title="Back to lessons"
             aria-label="Back to lessons">
             ←
-          </button>
+          </Button>
         </div>
 
         <!-- Title (grows to fill available space) -->
@@ -34,44 +37,52 @@
         <!-- Right side buttons (fixed width container) -->
         <div class="flex items-center gap-2 min-w-fit">
           <!-- Play/Pause button (visible only on lesson detail page, hidden on mobile) -->
-          <button
+          <Button
             v-if="isLessonPage"
+            variant="ghost"
+            size="icon"
             @click="togglePlayPause"
-            class="hidden md:flex bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all items-center justify-center flex-shrink-0"
+            class="hidden md:flex bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
             :title="isPlaying ? 'Pause' : 'Play'"
             :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
             {{ isPlaying ? '⏸' : '▶️' }}
-          </button>
+          </Button>
 
           <!-- Items button (visible on lesson pages and overview page) -->
-          <button
+          <Button
             v-if="canShowItemsButton"
+            variant="ghost"
+            size="icon"
             @click="goToItems"
-            class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all flex-shrink-0"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
             title="Learning Items"
             aria-label="Learning items">
             📚
-          </button>
+          </Button>
 
           <!-- Settings button (hidden on settings page) -->
-          <button
+          <Button
             v-if="route.name !== 'settings'"
+            variant="ghost"
+            size="icon"
             @click="goToSettings"
-            class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all hover:rotate-90 flex-shrink-0"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl hover:rotate-90 flex-shrink-0"
             title="Settings"
             aria-label="Settings">
             ⚙️
-          </button>
+          </Button>
 
           <!-- Done button (visible only on settings page) -->
-          <button
+          <Button
             v-if="route.name === 'settings'"
+            variant="ghost"
+            size="icon"
             @click="goBack"
-            class="bg-white bg-opacity-20 border-2 border-white border-opacity-50 text-white w-12 h-12 rounded-full text-2xl hover:bg-opacity-30 transition-all flex-shrink-0"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
             title="Done"
             aria-label="Done">
             ✓
-          </button>
+          </Button>
         </div>
       </div>
     </header>
@@ -92,6 +103,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAudio } from './composables/useAudio'
 import { useSettings } from './composables/useSettings'
+import { Button } from '@/components/ui/button'
 
 const router = useRouter()
 const route = useRoute()
