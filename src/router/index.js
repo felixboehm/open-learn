@@ -4,6 +4,7 @@ import LessonsOverview from '../views/LessonsOverview.vue'
 import LessonDetail from '../views/LessonDetail.vue'
 import LearningItems from '../views/LearningItems.vue'
 import AssessmentResults from '../views/AssessmentResults.vue'
+import Coach from '../views/Coach.vue'
 import Settings from '../views/Settings.vue'
 import AddSource from '../views/AddSource.vue'
 
@@ -36,6 +37,12 @@ const routes = [
     path: '/:learning/:teaching/results',
     name: 'assessment-results',
     component: AssessmentResults,
+    meta: { title: null } // Will be set dynamically
+  },
+  {
+    path: '/:learning/:teaching/coach',
+    name: 'coach',
+    component: Coach,
     meta: { title: null } // Will be set dynamically
   },
   {
