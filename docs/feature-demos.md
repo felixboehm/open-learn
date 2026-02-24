@@ -59,3 +59,17 @@ Die Assessment-Results-Seite wurde um vier Features erweitert: Sent-Status-Track
 4. **Change Detection** — Nach dem Senden eine Antwort aendern → Badge wechselt zu "Changed".
 5. **Unlearned Items** — Pro Lektion werden bis zu 10 ungelernte Items als Badges angezeigt. Klick → Item wird als gelernt markiert und verschwindet.
 6. **Last Sent Info** — Unter dem Lesson-Titel steht "Last sent: [Datum] via [Kanal]".
+
+---
+
+## #31 — Section Videos (YouTube und lokal)
+
+Sections koennen jetzt sowohl YouTube-Videos als auch lokale Videodateien (MP4, WebM) einbinden. YouTube-URLs werden automatisch erkannt und als Embed-Iframe gerendert. Lokale Videopfade werden relativ zum Lesson-Ordner aufgeloest und mit dem HTML5 `<video>`-Element dargestellt.
+
+### Demo
+
+1. **YouTube Video** — Section mit `video: "https://www.youtube.com/watch?v=xxx"` → Iframe-Embed wird angezeigt.
+2. **YouTube Short URL** — Section mit `video: "https://youtu.be/xxx"` → wird korrekt zu Embed-URL konvertiert.
+3. **Lokales Video** — Section mit `video: "video/intro.mp4"` → HTML5-Video mit Controls wird angezeigt.
+4. **Responsive** — Videos passen sich der Breite an (aspect-video).
+5. **Kein Video** — Sections ohne `video`-Feld bleiben unveraendert.
