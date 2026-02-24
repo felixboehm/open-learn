@@ -44,3 +44,18 @@ Der Assessment-Results-Button wurde aus der Lessons-Uebersicht entfernt und als 
 3. **Learning Items** — Items-Seite → 📋 Icon ist sichtbar.
 4. **Home / Settings** — 📋 Icon ist NICHT sichtbar (kein Topic-Kontext).
 5. **Alter Button weg** — Auf der Lessons-Uebersicht gibt es keinen "Assessment Results" Button mehr unten.
+
+---
+
+## #30 — Result Page Improvements
+
+Die Assessment-Results-Seite wurde um vier Features erweitert: Sent-Status-Tracking (wann zuletzt gesendet, per Email/Coach), Change-Detection (Hash-basiert: "Up to date" / "Changed" / "Never sent" Badge), Quick-Links zu Lektionen (Lesson-Titel sind jetzt klickbar), und Unlearned Learning Items pro Lektion (klickbar zum Markieren als gelernt).
+
+### Demo
+
+1. **Quick Links** — Results-Seite oeffnen → Lesson-Titel sind klickbar und fuehren direkt zur Lektion.
+2. **Sent Status Badge** — Jede Lektion zeigt "Never sent" (grau), "Up to date" (gruen) oder "Changed" (rot).
+3. **Send via Email** — "Send Results via Email" klicken → alle betroffenen Lektionen werden als "Up to date" markiert.
+4. **Change Detection** — Nach dem Senden eine Antwort aendern → Badge wechselt zu "Changed".
+5. **Unlearned Items** — Pro Lektion werden bis zu 10 ungelernte Items als Badges angezeigt. Klick → Item wird als gelernt markiert und verschwindet.
+6. **Last Sent Info** — Unter dem Lesson-Titel steht "Last sent: [Datum] via [Kanal]".

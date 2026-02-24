@@ -14,8 +14,9 @@ loadSettings()
 const { loadProgress, mergeProgress } = useProgress()
 loadProgress()
 
-const { loadAssessments, mergeAssessments } = useAssessments()
+const { loadAssessments, mergeAssessments, loadSentHistory } = useAssessments()
 loadAssessments()
+loadSentHistory()
 
 const app = createApp(App)
 app.use(router)
