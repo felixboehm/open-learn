@@ -39,17 +39,17 @@
           v-for="item in filteredItems"
           :key="item.id"
           variant="outline"
-          @click="toggleItemLearned(learning, teaching, item.term)"
+          @click="toggleItemLearned(learning, workshop, item.term)"
           :class="[
             'px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto',
-            isItemLearned(learning, teaching, item.term)
+            isItemLearned(learning, workshop, item.term)
               ? 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60'
               : 'hover:border-green-400 dark:hover:border-green-600'
           ]">
           <div class="font-semibold text-primary">{{ item.term }}</div>
           <div class="text-foreground">{{ item.translation }}</div>
           <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
-          <span v-if="isItemLearned(learning, teaching, item.term)" class="ml-1">✓</span>
+          <span v-if="isItemLearned(learning, workshop, item.term)" class="ml-1">✓</span>
         </Badge>
       </div>
     </div>
@@ -65,7 +65,7 @@
             v-for="item in unlearnedItems"
             :key="item.id"
             variant="outline"
-            @click="toggleItemLearned(learning, teaching, item.term)"
+            @click="toggleItemLearned(learning, workshop, item.term)"
             class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto hover:border-green-400 dark:hover:border-green-600">
             <div class="font-semibold text-primary">{{ item.term }}</div>
             <div class="text-foreground">{{ item.translation }}</div>
@@ -83,7 +83,7 @@
             v-for="item in learnedItems"
             :key="item.id"
             variant="outline"
-            @click="toggleItemLearned(learning, teaching, item.term)"
+            @click="toggleItemLearned(learning, workshop, item.term)"
             class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60">
             <div class="font-semibold text-primary">{{ item.term }}</div>
             <div class="text-foreground">{{ item.translation }}</div>
@@ -112,7 +112,7 @@
                 v-for="item in lesson.unlearnedItems"
                 :key="item.id"
                 variant="outline"
-                @click="toggleItemLearned(learning, teaching, item.term)"
+                @click="toggleItemLearned(learning, workshop, item.term)"
                 class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto hover:border-green-400 dark:hover:border-green-600">
                 <div class="font-semibold text-primary">{{ item.term }}</div>
                 <div class="text-foreground">{{ item.translation }}</div>
@@ -130,7 +130,7 @@
                 v-for="item in lesson.learnedItems"
                 :key="item.id"
                 variant="outline"
-                @click="toggleItemLearned(learning, teaching, item.term)"
+                @click="toggleItemLearned(learning, workshop, item.term)"
                 class="px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60">
                 <div class="font-semibold text-primary">{{ item.term }}</div>
                 <div class="text-foreground">{{ item.translation }}</div>
@@ -148,17 +148,17 @@
               v-for="item in lesson.items"
               :key="item.id"
               variant="outline"
-              @click="toggleItemLearned(learning, teaching, item.term)"
+              @click="toggleItemLearned(learning, workshop, item.term)"
               :class="[
                 'px-3 py-2 text-sm transition cursor-pointer flex flex-col items-start h-auto',
-                isItemLearned(learning, teaching, item.term)
+                isItemLearned(learning, workshop, item.term)
                   ? 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60'
                   : 'hover:border-green-400 dark:hover:border-green-600'
               ]">
               <div class="font-semibold text-primary">{{ item.term }}</div>
               <div class="text-foreground">{{ item.translation }}</div>
               <div v-if="item.context" class="text-muted-foreground text-xs">{{ item.context }}</div>
-              <span v-if="isItemLearned(learning, teaching, item.term)" class="ml-1">✓</span>
+              <span v-if="isItemLearned(learning, workshop, item.term)" class="ml-1">✓</span>
             </Badge>
           </div>
         </div>
@@ -193,7 +193,7 @@ const { loadAllLessonsForTopic } = useLessons()
 const { isItemLearned, toggleItemLearned } = useProgress()
 
 const learning = computed(() => route.params.learning)
-const teaching = computed(() => route.params.teaching)
+const workshop = computed(() => route.params.workshop)
 const lessonNumber = computed(() => route.params.number ? parseInt(route.params.number) : null)
 
 const allItems = ref([])
@@ -219,12 +219,12 @@ const filteredItems = computed(() => {
 
 // Unlearned items
 const unlearnedItems = computed(() => {
-  return filteredItems.value.filter(item => !isItemLearned(learning.value, teaching.value, item.term))
+  return filteredItems.value.filter(item => !isItemLearned(learning.value, workshop.value, item.term))
 })
 
 // Learned items
 const learnedItems = computed(() => {
-  return filteredItems.value.filter(item => isItemLearned(learning.value, teaching.value, item.term))
+  return filteredItems.value.filter(item => isItemLearned(learning.value, workshop.value, item.term))
 })
 
 // Group items by lesson
@@ -238,8 +238,8 @@ const lessonsWithItems = computed(() => {
     return [{
       ...lesson,
       items: lessonItems,
-      unlearnedItems: lessonItems.filter(item => !isItemLearned(learning.value, teaching.value, item.term)),
-      learnedItems: lessonItems.filter(item => isItemLearned(learning.value, teaching.value, item.term))
+      unlearnedItems: lessonItems.filter(item => !isItemLearned(learning.value, workshop.value, item.term)),
+      learnedItems: lessonItems.filter(item => isItemLearned(learning.value, workshop.value, item.term))
     }]
   }
 
@@ -249,8 +249,8 @@ const lessonsWithItems = computed(() => {
     return {
       ...lesson,
       items: lessonItems,
-      unlearnedItems: lessonItems.filter(item => !isItemLearned(learning.value, teaching.value, item.term)),
-      learnedItems: lessonItems.filter(item => isItemLearned(learning.value, teaching.value, item.term))
+      unlearnedItems: lessonItems.filter(item => !isItemLearned(learning.value, workshop.value, item.term)),
+      learnedItems: lessonItems.filter(item => isItemLearned(learning.value, workshop.value, item.term))
     }
   }).filter(lesson => lesson.items.length > 0)
 })
@@ -261,7 +261,7 @@ async function loadItems() {
 
   // Get current params values
   const currentLearning = learning.value
-  const currentTeaching = teaching.value
+  const currentTeaching = workshop.value
   const currentLessonNumber = lessonNumber.value
 
   // Load all lessons
@@ -315,7 +315,7 @@ async function loadItems() {
 }
 
 // Watch for route param changes to reload data when navigating
-watch([learning, teaching, lessonNumber], async () => {
+watch([learning, workshop, lessonNumber], async () => {
   await loadItems()
 }, { immediate: true })
 
@@ -331,12 +331,12 @@ watch(selectedLesson, (newValue) => {
   if (newValue === 'all') {
     router.replace({
       name: 'learning-items',
-      params: { learning: learning.value, teaching: teaching.value }
+      params: { learning: learning.value, workshop: workshop.value }
     })
   } else {
     router.replace({
       name: 'learning-items',
-      params: { learning: learning.value, teaching: teaching.value, number: newValue }
+      params: { learning: learning.value, workshop: workshop.value, number: newValue }
     })
   }
 })

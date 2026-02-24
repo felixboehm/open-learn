@@ -40,14 +40,14 @@
           <Label class="block font-semibold mb-3">
             What I want to learn:
           </Label>
-          <div v-if="teachingTopics.length > 0" class="flex flex-col gap-3">
+          <div v-if="workshops.length > 0" class="flex flex-col gap-3">
             <Card
-              v-for="topic in teachingTopics"
+              v-for="topic in workshops"
               :key="topic"
-              @click="selectTeaching(topic)"
+              @click="selectWorkshop(topic)"
               :class="[
                 'p-4 cursor-pointer transition',
-                selectedTeaching === topic
+                selectedWorkshop === topic
                   ? 'ring-2 ring-primary bg-accent'
                   : 'hover:border-primary/50'
               ]">
@@ -59,7 +59,7 @@
                   <div v-if="getTopicDescription(topic)" class="text-sm text-muted-foreground mt-1">
                     {{ getTopicDescription(topic) }}
                   </div>
-                  <div v-if="isRemoteTopic(topic)" class="text-xs text-muted-foreground/60 mt-1">
+                  <div v-if="isRemoteWorkshop(topic)" class="text-xs text-muted-foreground/60 mt-1">
                     {{ getTopicSourceLabel(topic) }}
                   </div>
                 </div>
@@ -71,7 +71,7 @@
                     <span class="text-sm">{{ copiedTopic === topic ? '✓' : '🔗' }}</span>
                   </button>
                   <button
-                    v-if="isRemoteTopic(topic)"
+                    v-if="isRemoteWorkshop(topic)"
                     @click.stop="removeSource(topic)"
                     class="p-1.5 rounded text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition"
                     title="Remove external source">
@@ -136,10 +136,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 
 const router = useRouter()
-const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug, getTopicMeta, getContentSources } = useLessons()
+const { availableContent, isLoading, loadAvailableContent, loadWorkshopsForLanguage, removeContentSource, isRemoteWorkshop, getSourceForSlug, getWorkshopMeta, getContentSources } = useLessons()
 
 const selectedLearning = ref(null)
-const selectedTeaching = ref(null)
+const selectedWorkshop = ref(null)
 const copiedTopic = ref(null)
 
 // Known workshops that can be discovered
@@ -152,13 +152,13 @@ const learningLanguages = computed(() => {
   return Object.keys(availableContent.value)
 })
 
-const teachingTopics = computed(() => {
+const workshops = computed(() => {
   if (!selectedLearning.value) return []
   return Object.keys(availableContent.value[selectedLearning.value] || {})
 })
 
 const canLoadLessons = computed(() => {
-  return selectedLearning.value && selectedTeaching.value
+  return selectedLearning.value && selectedWorkshop.value
 })
 
 // Workshops not yet added by the user
@@ -168,12 +168,12 @@ const availableWorkshops = computed(() => {
 })
 
 function getTopicTitle(topic) {
-  const meta = getTopicMeta(selectedLearning.value, topic)
+  const meta = getWorkshopMeta(selectedLearning.value, topic)
   return meta.title || formatLangName(topic)
 }
 
 function getTopicDescription(topic) {
-  const meta = getTopicMeta(selectedLearning.value, topic)
+  const meta = getWorkshopMeta(selectedLearning.value, topic)
   return meta.description || null
 }
 
@@ -191,7 +191,7 @@ function getTopicSourceLabel(topic) {
 
 async function copyWorkshopLink(topic) {
   const base = window.location.href.replace(/#.*$/, '')
-  const url = `${base}#/${selectedLearning.value}/${topic}/lessons`
+  const url = `${base}#/${selectedLearning.value}/${topic}`
   try {
     await navigator.clipboard.writeText(url)
     copiedTopic.value = topic
@@ -203,15 +203,15 @@ async function copyWorkshopLink(topic) {
 
 async function selectLearning(lang) {
   selectedLearning.value = lang
-  selectedTeaching.value = null
+  selectedWorkshop.value = null
   // Save to localStorage
   localStorage.setItem('lastLearningLanguage', lang)
   localStorage.removeItem('lastTeachingTopic')
-  await loadTopicsForLanguage(lang)
+  await loadWorkshopsForLanguage(lang)
 }
 
-function selectTeaching(topic) {
-  selectedTeaching.value = topic
+function selectWorkshop(topic) {
+  selectedWorkshop.value = topic
   // Save to localStorage
   localStorage.setItem('lastTeachingTopic', topic)
 }
@@ -222,14 +222,14 @@ async function removeSource(topicSlug) {
     removeContentSource(sourceUrl)
   }
   // Clear selection if removed topic was selected
-  if (selectedTeaching.value === topicSlug) {
-    selectedTeaching.value = null
+  if (selectedWorkshop.value === topicSlug) {
+    selectedWorkshop.value = null
     localStorage.removeItem('lastTeachingTopic')
   }
   // Reload content
   await loadAvailableContent()
   if (selectedLearning.value) {
-    await loadTopicsForLanguage(selectedLearning.value)
+    await loadWorkshopsForLanguage(selectedLearning.value)
   }
 }
 
@@ -239,7 +239,7 @@ function loadLessons() {
       name: 'lessons-overview',
       params: {
         learning: selectedLearning.value,
-        teaching: selectedTeaching.value
+        workshop: selectedWorkshop.value
       }
     })
   }
@@ -251,10 +251,10 @@ async function restorePreviousSelection() {
 
   if (lastLearning && learningLanguages.value.includes(lastLearning)) {
     selectedLearning.value = lastLearning
-    await loadTopicsForLanguage(lastLearning)
+    await loadWorkshopsForLanguage(lastLearning)
 
-    if (lastTeaching && teachingTopics.value.includes(lastTeaching)) {
-      selectedTeaching.value = lastTeaching
+    if (lastTeaching && workshops.value.includes(lastTeaching)) {
+      selectedWorkshop.value = lastTeaching
     }
   }
 }

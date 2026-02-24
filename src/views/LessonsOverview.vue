@@ -65,22 +65,22 @@ const router = useRouter()
 const route = useRoute()
 const emit = defineEmits(['update-title'])
 
-const { loadAllLessonsForTopic, isRemoteTopic, getSourceForSlug, getTopicMeta } = useLessons()
+const { loadAllLessonsForTopic, isRemoteWorkshop, getSourceForSlug, getWorkshopMeta } = useLessons()
 
 const lessons = ref([])
 const isLoading = ref(true)
 const copied = ref(false)
 
 const learning = computed(() => route.params.learning)
-const teaching = computed(() => route.params.teaching)
+const workshop = computed(() => route.params.workshop)
 
-const isRemote = computed(() => isRemoteTopic(teaching.value))
+const isRemote = computed(() => isRemoteWorkshop(workshop.value))
 const topicDescription = computed(() => {
-  const meta = getTopicMeta(learning.value, teaching.value)
+  const meta = getWorkshopMeta(learning.value, workshop.value)
   return meta.description || null
 })
 const sourceLabel = computed(() => {
-  const url = getSourceForSlug(teaching.value)
+  const url = getSourceForSlug(workshop.value)
   if (!url) return ''
   try {
     const u = new URL(url)
@@ -91,7 +91,7 @@ const sourceLabel = computed(() => {
 
 async function copyShareLink() {
   const base = window.location.href.replace(/#.*$/, '')
-  const url = `${base}#/${learning.value}/${teaching.value}/lessons`
+  const url = `${base}#/${learning.value}/${workshop.value}`
   try {
     await navigator.clipboard.writeText(url)
     copied.value = true
@@ -104,26 +104,26 @@ function openLesson(number) {
     name: 'lesson-detail',
     params: {
       learning: learning.value,
-      teaching: teaching.value,
+      workshop: workshop.value,
       number
     }
   })
 }
 
 async function loadLessons() {
-  if (!learning.value || !teaching.value) return
+  if (!learning.value || !workshop.value) return
 
   isLoading.value = true
-  lessons.value = await loadAllLessonsForTopic(learning.value, teaching.value)
+  lessons.value = await loadAllLessonsForTopic(learning.value, workshop.value)
   isLoading.value = false
 
-  // Update page title with topic name
-  const meta = getTopicMeta(learning.value, teaching.value)
-  emit('update-title', meta.title || formatLangName(teaching.value))
+  // Update page title with workshop name
+  const meta = getWorkshopMeta(learning.value, workshop.value)
+  emit('update-title', meta.title || formatLangName(workshop.value))
 }
 
 // Watch for route changes and reload lessons
-watch([learning, teaching], () => {
+watch([learning, workshop], () => {
   loadLessons()
 }, { immediate: true })
 </script>

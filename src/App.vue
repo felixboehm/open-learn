@@ -137,7 +137,7 @@ const pageTitle = ref('🎓 Open Learn')
 
 const { isPlaying, play, pause, resume } = useAudio()
 const { settings } = useSettings()
-const { getTopicMeta } = useLessons()
+const { getWorkshopMeta } = useLessons()
 
 const canGoBack = computed(() => {
   return route.name !== 'home'
@@ -155,9 +155,9 @@ const canShowResultsButton = computed(() => {
 
 const hasCoach = computed(() => {
   const learning = route.params.learning
-  const teaching = route.params.teaching
-  if (!learning || !teaching) return false
-  const meta = getTopicMeta(learning, teaching)
+  const workshop = route.params.workshop
+  if (!learning || !workshop) return false
+  const meta = getWorkshopMeta(learning, workshop)
   return !!(meta.coach?.api)
 })
 
@@ -173,10 +173,10 @@ function goHome() {
 
 function goBackToLessons() {
   const learning = route.params.learning
-  const teaching = route.params.teaching
+  const workshop = route.params.workshop
   router.push({
     name: 'lessons-overview',
-    params: { learning, teaching }
+    params: { learning, workshop }
   })
 }
 
@@ -192,29 +192,29 @@ function goToSettings() {
 
 function goToResults() {
   const learning = route.params.learning
-  const teaching = route.params.teaching
-  if (learning && teaching) {
+  const workshop = route.params.workshop
+  if (learning && workshop) {
     router.push({
       name: 'assessment-results',
-      params: { learning, teaching }
+      params: { learning, workshop }
     })
   }
 }
 
 function goToCoach() {
   const learning = route.params.learning
-  const teaching = route.params.teaching
-  if (learning && teaching) {
+  const workshop = route.params.workshop
+  if (learning && workshop) {
     router.push({
       name: 'coach',
-      params: { learning, teaching }
+      params: { learning, workshop }
     })
   }
 }
 
 function goToItems() {
   const learning = route.params.learning
-  const teaching = route.params.teaching
+  const workshop = route.params.workshop
   const number = route.params.number
 
   if (route.name === 'learning-items') {
@@ -223,30 +223,30 @@ function goToItems() {
       // Go to specific lesson
       router.push({
         name: 'lesson-detail',
-        params: { learning, teaching, number }
+        params: { learning, workshop, number }
       })
     } else {
       // Go to lessons overview
       router.push({
         name: 'lessons-overview',
-        params: { learning, teaching }
+        params: { learning, workshop }
       })
     }
     return
   }
 
-  if (learning && teaching) {
+  if (learning && workshop) {
     // If coming from a lesson, include the lesson number to filter
     if (number && route.name === 'lesson-detail') {
       router.push({
         name: 'learning-items',
-        params: { learning, teaching, number }
+        params: { learning, workshop, number }
       })
     } else {
       // If coming from overview, show all items
       router.push({
         name: 'learning-items',
-        params: { learning, teaching }
+        params: { learning, workshop }
       })
     }
   }

@@ -38,7 +38,7 @@ open-learn/
 │   ├── router/
 │   │   └── index.js       # Vue Router configuration
 │   ├── views/             # Page components
-│   │   ├── Home.vue       # Topic selection page
+│   │   ├── Home.vue       # Workshop selection page
 │   │   ├── LessonsOverview.vue  # Lessons grid page
 │   │   ├── LessonDetail.vue     # Individual lesson page (assessments, audio, progress)
 │   │   ├── LearningItems.vue    # Learning items browser
@@ -56,7 +56,7 @@ open-learn/
 │   └── lessons/           # YAML lesson content (deployed as-is)
 │       ├── index.yaml    # Root index - lists available interface languages
 │       ├── deutsch/       # German interface folder
-│       │   ├── topics.yaml            # Lists topics (portugiesisch)
+│       │   ├── workshops.yaml          # Lists workshops (portugiesisch)
 │       │   └── portugiesisch/
 │       │       ├── lessons.yaml       # Lists lesson folder names
 │       │       ├── 01-essential-verbs/
@@ -126,18 +126,19 @@ pnpm test:e2e
 
 **Main Components**:
 - `App.vue` - Root component with unified navigation (back button, dynamic title, settings button)
-- `Home.vue` - Topic selection page (route: `/`)
-- `LessonsOverview.vue` - Lessons grid page (route: `/:learning/:teaching/lessons`)
-- `LessonDetail.vue` - Individual lesson page (route: `/:learning/:teaching/lesson/:number`)
-- `LearningItems.vue` - Learning items browser (route: `/:learning/:teaching/items/:number?`)
+- `Home.vue` - Workshop selection page (route: `/`)
+- `LessonsOverview.vue` - Lessons grid page (route: `/:learning/:workshop`)
+- `LessonDetail.vue` - Individual lesson page (route: `/:learning/:workshop/:number`)
+- `LearningItems.vue` - Learning items browser (route: `/:learning/:workshop/items/:number?`)
+- `Coach.vue` - Coach chat page (route: `/:learning/:workshop/coach`)
 - `Settings.vue` - Settings page (route: `/settings`)
 - `AddSource.vue` - Add external workshop (route: `/add?source=URL`)
 
 **Composables** (Reusable logic, all use singleton pattern — see `docs/adr/005`):
 - `useLessons()` - Lesson loading with js-yaml parser
   - `loadAvailableContent()` - Load main lesson index + registered content sources
-  - `loadTopicsForLanguage(lang)` - Load topics for a language
-  - `loadAllLessonsForTopic(lang, topic)` - Load all lessons for a topic
+  - `loadWorkshopsForLanguage(lang)` - Load workshops for a language
+  - `loadAllLessonsForTopic(lang, topic)` - Load all lessons for a workshop
   - Content source management (add/remove external workshops)
   - IPFS URL resolution
 - `useSettings()` - Settings management
@@ -146,7 +147,7 @@ pnpm test:e2e
   - Dark mode toggle with DOM class manipulation
   - Settings loaded on app initialization in `main.js`
 - `useProgress()` - Progress tracking
-  - Track learned items per language/topic combination
+  - Track learned items per language/workshop combination
   - Persisted to localStorage
 - `useAssessments()` - Assessment system
   - Answer validation for input, multiple-choice, select types
@@ -159,10 +160,12 @@ pnpm test:e2e
   - Variable playback speed
 
 **Routing**:
-- `#/` - Home page (topic selection)
-- `#/:learning/:teaching/lessons` - Lessons overview grid
-- `#/:learning/:teaching/lesson/:number` - Lesson detail view
-- `#/:learning/:teaching/items/:number?` - Learning items
+- `#/` - Home page (workshop selection)
+- `#/:learning/:workshop` - Lessons overview grid
+- `#/:learning/:workshop/:number` - Lesson detail view
+- `#/:learning/:workshop/items/:number?` - Learning items
+- `#/:learning/:workshop/results` - Assessment results
+- `#/:learning/:workshop/coach` - Coach chat
 - `#/settings` - Settings panel
 - `#/add?source=URL` - Add external workshop
 
@@ -171,7 +174,7 @@ Uses hash-based routing (`createWebHashHistory`) for GitHub Pages compatibility.
 **Navigation Pattern**:
 - **Dynamic Title**: Changes based on route
   - Home: "🎓 Open Learn"
-  - Overview: Topic name (e.g., "Portugiesisch")
+  - Overview: Workshop name (e.g., "Portugiesisch")
   - Detail: Lesson title (e.g., "Basic Verbs - Ser and Estar")
   - Settings: "⚙️ Settings"
 - **Back Button**: Visible on all pages except home
@@ -179,10 +182,10 @@ Uses hash-based routing (`createWebHashHistory`) for GitHub Pages compatibility.
 
 **YAML Loading Flow**:
 1. Load `lessons/index.yaml` → get available interface languages
-2. User selects language → load `lessons/{language}/topics.yaml` → get topics
-3. User selects topic → navigate to `/:learning/:teaching/lessons`
-4. Load `lessons/{language}/{topic}/lessons.yaml` → get lesson folder names
-5. Load all lessons for topic → fetch `{folder}/content.yaml` for each folder and parse with js-yaml
+2. User selects language → load `lessons/{language}/workshops.yaml` (fallback: `topics.yaml`) → get workshops
+3. User selects workshop → navigate to `/:learning/:workshop`
+4. Load `lessons/{language}/{workshop}/lessons.yaml` → get lesson folder names
+5. Load all lessons for workshop → fetch `{folder}/content.yaml` for each folder and parse with js-yaml
 
 ### YAML Lesson Schema
 
@@ -206,8 +209,8 @@ sections:
 ```
 
 **Key Concepts**:
-- **Three-level hierarchy**: Language → Topic → Lesson
-  - `lessons/<language>/<topic>/<lesson-folder>/`
+- **Three-level hierarchy**: Language → Workshop → Lesson
+  - `lessons/<language>/<workshop>/<lesson-folder>/`
   - Example: `deutsch/portugiesisch/01-essential-verbs/` = Portuguese lesson in German interface
   - Example: `deutsch/math-algebra/01-basics/` = Math lesson in German interface
 - **Self-contained lessons**: Each lesson folder contains its content and audio files
@@ -258,30 +261,30 @@ See `docs/lesson-schema.md` for individual lesson documentation and `docs/yaml-s
 
 ### Adding a New Lesson
 
-1. Choose or create the appropriate topic folder: `public/lessons/<language>/<topic>/`
-2. Create a new lesson folder: `public/lessons/<language>/<topic>/##-lesson-name/`
+1. Choose or create the appropriate workshop folder: `public/lessons/<language>/<workshop>/`
+2. Create a new lesson folder: `public/lessons/<language>/<workshop>/##-lesson-name/`
 3. Create `content.yaml` in the lesson folder following the schema (see `docs/lesson-schema.md`)
 4. Optionally create an `audio/` subfolder for audio files
-5. Add the folder name to `public/lessons/<language>/<topic>/lessons.yaml`:
+5. Add the folder name to `public/lessons/<language>/<workshop>/lessons.yaml`:
    ```yaml
    lessons:
      - 01-basics
      - 02-your-new-lesson
    ```
-6. Generate audio files using `./generate-audio.sh public/lessons/<language>/<topic>/02-your-new-lesson/`
+6. Generate audio files using `./generate-audio.sh public/lessons/<language>/<workshop>/02-your-new-lesson/`
 
-### Adding a New Topic
+### Adding a New Workshop
 
-1. Create folder structure: `public/lessons/<language>/<topic>/`
-2. Add topic to `public/lessons/<language>/topics.yaml`:
+1. Create folder structure: `public/lessons/<language>/<workshop>/`
+2. Add workshop to `public/lessons/<language>/workshops.yaml`:
    ```yaml
-   topics:
+   workshops:
      - folder: portugiesisch
        code: pt-PT
-     - folder: your-new-topic
+     - folder: your-new-workshop
        code: de-DE
    ```
-3. Create `public/lessons/<language>/<topic>/lessons.yaml` with lesson folder names
+3. Create `public/lessons/<language>/<workshop>/lessons.yaml` with lesson folder names
 4. Add lesson folders with `content.yaml` files
 
 ### Adding a New Interface Language
@@ -294,8 +297,8 @@ See `docs/lesson-schema.md` for individual lesson documentation and `docs/yaml-s
      - folder: your-new-language
        code: xx-XX
    ```
-2. Create `public/lessons/<language>/topics.yaml` with topics list
-3. Create topic folders with `lessons.yaml` and lesson folders
+2. Create `public/lessons/<language>/workshops.yaml` with workshops list
+3. Create workshop folders with `lessons.yaml` and lesson folders
 
 See `docs/yaml-schemas.md` for detailed documentation on all index file schemas.
 
@@ -304,9 +307,8 @@ See `docs/yaml-schemas.md` for detailed documentation on all index file schemas.
 | Term | Code variable | Meaning |
 |------|--------------|---------|
 | **Language** | `learning` | Interface language the user knows (e.g. `deutsch`) |
-| **Topic** | `teaching` | Subject being learned (e.g. `portugiesisch`) |
+| **Workshop** | `workshop` | Subject being learned (e.g. `portugiesisch`), local or remote |
 | **Lesson** | `lesson` | Single learning unit, numbered (e.g. `01-essential-verbs`) |
-| **Workshop** | — | External topic from a remote URL (synonym for "external content source") |
 | **Learning Item** | `rel` | Vocabulary/concept from examples, tracked as learned/unlearned |
 | **Coach** | `lesson.coach` | Optional external service receiving assessment answers |
 

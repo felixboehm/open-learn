@@ -10,7 +10,7 @@ describe('useLessons', () => {
     // Reset state
     lessons.availableContent.value = {}
     lessons.languageCodes.value = {}
-    lessons.topicCodes.value = {}
+    lessons.workshopCodes.value = {}
   })
 
   describe('content sources (localStorage)', () => {
@@ -50,13 +50,13 @@ describe('useLessons', () => {
     })
   })
 
-  describe('topic resolution', () => {
-    it('returns topic key as-is when not remote', () => {
-      expect(lessons.resolveTopicKey('portugiesisch')).toBe('portugiesisch')
+  describe('workshop resolution', () => {
+    it('returns workshop key as-is when not remote', () => {
+      expect(lessons.resolveWorkshopKey('portugiesisch')).toBe('portugiesisch')
     })
 
-    it('returns false for non-remote topics', () => {
-      expect(lessons.isRemoteTopic('portugiesisch')).toBe(false)
+    it('returns false for non-remote workshops', () => {
+      expect(lessons.isRemoteWorkshop('portugiesisch')).toBe(false)
     })
 
     it('returns null for unknown slug', () => {
@@ -64,16 +64,16 @@ describe('useLessons', () => {
     })
   })
 
-  describe('topic metadata', () => {
-    it('returns empty metadata for unknown topic', () => {
-      const meta = lessons.getTopicMeta('de', 'unknown')
+  describe('workshop metadata', () => {
+    it('returns empty metadata for unknown workshop', () => {
+      const meta = lessons.getWorkshopMeta('de', 'unknown')
       expect(meta.title).toBeNull()
       expect(meta.description).toBeNull()
     })
   })
 
   describe('share URL', () => {
-    it('returns null for non-remote topic', () => {
+    it('returns null for non-remote workshop', () => {
       expect(lessons.getShareUrl('portugiesisch')).toBeNull()
     })
   })
@@ -88,18 +88,18 @@ describe('useLessons', () => {
       expect(lessons.getLanguageCode('deutsch')).toBe('de-DE')
     })
 
-    it('returns null for unknown topic code', () => {
+    it('returns null for unknown workshop code', () => {
       expect(lessons.getTopicCode('de', 'unknown')).toBeNull()
     })
 
-    it('returns topic code when available', () => {
-      lessons.topicCodes.value = { 'deutsch': { 'portugiesisch': 'pt-PT' } }
+    it('returns workshop code when available', () => {
+      lessons.workshopCodes.value = { 'deutsch': { 'portugiesisch': 'pt-PT' } }
       expect(lessons.getTopicCode('deutsch', 'portugiesisch')).toBe('pt-PT')
     })
 
-    it('falls back to language code when topic code missing', () => {
+    it('falls back to language code when workshop code missing', () => {
       lessons.languageCodes.value = { 'deutsch': 'de-DE' }
-      lessons.topicCodes.value = { 'deutsch': {} }
+      lessons.workshopCodes.value = { 'deutsch': {} }
       expect(lessons.getTopicCode('deutsch', 'unknown')).toBe('de-DE')
     })
   })
@@ -165,8 +165,8 @@ describe('useLessons', () => {
     })
   })
 
-  describe('loadTopicsForLanguage', () => {
-    it('parses topics.yaml', async () => {
+  describe('loadWorkshopsForLanguage', () => {
+    it('parses workshops/topics.yaml', async () => {
       lessons.availableContent.value = { 'deutsch': {} }
 
       const originalFetch = globalThis.fetch
@@ -175,11 +175,11 @@ describe('useLessons', () => {
         text: () => Promise.resolve('topics:\n  - folder: portugiesisch\n    code: pt-PT\n  - folder: spanisch\n    code: es-ES')
       })
 
-      await lessons.loadTopicsForLanguage('deutsch')
+      await lessons.loadWorkshopsForLanguage('deutsch')
 
       expect(lessons.availableContent.value['deutsch']).toHaveProperty('portugiesisch')
       expect(lessons.availableContent.value['deutsch']).toHaveProperty('spanisch')
-      expect(lessons.topicCodes.value['deutsch']['portugiesisch']).toBe('pt-PT')
+      expect(lessons.workshopCodes.value['deutsch']['portugiesisch']).toBe('pt-PT')
 
       globalThis.fetch = originalFetch
     })

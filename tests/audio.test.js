@@ -5,7 +5,7 @@ vi.mock('../src/composables/useLessons', () => ({
   useLessons: () => ({
     getLanguageCode: () => null,
     getTopicCode: () => null,
-    resolveTopicKey: (key) => key
+    resolveWorkshopKey: (key) => key
   })
 }))
 

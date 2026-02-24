@@ -16,33 +16,33 @@ const routes = [
     meta: { title: '🎓 Open Learn' }
   },
   {
-    path: '/:learning/:teaching/lessons',
-    name: 'lessons-overview',
-    component: LessonsOverview,
-    meta: { title: null } // Will be set dynamically
-  },
-  {
-    path: '/:learning/:teaching/lesson/:number',
-    name: 'lesson-detail',
-    component: LessonDetail,
-    meta: { title: null } // Will be set dynamically
-  },
-  {
-    path: '/:learning/:teaching/items/:number?',
+    path: '/:learning/:workshop/items/:number?',
     name: 'learning-items',
     component: LearningItems,
     meta: { title: null } // Will be set dynamically
   },
   {
-    path: '/:learning/:teaching/results',
+    path: '/:learning/:workshop/results',
     name: 'assessment-results',
     component: AssessmentResults,
     meta: { title: null } // Will be set dynamically
   },
   {
-    path: '/:learning/:teaching/coach',
+    path: '/:learning/:workshop/coach',
     name: 'coach',
     component: Coach,
+    meta: { title: null } // Will be set dynamically
+  },
+  {
+    path: '/:learning/:workshop/:number',
+    name: 'lesson-detail',
+    component: LessonDetail,
+    meta: { title: null } // Will be set dynamically
+  },
+  {
+    path: '/:learning/:workshop',
+    name: 'lessons-overview',
+    component: LessonsOverview,
     meta: { title: null } // Will be set dynamically
   },
   {
