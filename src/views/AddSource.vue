@@ -70,16 +70,16 @@
             <h3 class="text-lg font-semibold text-foreground mb-3">
               Available Content
             </h3>
-            <div v-for="(topics, lang) in discoveredContent" :key="lang" class="mb-3">
+            <div v-for="(workshops, lang) in discoveredContent" :key="lang" class="mb-3">
               <div class="font-semibold text-primary">
                 {{ formatLangName(lang) }}
               </div>
               <div class="flex flex-wrap gap-2 mt-1">
                 <Badge
-                  v-for="topic in topics"
-                  :key="topic"
+                  v-for="ws in workshops"
+                  :key="ws"
                   variant="secondary">
-                  {{ formatTopicName(topic) }}
+                  {{ formatWorkshopName(ws) }}
                 </Badge>
               </div>
             </div>
@@ -120,7 +120,7 @@ const alreadyAdded = ref(false)
 const error = ref(null)
 const discoveredContent = ref({})
 
-function formatTopicName(folderName) {
+function formatWorkshopName(folderName) {
   return formatLangName(folderName)
 }
 
@@ -184,18 +184,19 @@ async function validateSource() {
         const topicsText = await topicsResponse.text()
         const topicsData = yaml.load(topicsText)
 
-        if (topicsData && topicsData.topics) {
-          content[langKey] = topicsData.topics.map(t =>
+        const workshopsList = topicsData && (topicsData.workshops || topicsData.topics)
+        if (workshopsList) {
+          content[langKey] = workshopsList.map(t =>
             typeof t === 'string' ? t : (t.folder || t.url || '')
           )
         }
       } catch {
-        // Skip languages where topics can't be loaded
+        // Skip languages where workshops can't be loaded
       }
     }
 
     if (Object.keys(content).length === 0) {
-      throw new Error('No topics found in the content source')
+      throw new Error('No workshops found in the content source')
     }
 
     discoveredContent.value = content

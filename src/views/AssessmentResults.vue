@@ -37,7 +37,7 @@
         <CardHeader class="p-0 pb-3">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <router-link
-              :to="{ name: 'lesson-detail', params: { learning, teaching, number: entry.lesson.number } }"
+              :to="{ name: 'lesson-detail', params: { learning, workshop, number: entry.lesson.number } }"
               class="text-xl font-semibold text-primary hover:underline">
               Lesson {{ entry.lesson.number }}: {{ entry.lesson.title }}
             </router-link>
@@ -149,7 +149,7 @@ import { Badge } from '@/components/ui/badge'
 const route = useRoute()
 const emit = defineEmits(['update-title'])
 
-const { loadAllLessonsForTopic, getTopicMeta } = useLessons()
+const { loadAllLessonsForWorkshop, getWorkshopMeta } = useLessons()
 const { getAnswer, getLastSent, recordSent, getLessonHash } = useAssessments()
 const { isItemLearned, toggleItemLearned, progress } = useProgress()
 
@@ -158,16 +158,16 @@ const isLoading = ref(true)
 const selectedLesson = ref(null)
 
 const learning = computed(() => route.params.learning)
-const teaching = computed(() => route.params.teaching)
+const workshop = computed(() => route.params.workshop)
 
-// Coach info from topic metadata
+// Coach info from workshop metadata
 const coachEmail = computed(() => {
-  const meta = getTopicMeta(learning.value, teaching.value)
+  const meta = getWorkshopMeta(learning.value, workshop.value)
   return meta.coach?.email || null
 })
 
 const coachName = computed(() => {
-  const meta = getTopicMeta(learning.value, teaching.value)
+  const meta = getWorkshopMeta(learning.value, workshop.value)
   return meta.coach?.name || null
 })
 
@@ -182,13 +182,13 @@ function formatDate(iso) {
 
 // Toggle a learning item
 function toggleItem(itemId) {
-  toggleItemLearned(learning.value, teaching.value, itemId)
+  toggleItemLearned(learning.value, workshop.value, itemId)
 }
 
 // Build structured data for each lesson
 const allEntries = computed(() => {
   return lessons.value.map(lesson => {
-    const lessonKey = `${learning.value}:${teaching.value}:${lesson.number}`
+    const lessonKey = `${learning.value}:${workshop.value}:${lesson.number}`
     const sections = []
     let assessmentCount = 0
     let totalItems = 0
@@ -207,7 +207,7 @@ const allEntries = computed(() => {
             if (!itemsSeen.has(id)) {
               itemsSeen.add(id)
               totalItems++
-              if (isItemLearned(learning.value, teaching.value, id)) {
+              if (isItemLearned(learning.value, workshop.value, id)) {
                 learnedItems++
               } else {
                 unlearnedItems.push({ id, term: item[0], translation: item[1] || '' })
@@ -221,7 +221,7 @@ const allEntries = computed(() => {
         if (type === 'qa') return
 
         assessmentCount++
-        const saved = getAnswer(learning.value, teaching.value, lesson.number, sIdx, eIdx)
+        const saved = getAnswer(learning.value, workshop.value, lesson.number, sIdx, eIdx)
 
         examples.push({
           key: `${sIdx}-${eIdx}`,
@@ -244,8 +244,8 @@ const allEntries = computed(() => {
     })
 
     // Sent status tracking
-    const topicProgress = progress.value[`${learning.value}:${teaching.value}`] || {}
-    const currentHash = getLessonHash(lessonKey, topicProgress)
+    const workshopProgress = progress.value[`${learning.value}:${workshop.value}`] || {}
+    const currentHash = getLessonHash(lessonKey, workshopProgress)
     const lastSent = getLastSent(lessonKey)
     let sentStatus = 'never-sent'
     let sentStatusLabel = 'Never sent'
@@ -302,11 +302,11 @@ function onSendEmail() {
 // Generate plain-text report (uses filtered view)
 function generateReport() {
   const lines = []
-  const topicName = formatLangName(teaching.value)
+  const workshopName = formatLangName(workshop.value)
   const date = new Date().toISOString().slice(0, 10)
 
   lines.push(`Open Learn - Assessment Results`)
-  lines.push(`Topic: ${topicName}`)
+  lines.push(`Workshop: ${workshopName}`)
   lines.push(`Date: ${date}`)
   lines.push('')
 
@@ -348,8 +348,8 @@ function generateReport() {
 // Build mailto: link
 const mailtoLink = computed(() => {
   if (!coachEmail.value) return '#'
-  const topicName = formatLangName(teaching.value)
-  const subject = `Assessment Results - ${topicName}`
+  const workshopName = formatLangName(workshop.value)
+  const subject = `Assessment Results - ${workshopName}`
   const body = generateReport()
   return `mailto:${encodeURIComponent(coachEmail.value)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 })
@@ -388,14 +388,14 @@ function formatExpectedAnswer(example) {
 }
 
 async function loadData() {
-  if (!learning.value || !teaching.value) return
+  if (!learning.value || !workshop.value) return
   isLoading.value = true
-  lessons.value = await loadAllLessonsForTopic(learning.value, teaching.value)
+  lessons.value = await loadAllLessonsForWorkshop(learning.value, workshop.value)
   isLoading.value = false
   emit('update-title', 'Results')
 }
 
-watch([learning, teaching], () => {
+watch([learning, workshop], () => {
   loadData()
 }, { immediate: true })
 </script>

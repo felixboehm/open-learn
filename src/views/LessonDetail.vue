@@ -155,7 +155,7 @@
                 @click.stop="handleItemClick(item[0])"
                 :class="[
                   'cursor-pointer transition',
-                  isItemLearned(learning, teaching, item[0])
+                  isItemLearned(learning, workshop, item[0])
                     ? 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-600 line-through opacity-60'
                     : 'hover:border-green-400 dark:hover:border-green-600'
                 ]">
@@ -165,7 +165,7 @@
                 <span class="text-foreground ml-1">
                   • {{ item.slice(1).join(' • ') }}
                 </span>
-                <span v-if="isItemLearned(learning, teaching, item[0])" class="ml-1">✓</span>
+                <span v-if="isItemLearned(learning, workshop, item[0])" class="ml-1">✓</span>
               </Badge>
             </div>
 
@@ -187,7 +187,7 @@
           <!-- Next lesson button -->
           <router-link
             v-if="nextLessonNumber"
-            :to="`/${learning}/${teaching}/lesson/${nextLessonNumber}`"
+            :to="`/${learning}/${workshop}/lesson/${nextLessonNumber}`"
             @click="flushOnLeave">
             <Button>
               Next Lesson
@@ -196,7 +196,7 @@
 
           <!-- Back to overview -->
           <router-link
-            :to="`/${learning}/${teaching}/lessons`"
+            :to="`/${learning}/${workshop}/lessons`"
             @click="flushOnLeave">
             <Button variant="secondary">
               All Lessons
@@ -256,7 +256,7 @@ const route = useRoute()
 const router = useRouter()
 const emit = defineEmits(['update-title'])
 
-const { loadAllLessonsForTopic } = useLessons()
+const { loadAllLessonsForWorkshop } = useLessons()
 const { settings } = useSettings()
 const { isItemLearned, toggleItemLearned, areAllItemsLearned, progress } = useProgress()
 const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanup, play, pause } = useAudio()
@@ -297,7 +297,7 @@ function resolveVideoPath(videoPath) {
     return `${lesson.value._source.path}/${videoPath}`
   }
   const filename = lesson.value?._filename || `${String(lesson.value?.number).padStart(2, '0')}-lesson`
-  return `${baseUrl}lessons/${learning.value}/${teaching.value}/${filename}/${videoPath}`
+  return `${baseUrl}lessons/${learning.value}/${workshop.value}/${filename}/${videoPath}`
 }
 
 // Check if example is an assessment type (not plain qa)
@@ -397,7 +397,7 @@ function hasDraftOptions(example) {
 
 function getSubmission(example) {
   return getAnswer(
-    learning.value, teaching.value, lessonNumber.value,
+    learning.value, workshop.value, lessonNumber.value,
     example._originalSectionIdx, example._originalExampleIdx
   )
 }
@@ -422,7 +422,7 @@ function submitAnswer(example) {
   const correct = validateAnswer(example, userAnswer)
 
   saveAnswer(
-    learning.value, teaching.value, lessonNumber.value,
+    learning.value, workshop.value, lessonNumber.value,
     example._originalSectionIdx, example._originalExampleIdx,
     { type, answer: userAnswer, correct }
   )
@@ -434,7 +434,7 @@ function restoreDraftsFromSaved() {
   if (!lesson.value) return
   lesson.value.sections.forEach((section, sIdx) => {
     section.examples.forEach((example, eIdx) => {
-      const saved = getAnswer(learning.value, teaching.value, lessonNumber.value, sIdx, eIdx)
+      const saved = getAnswer(learning.value, workshop.value, lessonNumber.value, sIdx, eIdx)
       if (saved) {
         drafts[`${sIdx}-${eIdx}`] = saved.answer
       }
@@ -443,7 +443,7 @@ function restoreDraftsFromSaved() {
 }
 
 const learning = computed(() => route.params.learning)
-const teaching = computed(() => route.params.teaching)
+const workshop = computed(() => route.params.workshop)
 const lessonNumber = computed(() => parseInt(route.params.number))
 
 // Find the next lesson number (if exists)
@@ -477,7 +477,7 @@ const filteredSections = computed(() => {
         if (!example.rel || example.rel.length === 0) {
           return true
         }
-        return !areAllItemsLearned(learning.value, teaching.value, example.rel)
+        return !areAllItemsLearned(learning.value, workshop.value, example.rel)
       })
 
     return {
@@ -490,7 +490,7 @@ const filteredSections = computed(() => {
 
 // Handle item click to toggle learned status
 function handleItemClick(itemId) {
-  toggleItemLearned(learning.value, teaching.value, itemId)
+  toggleItemLearned(learning.value, workshop.value, itemId)
 }
 
 // Handle example click for audio playback (only for non-assessment types)
@@ -543,7 +543,7 @@ watch(
   async () => {
     if (lesson.value) {
       console.log('🔄 Settings changed, rebuilding audio queue')
-      await initializeAudio(lesson.value, learning.value, teaching.value, settings.value)
+      await initializeAudio(lesson.value, learning.value, workshop.value, settings.value)
     }
   },
   { deep: true }
@@ -555,7 +555,7 @@ watch(
   async () => {
     if (lesson.value && settings.value.hideLearnedExamples) {
       console.log('🔄 Progress changed, rebuilding audio queue')
-      await initializeAudio(lesson.value, learning.value, teaching.value, settings.value)
+      await initializeAudio(lesson.value, learning.value, workshop.value, settings.value)
     }
   },
   { deep: true }
@@ -563,11 +563,11 @@ watch(
 
 onMounted(async () => {
   const currentLearning = route.params.learning
-  const currentTeaching = route.params.teaching
+  const currentWorkshop = route.params.workshop
   const currentLessonNumber = parseInt(route.params.number)
 
   // Load all lessons to find the correct file and determine next lesson
-  const lessons = await loadAllLessonsForTopic(currentLearning, currentTeaching)
+  const lessons = await loadAllLessonsForWorkshop(currentLearning, currentWorkshop)
   allLessons.value = lessons
 
   // Find the lesson with the matching number
@@ -577,7 +577,7 @@ onMounted(async () => {
     emit('update-title', `Lesson ${lesson.value.number}`)
 
     // Initialize audio for this lesson (load voices once)
-    await initializeAudio(lesson.value, currentLearning, currentTeaching, settings.value)
+    await initializeAudio(lesson.value, currentLearning, currentWorkshop, settings.value)
 
     // Restore drafts from previously saved assessment answers
     restoreDraftsFromSaved()

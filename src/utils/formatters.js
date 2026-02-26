@@ -1,6 +1,6 @@
 /**
- * Format language/topic names for display
- * @param {string} lang - Language or topic identifier (folder name or URL)
+ * Format language/workshop names for display
+ * @param {string} lang - Language or workshop identifier (folder name or URL)
  * @returns {string} - Formatted display name
  */
 export function formatLangName(lang) {
@@ -12,7 +12,7 @@ export function formatLangName(lang) {
 
   if (names[lang]) return names[lang]
 
-  // For URL-based topics, extract the last path segment
+  // For URL-based workshops, extract the last path segment
   if (lang.startsWith('http://') || lang.startsWith('https://')) {
     const parts = lang.replace(/\/+$/, '').split('/')
     const lastPart = parts[parts.length - 1]

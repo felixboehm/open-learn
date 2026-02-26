@@ -4,8 +4,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 vi.mock('../src/composables/useLessons', () => ({
   useLessons: () => ({
     getLanguageCode: () => null,
-    getTopicCode: () => null,
-    resolveTopicKey: (key) => key
+    getWorkshopCode: () => null,
+    resolveWorkshopKey: (key) => key
   })
 }))
 

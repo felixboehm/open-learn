@@ -2,14 +2,14 @@ import { ref, watch } from 'vue'
 import { useGun } from './useGun'
 
 // Shared progress state (singleton pattern)
-// Structure: { "learning:teaching": { "itemId": true, ... } }
+// Structure: { "learning:workshop": { "itemId": true, ... } }
 const progress = ref({})
 
 let isInitialized = false
 
-// Get the storage key for a specific topic
-function getTopicKey(learning, teaching) {
-  return `${learning}:${teaching}`
+// Get the storage key for a specific workshop
+function getWorkshopKey(learning, workshop) {
+  return `${learning}:${workshop}`
 }
 
 // Save progress to localStorage and sync to Gun
@@ -35,37 +35,37 @@ function loadProgress() {
 }
 
 // Check if an item is learned
-function isItemLearned(learning, teaching, itemId) {
-  const topicKey = getTopicKey(learning, teaching)
-  return progress.value[topicKey]?.[itemId] === true
+function isItemLearned(learning, workshop, itemId) {
+  const workshopKey = getWorkshopKey(learning, workshop)
+  return progress.value[workshopKey]?.[itemId] === true
 }
 
 // Toggle learned status for an item
-function toggleItemLearned(learning, teaching, itemId) {
-  const topicKey = getTopicKey(learning, teaching)
+function toggleItemLearned(learning, workshop, itemId) {
+  const workshopKey = getWorkshopKey(learning, workshop)
 
-  if (!progress.value[topicKey]) {
-    progress.value[topicKey] = {}
+  if (!progress.value[workshopKey]) {
+    progress.value[workshopKey] = {}
   }
 
-  if (progress.value[topicKey][itemId]) {
-    delete progress.value[topicKey][itemId]
+  if (progress.value[workshopKey][itemId]) {
+    delete progress.value[workshopKey][itemId]
   } else {
-    progress.value[topicKey][itemId] = true
+    progress.value[workshopKey][itemId] = true
   }
 
   saveProgress()
 }
 
 // Check if all items in an example are learned
-function areAllItemsLearned(learning, teaching, items) {
+function areAllItemsLearned(learning, workshop, items) {
   if (!items || items.length === 0) {
     return false
   }
 
   return items.every(item => {
     const itemId = item[0] // First element is the unique identifier
-    return isItemLearned(learning, teaching, itemId)
+    return isItemLearned(learning, workshop, itemId)
   })
 }
 
@@ -88,11 +88,11 @@ function getProgress() {
 
 // Merge imported progress into existing (additive)
 function mergeProgress(imported) {
-  for (const [topicKey, items] of Object.entries(imported)) {
-    if (!progress.value[topicKey]) {
-      progress.value[topicKey] = {}
+  for (const [workshopKey, items] of Object.entries(imported)) {
+    if (!progress.value[workshopKey]) {
+      progress.value[workshopKey] = {}
     }
-    Object.assign(progress.value[topicKey], items)
+    Object.assign(progress.value[workshopKey], items)
   }
   saveProgress()
 }

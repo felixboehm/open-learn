@@ -6,11 +6,11 @@ This document describes the YAML file schemas used for organizing and structurin
 
 The application uses a hierarchical structure of YAML files to organize content:
 
-**Hierarchy**: Language → Topic → Lesson
+**Hierarchy**: Language → Workshop → Lesson
 
 1. **index.yaml** - Root index listing all available languages (interface languages)
-2. **topics.yaml** - Lists available topics for each language
-3. **lessons.yaml** - Lists lesson files for each topic
+2. **workshops.yaml** - Lists available workshops for each language
+3. **lessons.yaml** - Lists lesson files for each workshop
 4. **Individual lesson files** - Contain the actual lesson content (see [lesson-schema.md](lesson-schema.md))
 
 ## Directory Structure
@@ -19,8 +19,8 @@ The application uses a hierarchical structure of YAML files to organize content:
 lessons/
 ├── index.yaml                  # Root: lists all available languages
 ├── deutsch/                        # Language folder
-│   ├── topics.yaml                # Lists topics for this language
-│   ├── portugiesisch/             # Topic folder
+│   ├── workshops.yaml             # Lists workshops for this language
+│   ├── portugiesisch/             # Workshop folder
 │   │   ├── lessons.yaml           # Lists lesson folder names
 │   │   ├── 01-basic-verbs/        # Individual lesson folder
 │   │   │   ├── content.yaml       # Lesson content
@@ -35,7 +35,7 @@ lessons/
 │           ├── content.yaml
 │           └── audio/
 └── english/                        # Another language folder
-    ├── topics.yaml
+    ├── workshops.yaml
     └── german/
         ├── lessons.yaml
         └── ...
@@ -107,16 +107,16 @@ for (const lang of data.languages) {
 }
 ```
 
-## 2. topics.yaml
+## 2. workshops.yaml
 
-**Location**: `lessons/<language>/topics.yaml`
+**Location**: `lessons/<language>/workshops.yaml` (also supports legacy `topics.yaml`)
 
-**Purpose**: Lists all available topics for a specific language.
+**Purpose**: Lists all available workshops for a specific language.
 
 ### Schema
 
 ```yaml
-topics:
+workshops:
   - string                      # Backward compatible: folder name
   - folder: string              # Local folder source
     code: string
@@ -130,31 +130,33 @@ topics:
       name: string
 ```
 
+> **Backward compatibility**: The file can also be named `topics.yaml` with a `topics:` key. The app tries `workshops.yaml` first, then falls back to `topics.yaml`.
+
 ### Fields
 
-- **topics** (array, required): List of available topics
+- **workshops** (array, required): List of available workshops
   - **String format** (backward compatible): Treated as a local folder name
   - **Object format with `folder`**:
-    - **folder** (string, required): Directory name for this topic (e.g., "portugiesisch", "math-algebra")
+    - **folder** (string, required): Directory name for this workshop (e.g., "portugiesisch", "math-algebra")
     - **code** (string, optional): Language/locale code for text-to-speech (BCP 47 format)
     - **coach** (object, optional): Workshop coach configuration
       - **email** (string, required): Coach's email address for `mailto:` results
       - **name** (string, optional): Coach or workshop name displayed in the UI
   - **Object format with `url`**:
-    - **url** (string, required): Remote URL to the topic folder
+    - **url** (string, required): Remote URL to the workshop folder
     - **code** (string, optional): Language/locale code for text-to-speech
     - **coach** (object, optional): Workshop coach configuration (same fields as above)
 
-For language topics, use the target language code (e.g., "pt-PT" for Portuguese). For non-language topics, use the base language code.
+For language workshops, use the target language code (e.g., "pt-PT" for Portuguese). For non-language workshops, use the base language code.
 
-When `coach` is configured, the Assessment Results page (`/:learning/:teaching/results`) shows a "Send Results via Email" button that opens the user's email client with a plain-text report.
+When `coach` is configured, the Assessment Results page (`/:learning/:workshop/results`) shows a "Send Results via Email" button that opens the user's email client with a plain-text report.
 
 ### Example
 
 ```yaml
-# Available topics for German language
-# This file lists all topics available in the German interface
-topics:
+# Available workshops for German language
+# This file lists all workshops available in the German interface
+workshops:
   # Object format with folder + coach
   - folder: portugiesisch
     code: pt-PT
@@ -165,32 +167,32 @@ topics:
   - englisch
 
   # Object format with URL
-  - url: https://example.com/topics/spanish
+  - url: https://example.com/workshops/spanish
     code: es-ES
 
   # IPFS URL
   - url: ipfs://QmExample.../math-algebra
-    code: de-DE    # Non-language topic uses base language
+    code: de-DE    # Non-language workshop uses base language
 ```
 
 ### Usage in Code
 
 ```javascript
 // In useLessons.js
-const response = await fetch(`lessons/${lang}/topics.yaml`)
+const response = await fetch(`lessons/${lang}/workshops.yaml`)
 const data = yaml.load(text)
 
-for (const topic of data.topics) {
-  const folder = topic.folder    // "portugiesisch"
-  const code = topic.code         // "pt-PT"
+for (const workshop of data.workshops) {
+  const folder = workshop.folder    // "portugiesisch"
+  const code = workshop.code         // "pt-PT"
 }
 ```
 
 ## 3. lessons.yaml
 
-**Location**: `lessons/<language>/<topic>/lessons.yaml`
+**Location**: `lessons/<language>/<workshop>/lessons.yaml`
 
-**Purpose**: Lists all lesson folders available for a specific topic.
+**Purpose**: Lists all lesson folders available for a specific workshop.
 
 ### Schema
 
@@ -213,7 +215,7 @@ Each lesson folder must contain a `content.yaml` file. Lessons are sorted by the
 ### Example
 
 ```yaml
-# Portuguese topic lessons (German language)
+# Portuguese workshop lessons (German language)
 lessons:
   # String format (backward compatible)
   - 01-basic-verbs
@@ -251,7 +253,7 @@ Each lesson folder contains:
 
 ```javascript
 // In useLessons.js
-const response = await fetch(`lessons/${lang}/${topic}/lessons.yaml`)
+const response = await fetch(`lessons/${lang}/${workshop}/lessons.yaml`)
 const data = yaml.load(text)
 
 // data.lessons is an array of strings (folder names)
@@ -259,22 +261,22 @@ console.log(data.lessons)  // ["01-basic-verbs", "02-modal-verbs", ...]
 
 // Load each lesson from its folder
 for (const folderName of data.lessons) {
-  // Loads from: lessons/{lang}/{topic}/{folderName}/content.yaml
-  const lesson = await loadLesson(lang, topic, folderName)
+  // Loads from: lessons/{lang}/{workshop}/{folderName}/content.yaml
+  const lesson = await loadLesson(lang, workshop, folderName)
 }
 ```
 
 ## Audio Integration
 
-The language codes specified in `index.yaml` and `topics.yaml` are used for audio generation and text-to-speech functionality.
+The language codes specified in `index.yaml` and `workshops.yaml` are used for audio generation and text-to-speech functionality.
 
 ### Language Usage by Content Type
 
 | Content Type | YAML Field | Language Used | Code Source |
 |--------------|-----------|---------------|-------------|
 | **Lesson title** | `title` | **Base** language | `index.yaml` |
-| **Section titles** | `sections[].title` | **Topic** language | `topics.yaml` |
-| **Questions** | `sections[].examples[].q` | **Topic** language | `topics.yaml` |
+| **Section titles** | `sections[].title` | **Workshop** language | `workshops.yaml` |
+| **Questions** | `sections[].examples[].q` | **Workshop** language | `workshops.yaml` |
 | **Answers** | `sections[].examples[].a` | **Base** language | `index.yaml` |
 
 **Example for `deutsch/portugiesisch/`:**
@@ -288,16 +290,16 @@ The language codes specified in `index.yaml` and `topics.yaml` are used for audi
 Audio files are stored **inside each lesson folder** for portability and self-containment:
 
 ```
-lessons/<language>/<topic>/<lesson-folder>/
+lessons/<language>/<workshop>/<lesson-folder>/
 ├── content.yaml
 └── audio/
     ├── title.mp3                  # Lesson title (in base language)
-    ├── 0-title.mp3                # Section 0 title (in topic language)
-    ├── 0-0-q.mp3                  # Section 0, Example 0, Question (in topic language)
+    ├── 0-title.mp3                # Section 0 title (in workshop language)
+    ├── 0-0-q.mp3                  # Section 0, Example 0, Question (in workshop language)
     ├── 0-0-a.mp3                  # Section 0, Example 0, Answer (in base language)
     ├── 0-1-q.mp3
     ├── 0-1-a.mp3
-    ├── 1-title.mp3                # Section 1 title (in topic language)
+    ├── 1-title.mp3                # Section 1 title (in workshop language)
     ├── 1-0-q.mp3
     └── ...
 ```
@@ -306,7 +308,7 @@ lessons/<language>/<topic>/<lesson-folder>/
 
 **Language Usage:**
 - **Lesson title** uses the **base language** (e.g., German in `deutsch/portugiesisch/`)
-- **Section titles** and **questions** use the **topic language** (e.g., Portuguese in `deutsch/portugiesisch/`)
+- **Section titles** and **questions** use the **workshop language** (e.g., Portuguese in `deutsch/portugiesisch/`)
 - **Answers** use the **base language** (e.g., German in `deutsch/portugiesisch/`)
 
 **Benefits of this structure:**
@@ -361,10 +363,10 @@ languages:
 ```
 
 ```yaml
-topics:
-  - folder: portugiesisch  # Local folder topic
+workshops:
+  - folder: portugiesisch  # Local folder workshop
     code: pt-PT
-  - url: https://example.com/spanish  # Remote topic
+  - url: https://example.com/spanish  # Remote workshop
     code: es-ES
 ```
 
@@ -400,21 +402,21 @@ lessons:
 
 ### 3. File Organization
 
-- Always create all three index files (`index.yaml`, `topics.yaml`, `lessons.yaml`)
-- Keep the directory structure consistent: `lessons/<language>/<topic>/`
+- Always create all three index files (`index.yaml`, `workshops.yaml`, `lessons.yaml`)
+- Keep the directory structure consistent: `lessons/<language>/<workshop>/`
 - Update index files immediately when adding new content
 
 ### 4. Versioning and Updates
 
 - **When adding a new language**:
   1. Add entry to `index.yaml`
-  2. Create `lessons/<language>/topics.yaml`
-  3. Create topic folders and their `lessons.yaml` files
+  2. Create `lessons/<language>/workshops.yaml`
+  3. Create workshop folders and their `lessons.yaml` files
 
-- **When adding a new topic**:
-  1. Add entry to appropriate `topics.yaml`
-  2. Create topic folder
-  3. Create `lessons.yaml` in topic folder
+- **When adding a new workshop**:
+  1. Add entry to appropriate `workshops.yaml`
+  2. Create workshop folder
+  3. Create `lessons.yaml` in workshop folder
   4. Add lesson files
 
 - **When adding a new lesson**:
@@ -431,8 +433,8 @@ For each new content addition, ensure these files exist:
 
 ```
 ✓ lessons/index.yaml exists
-✓ lessons/<language>/topics.yaml exists
-✓ lessons/<language>/<topic>/lessons.yaml exists
+✓ lessons/<language>/workshops.yaml exists
+✓ lessons/<language>/<workshop>/lessons.yaml exists
 ✓ All lesson folders listed in lessons.yaml exist
 ✓ Each lesson folder contains content.yaml
 ✓ All YAML files are valid (parseable by js-yaml)
@@ -442,8 +444,8 @@ For each new content addition, ensure these files exist:
 
 **1. Missing index files**
 ```
-Error: Failed to fetch topics.yaml for deutsch: 404
-→ Create lessons/deutsch/topics.yaml
+Error: Failed to fetch workshops.yaml for deutsch: 404
+→ Create lessons/deutsch/workshops.yaml
 ```
 
 **2. Invalid YAML syntax**
@@ -488,9 +490,9 @@ languages:
     code: en-US
 ```
 
-**2. Create `lessons/english/topics.yaml`:**
+**2. Create `lessons/english/workshops.yaml`:**
 ```yaml
-topics:
+workshops:
   - folder: german
     code: de-DE
 ```
@@ -510,9 +512,9 @@ lessons:
 
 ### Full Example: Adding Math Content
 
-**1. Update `lessons/english/topics.yaml`:**
+**1. Update `lessons/english/workshops.yaml`:**
 ```yaml
-topics:
+workshops:
   - folder: german
     code: de-DE
   - folder: math-algebra

@@ -3,7 +3,7 @@ import { useLessons } from './useLessons'
 import { useProgress } from './useProgress'
 
 // Get lesson composable for language codes
-const { getLanguageCode, getTopicCode, resolveTopicKey } = useLessons()
+const { getLanguageCode, getWorkshopCode, resolveWorkshopKey } = useLessons()
 
 // Get progress composable for learned items
 const { areAllItemsLearned } = useProgress()
@@ -16,10 +16,10 @@ const readingQueue = ref([])
 const audioElements = ref([]) // Pre-loaded audio elements
 const currentAudio = ref(null) // Currently playing audio element
 const lessonTitle = ref('')
-const lessonMetadata = ref({ learning: '', teaching: '', number: '' })
+const lessonMetadata = ref({ learning: '', workshop: '', number: '' })
 
 // Build reading queue from lesson data
-function buildReadingQueue(lesson, learning, teaching, settings) {
+function buildReadingQueue(lesson, learning, workshop, settings) {
   const queue = []
 
   if (!lesson || !lesson.sections) {
@@ -30,22 +30,22 @@ function buildReadingQueue(lesson, learning, teaching, settings) {
   const lessonFilename = lesson._filename || `${String(lesson.number).padStart(2, '0')}-lesson`
 
   // Resolve slug to URL if needed
-  const resolvedTeaching = resolveTopicKey(teaching)
+  const resolvedWorkshop = resolveWorkshopKey(workshop)
 
   // Determine audio base path based on lesson source
   let audioBase
   if (lesson._source && lesson._source.type === 'url') {
     // Lesson is from URL
     audioBase = `${lesson._source.path}/audio`
-  } else if (resolvedTeaching && (resolvedTeaching.startsWith('http://') || resolvedTeaching.startsWith('https://'))) {
-    // Topic is a URL (resolved from slug)
-    audioBase = `${resolvedTeaching}/${lessonFilename}/audio`
+  } else if (resolvedWorkshop && (resolvedWorkshop.startsWith('http://') || resolvedWorkshop.startsWith('https://'))) {
+    // Workshop is a URL (resolved from slug)
+    audioBase = `${resolvedWorkshop}/${lessonFilename}/audio`
   } else if (learning && (learning.startsWith('http://') || learning.startsWith('https://'))) {
     // Language is from URL
-    audioBase = `${learning}/${teaching}/${lessonFilename}/audio`
+    audioBase = `${learning}/${workshop}/${lessonFilename}/audio`
   } else {
     // Local folder structure: audio files are inside the lesson folder
-    audioBase = `${baseUrl}lessons/${learning}/${teaching}/${lessonFilename}/audio`
+    audioBase = `${baseUrl}lessons/${learning}/${workshop}/${lessonFilename}/audio`
   }
 
   console.log(`🎵 Building audio queue from: ${audioBase}`)
@@ -76,7 +76,7 @@ function buildReadingQueue(lesson, learning, teaching, settings) {
       }
 
       // Hide example only if ALL items are learned
-      return !areAllItemsLearned(learning, teaching, example.rel)
+      return !areAllItemsLearned(learning, workshop, example.rel)
     })
 
     // Only add section title and examples if there are visible examples
@@ -169,7 +169,7 @@ async function preloadAudioFiles(queue) {
 }
 
 // Setup Media Session API for lock screen controls
-function setupMediaSession(lessonTitle, learning, teaching) {
+function setupMediaSession(lessonTitle, learning, workshop) {
   if (!('mediaSession' in navigator)) {
     console.log('⚠️ Media Session API not supported')
     return
@@ -180,7 +180,7 @@ function setupMediaSession(lessonTitle, learning, teaching) {
 
   navigator.mediaSession.metadata = new MediaMetadata({
     title: lessonTitle,
-    artist: `Learning ${teaching}`,
+    artist: `Learning ${workshop}`,
     album: `Open Learn - ${learning}`,
     artwork: [
       { src: artworkUrl, sizes: '512x512', type: 'image/svg+xml' }
@@ -211,17 +211,17 @@ function setupMediaSession(lessonTitle, learning, teaching) {
 }
 
 // Initialize audio queue for a lesson
-async function initializeAudio(lesson, learning, teaching, settings) {
+async function initializeAudio(lesson, learning, workshop, settings) {
   console.log('🎼 Initializing audio for lesson:', lesson.title)
-  console.log('🌍 Languages:', { learning, teaching })
+  console.log('🌍 Languages:', { learning, workshop })
   console.log('📖 Lesson number:', lesson.number)
   console.log('📁 Lesson filename:', lesson._filename)
   console.log('🎵 Audio speed:', settings.audioSpeed)
 
   lessonTitle.value = lesson.title
-  lessonMetadata.value = { learning, teaching, number: lesson.number }
+  lessonMetadata.value = { learning, workshop, number: lesson.number }
 
-  readingQueue.value = buildReadingQueue(lesson, learning, teaching, settings)
+  readingQueue.value = buildReadingQueue(lesson, learning, workshop, settings)
 
   console.log('📋 Built reading queue with', readingQueue.value.length, 'items')
   console.log('📋 First 5 items:', readingQueue.value.slice(0, 5).map(item => ({
@@ -239,7 +239,7 @@ async function initializeAudio(lesson, learning, teaching, settings) {
   currentAudio.value = null
 
   // Setup Media Session API
-  setupMediaSession(lesson.title, learning, teaching)
+  setupMediaSession(lesson.title, learning, workshop)
 
   console.log('✅ Audio initialized')
 }

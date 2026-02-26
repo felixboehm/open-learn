@@ -10,7 +10,7 @@ Lesson content needs a format that is human-readable, easy to author, and suppor
 Use **YAML** as the content format for all lesson data.
 
 - Lessons are authored in `content.yaml` files
-- Index files (`index.yaml`, `topics.yaml`, `lessons.yaml`) organize the hierarchy
+- Index files (`index.yaml`, `workshops.yaml`, `lessons.yaml`) organize the hierarchy
 - Parsed at runtime with `js-yaml` library
 
 ## Consequences

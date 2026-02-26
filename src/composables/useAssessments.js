@@ -2,13 +2,13 @@ import { ref, watch } from 'vue'
 import { useGun } from './useGun'
 
 // Shared assessment state (singleton pattern)
-// Structure: { "learning:teaching:lessonNumber": { "sectionIdx-exampleIdx": { type, answer, submittedAt, correct } } }
+// Structure: { "learning:workshop:lessonNumber": { "sectionIdx-exampleIdx": { type, answer, submittedAt, correct } } }
 const assessments = ref({})
 
 let isInitialized = false
 
-function getKey(learning, teaching, lessonNumber) {
-  return `${learning}:${teaching}:${lessonNumber}`
+function getKey(learning, workshop, lessonNumber) {
+  return `${learning}:${workshop}:${lessonNumber}`
 }
 
 function getItemKey(sectionIdx, exampleIdx) {
@@ -35,14 +35,14 @@ function loadAssessments() {
   }
 }
 
-function getAnswer(learning, teaching, lessonNumber, sectionIdx, exampleIdx) {
-  const key = getKey(learning, teaching, lessonNumber)
+function getAnswer(learning, workshop, lessonNumber, sectionIdx, exampleIdx) {
+  const key = getKey(learning, workshop, lessonNumber)
   const itemKey = getItemKey(sectionIdx, exampleIdx)
   return assessments.value[key]?.[itemKey] || null
 }
 
-function saveAnswer(learning, teaching, lessonNumber, sectionIdx, exampleIdx, answerData) {
-  const key = getKey(learning, teaching, lessonNumber)
+function saveAnswer(learning, workshop, lessonNumber, sectionIdx, exampleIdx, answerData) {
+  const key = getKey(learning, workshop, lessonNumber)
   const itemKey = getItemKey(sectionIdx, exampleIdx)
 
   if (!assessments.value[key]) {
@@ -57,8 +57,8 @@ function saveAnswer(learning, teaching, lessonNumber, sectionIdx, exampleIdx, an
   saveAssessments()
 }
 
-function clearAnswers(learning, teaching, lessonNumber) {
-  const key = getKey(learning, teaching, lessonNumber)
+function clearAnswers(learning, workshop, lessonNumber) {
+  const key = getKey(learning, workshop, lessonNumber)
   delete assessments.value[key]
   saveAssessments()
 }
@@ -104,7 +104,7 @@ function initializeWatchers() {
 }
 
 // --- Sent history tracking ---
-// Structure: { "learning:teaching:lessonNumber": [{ timestamp, channel, hash }] }
+// Structure: { "learning:workshop:lessonNumber": [{ timestamp, channel, hash }] }
 const sentHistory = ref({})
 
 function loadSentHistory() {

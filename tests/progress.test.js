@@ -20,7 +20,7 @@ describe('useProgress', () => {
       expect(progress.isItemLearned('de', 'pt', 'sei')).toBe(true)
     })
 
-    it('returns false for unknown topic', () => {
+    it('returns false for unknown workshop', () => {
       expect(progress.isItemLearned('de', 'unknown', 'sei')).toBe(false)
     })
   })
@@ -43,20 +43,20 @@ describe('useProgress', () => {
       expect(stored['de:pt']['sei']).toBe(true)
     })
 
-    it('creates topic key if missing', () => {
+    it('creates workshop key if missing', () => {
       progress.toggleItemLearned('en', 'de', 'hello')
       expect(progress.progress.value['en:de']).toBeDefined()
       expect(progress.progress.value['en:de']['hello']).toBe(true)
     })
 
-    it('handles multiple items in same topic', () => {
+    it('handles multiple items in same workshop', () => {
       progress.toggleItemLearned('de', 'pt', 'sei')
       progress.toggleItemLearned('de', 'pt', 'estar')
       expect(progress.isItemLearned('de', 'pt', 'sei')).toBe(true)
       expect(progress.isItemLearned('de', 'pt', 'estar')).toBe(true)
     })
 
-    it('handles multiple topics independently', () => {
+    it('handles multiple workshops independently', () => {
       progress.toggleItemLearned('de', 'pt', 'sei')
       progress.toggleItemLearned('de', 'es', 'ser')
       expect(progress.isItemLearned('de', 'pt', 'sei')).toBe(true)

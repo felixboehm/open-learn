@@ -88,7 +88,7 @@ import { Input } from '@/components/ui/input'
 const route = useRoute()
 const emit = defineEmits(['update-title'])
 
-const { loadAllLessonsForTopic, getTopicMeta } = useLessons()
+const { loadAllLessonsForWorkshop, getWorkshopMeta } = useLessons()
 const { isLoading, getMessages, sendMessage, clearChat, loadChatHistory } = useCoach()
 
 const lessons = ref([])
@@ -96,19 +96,19 @@ const inputMessage = ref('')
 const chatContainer = ref(null)
 
 const learning = computed(() => route.params.learning)
-const teaching = computed(() => route.params.teaching)
+const workshop = computed(() => route.params.workshop)
 
 const coachApi = computed(() => {
-  const meta = getTopicMeta(learning.value, teaching.value)
+  const meta = getWorkshopMeta(learning.value, workshop.value)
   return meta.coach?.api || null
 })
 
 const coachName = computed(() => {
-  const meta = getTopicMeta(learning.value, teaching.value)
+  const meta = getWorkshopMeta(learning.value, workshop.value)
   return meta.coach?.name || null
 })
 
-const messages = computed(() => getMessages(learning.value, teaching.value))
+const messages = computed(() => getMessages(learning.value, workshop.value))
 
 const suggestions = [
   'How am I doing?',
@@ -129,7 +129,7 @@ async function send() {
   if (!text || !coachApi.value) return
 
   inputMessage.value = ''
-  await sendMessage(coachApi.value, learning.value, teaching.value, text, lessons.value)
+  await sendMessage(coachApi.value, learning.value, workshop.value, text, lessons.value)
   scrollToBottom()
 }
 
@@ -139,7 +139,7 @@ function sendSuggestion(text) {
 }
 
 function handleClear() {
-  clearChat(learning.value, teaching.value)
+  clearChat(learning.value, workshop.value)
 }
 
 function scrollToBottom() {
@@ -158,9 +158,9 @@ watch(messages, () => {
 // Load data
 loadChatHistory()
 
-watch([learning, teaching], async () => {
-  if (!learning.value || !teaching.value) return
-  lessons.value = await loadAllLessonsForTopic(learning.value, teaching.value)
+watch([learning, workshop], async () => {
+  if (!learning.value || !workshop.value) return
+  lessons.value = await loadAllLessonsForWorkshop(learning.value, workshop.value)
   emit('update-title', coachName.value || 'Coach')
 }, { immediate: true })
 </script>

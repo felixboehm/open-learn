@@ -35,44 +35,44 @@
           </div>
         </div>
 
-        <!-- Teaching topic selection -->
+        <!-- Workshop selection -->
         <div class="mb-4">
           <Label class="block font-semibold mb-3">
             What I want to learn:
           </Label>
-          <div v-if="teachingTopics.length > 0" class="flex flex-col gap-3">
+          <div v-if="workshops.length > 0" class="flex flex-col gap-3">
             <Card
-              v-for="topic in teachingTopics"
-              :key="topic"
-              @click="selectTeaching(topic)"
+              v-for="ws in workshops"
+              :key="ws"
+              @click="selectWorkshop(ws)"
               :class="[
                 'p-4 cursor-pointer transition',
-                selectedTeaching === topic
+                selectedWorkshop === ws
                   ? 'ring-2 ring-primary bg-accent'
                   : 'hover:border-primary/50'
               ]">
               <div class="flex items-start justify-between gap-2">
                 <div class="flex-grow min-w-0">
                   <div class="font-semibold text-foreground">
-                    {{ getTopicTitle(topic) }}
+                    {{ getWorkshopTitle(ws) }}
                   </div>
-                  <div v-if="getTopicDescription(topic)" class="text-sm text-muted-foreground mt-1">
-                    {{ getTopicDescription(topic) }}
+                  <div v-if="getWorkshopDescription(ws)" class="text-sm text-muted-foreground mt-1">
+                    {{ getWorkshopDescription(ws) }}
                   </div>
-                  <div v-if="isRemoteTopic(topic)" class="text-xs text-muted-foreground/60 mt-1">
-                    {{ getTopicSourceLabel(topic) }}
+                  <div v-if="isRemoteWorkshop(ws)" class="text-xs text-muted-foreground/60 mt-1">
+                    {{ getWorkshopSourceLabel(ws) }}
                   </div>
                 </div>
                 <div class="flex items-center gap-1 flex-shrink-0">
                   <button
-                    @click.stop="copyWorkshopLink(topic)"
+                    @click.stop="copyWorkshopLink(ws)"
                     class="p-1.5 rounded text-muted-foreground hover:text-primary hover:bg-accent transition"
                     title="Copy link to workshop">
-                    <span class="text-sm">{{ copiedTopic === topic ? '✓' : '🔗' }}</span>
+                    <span class="text-sm">{{ copiedWorkshop === ws ? '✓' : '🔗' }}</span>
                   </button>
                   <button
-                    v-if="isRemoteTopic(topic)"
-                    @click.stop="removeSource(topic)"
+                    v-if="isRemoteWorkshop(ws)"
+                    @click.stop="removeSource(ws)"
                     class="p-1.5 rounded text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 transition"
                     title="Remove external source">
                     <span class="text-sm">✕</span>
@@ -136,11 +136,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 
 const router = useRouter()
-const { availableContent, isLoading, loadAvailableContent, loadTopicsForLanguage, removeContentSource, isRemoteTopic, getSourceForSlug, getTopicMeta, getContentSources } = useLessons()
+const { availableContent, isLoading, loadAvailableContent, loadWorkshopsForLanguage, removeContentSource, isRemoteWorkshop, getSourceForSlug, getWorkshopMeta, getContentSources } = useLessons()
 
 const selectedLearning = ref(null)
-const selectedTeaching = ref(null)
-const copiedTopic = ref(null)
+const selectedWorkshop = ref(null)
+const copiedWorkshop = ref(null)
 
 // Known workshops that can be discovered
 const knownWorkshops = [
@@ -152,13 +152,13 @@ const learningLanguages = computed(() => {
   return Object.keys(availableContent.value)
 })
 
-const teachingTopics = computed(() => {
+const workshops = computed(() => {
   if (!selectedLearning.value) return []
   return Object.keys(availableContent.value[selectedLearning.value] || {})
 })
 
 const canLoadLessons = computed(() => {
-  return selectedLearning.value && selectedTeaching.value
+  return selectedLearning.value && selectedWorkshop.value
 })
 
 // Workshops not yet added by the user
@@ -167,18 +167,18 @@ const availableWorkshops = computed(() => {
   return knownWorkshops.filter(w => !sources.includes(w.url))
 })
 
-function getTopicTitle(topic) {
-  const meta = getTopicMeta(selectedLearning.value, topic)
-  return meta.title || formatLangName(topic)
+function getWorkshopTitle(workshop) {
+  const meta = getWorkshopMeta(selectedLearning.value, workshop)
+  return meta.title || formatLangName(workshop)
 }
 
-function getTopicDescription(topic) {
-  const meta = getTopicMeta(selectedLearning.value, topic)
+function getWorkshopDescription(workshop) {
+  const meta = getWorkshopMeta(selectedLearning.value, workshop)
   return meta.description || null
 }
 
-function getTopicSourceLabel(topic) {
-  const sourceUrl = getSourceForSlug(topic)
+function getWorkshopSourceLabel(workshop) {
+  const sourceUrl = getSourceForSlug(workshop)
   if (!sourceUrl) return ''
   try {
     const url = new URL(sourceUrl)
@@ -189,13 +189,13 @@ function getTopicSourceLabel(topic) {
   }
 }
 
-async function copyWorkshopLink(topic) {
+async function copyWorkshopLink(workshop) {
   const base = window.location.href.replace(/#.*$/, '')
-  const url = `${base}#/${selectedLearning.value}/${topic}/lessons`
+  const url = `${base}#/${selectedLearning.value}/${workshop}/lessons`
   try {
     await navigator.clipboard.writeText(url)
-    copiedTopic.value = topic
-    setTimeout(() => { copiedTopic.value = null }, 2000)
+    copiedWorkshop.value = workshop
+    setTimeout(() => { copiedWorkshop.value = null }, 2000)
   } catch {
     // Clipboard API not available
   }
@@ -203,33 +203,33 @@ async function copyWorkshopLink(topic) {
 
 async function selectLearning(lang) {
   selectedLearning.value = lang
-  selectedTeaching.value = null
+  selectedWorkshop.value = null
   // Save to localStorage
   localStorage.setItem('lastLearningLanguage', lang)
-  localStorage.removeItem('lastTeachingTopic')
-  await loadTopicsForLanguage(lang)
+  localStorage.removeItem('lastWorkshop')
+  await loadWorkshopsForLanguage(lang)
 }
 
-function selectTeaching(topic) {
-  selectedTeaching.value = topic
+function selectWorkshop(workshop) {
+  selectedWorkshop.value = workshop
   // Save to localStorage
-  localStorage.setItem('lastTeachingTopic', topic)
+  localStorage.setItem('lastWorkshop', workshop)
 }
 
-async function removeSource(topicSlug) {
-  const sourceUrl = getSourceForSlug(topicSlug)
+async function removeSource(workshopSlug) {
+  const sourceUrl = getSourceForSlug(workshopSlug)
   if (sourceUrl) {
     removeContentSource(sourceUrl)
   }
-  // Clear selection if removed topic was selected
-  if (selectedTeaching.value === topicSlug) {
-    selectedTeaching.value = null
-    localStorage.removeItem('lastTeachingTopic')
+  // Clear selection if removed workshop was selected
+  if (selectedWorkshop.value === workshopSlug) {
+    selectedWorkshop.value = null
+    localStorage.removeItem('lastWorkshop')
   }
   // Reload content
   await loadAvailableContent()
   if (selectedLearning.value) {
-    await loadTopicsForLanguage(selectedLearning.value)
+    await loadWorkshopsForLanguage(selectedLearning.value)
   }
 }
 
@@ -239,7 +239,7 @@ function loadLessons() {
       name: 'lessons-overview',
       params: {
         learning: selectedLearning.value,
-        teaching: selectedTeaching.value
+        workshop: selectedWorkshop.value
       }
     })
   }
@@ -247,14 +247,14 @@ function loadLessons() {
 
 async function restorePreviousSelection() {
   const lastLearning = localStorage.getItem('lastLearningLanguage')
-  const lastTeaching = localStorage.getItem('lastTeachingTopic')
+  const lastTeaching = localStorage.getItem('lastWorkshop')
 
   if (lastLearning && learningLanguages.value.includes(lastLearning)) {
     selectedLearning.value = lastLearning
-    await loadTopicsForLanguage(lastLearning)
+    await loadWorkshopsForLanguage(lastLearning)
 
-    if (lastTeaching && teachingTopics.value.includes(lastTeaching)) {
-      selectedTeaching.value = lastTeaching
+    if (lastTeaching && workshops.value.includes(lastTeaching)) {
+      selectedWorkshop.value = lastTeaching
     }
   }
 }

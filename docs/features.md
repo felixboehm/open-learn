@@ -7,16 +7,16 @@ Complete inventory of all features in Open Learn.
 ## Content System
 
 ### YAML-Based Lessons
-Lessons are authored in YAML files with a hierarchical structure: Language → Topic → Lesson → Section → Example.
+Lessons are authored in YAML files with a hierarchical structure: Language → Workshop → Lesson → Section → Example.
 
-- **Lesson content**: `public/lessons/{language}/{topic}/{lesson-folder}/content.yaml`
+- **Lesson content**: `public/lessons/{language}/{workshop}/{lesson-folder}/content.yaml`
 - **Schema docs**: `docs/lesson-schema.md`, `docs/yaml-schemas.md`
 - **Composable**: `src/composables/useLessons.js`
 
 ### Three-Level Content Hierarchy
 ```
 Language (e.g. deutsch)
-  └── Topic (e.g. portugiesisch)
+  └── Workshop (e.g. portugiesisch)
        └── Lesson (e.g. 01-essential-verbs)
             └── Section (e.g. "Ser and Estar")
                  └── Example (q/a pair with optional metadata)
@@ -76,7 +76,7 @@ No explicit submit buttons. Answers are validated and saved automatically:
 ### Answer Persistence
 Answers are stored in localStorage and restored on page load.
 
-- **Key**: `assessments` → `{ "learning:teaching:lessonNumber": { "sectionIdx-exampleIdx": { type, answer, correct, submittedAt } } }`
+- **Key**: `assessments` → `{ "learning:workshop:lessonNumber": { "sectionIdx-exampleIdx": { type, answer, correct, submittedAt } } }`
 - Answers are always re-submittable (no locked state, no reset needed)
 
 ---
@@ -93,17 +93,17 @@ rel:
 First element is the unique ID, remaining elements are translations/context.
 
 ### Progress Tracking
-Each item can be toggled as "learned" per language:topic combination.
+Each item can be toggled as "learned" per language:workshop combination.
 
 - **Composable**: `src/composables/useProgress.js`
-- **Storage**: localStorage key `progress` → `{ "learning:teaching": { "itemId": true } }`
+- **Storage**: localStorage key `progress` → `{ "learning:workshop": { "itemId": true } }`
 - Click on item button to toggle learned status
 
 ### Learning Items Browser
 Dedicated page to browse and manage all vocabulary across lessons.
 
 - **View**: `src/views/LearningItems.vue`
-- **Route**: `#/:learning/:teaching/items/:number?`
+- **Route**: `#/:learning/:workshop/items/:number?`
 - Features: filter by lesson, group by status (learned/unlearned), group by lesson
 
 ### Hide Learned Examples
@@ -164,7 +164,7 @@ Assessment answers are queued in-memory and sent as a batch:
 ### Payload Format
 ```json
 {
-  "lesson": { "learning": "...", "teaching": "...", "number": 1, "title": "..." },
+  "lesson": { "learning": "...", "workshop": "...", "number": 1, "title": "..." },
   "answers": [
     {
       "section": { "index": 0, "title": "..." },
@@ -196,12 +196,12 @@ External workshops can be hosted anywhere (GitHub Pages, IPFS, CDN) and added to
 
 ### Adding External Content
 1. Via URL: `https://your-app.com/open-learn/#/add?source=https://example.com/workshop/`
-2. App validates the source (fetches index.yaml, discovers languages/topics)
+2. App validates the source (fetches index.yaml, discovers languages/workshops)
 3. Source stored in localStorage key `contentSources`
 4. Content merged seamlessly with local lessons
 
 ### Share Links
-Topics can be shared via URL that includes the content source query parameter. Copy button available on topic cards and lessons overview.
+Workshops can be shared via URL that includes the content source query parameter. Copy button available on workshop cards and lessons overview.
 
 ### IPFS Support
 IPFS URLs (`ipfs://...`) are resolved to HTTP gateway URLs automatically.
@@ -211,10 +211,10 @@ IPFS URLs (`ipfs://...`) are resolved to HTTP gateway URLs automatically.
 ## Data Management
 
 ### Export / Import
-Per-topic export and import of user data (progress + assessments).
+Per-workshop export and import of user data (progress + assessments).
 
 - **Location**: `src/views/Settings.vue`
-- **Format**: JSON file `open-learn-{topic}-{date}.json`
+- **Format**: JSON file `open-learn-{workshop}-{date}.json`
 - **Import behavior**: Additive merge (no data loss, existing data preserved)
 
 ### Export Format
@@ -222,9 +222,9 @@ Per-topic export and import of user data (progress + assessments).
 {
   "version": 1,
   "exportedAt": "2026-02-21T...",
-  "topic": "learning:teaching",
-  "progress": { "learning:teaching": { "itemId": true } },
-  "assessments": { "learning:teaching:1": { "0-0": { ... } } }
+  "workshop": "learning:workshop",
+  "progress": { "learning:workshop": { "itemId": true } },
+  "assessments": { "learning:workshop:1": { "0-0": { ... } } }
 }
 ```
 
@@ -275,10 +275,10 @@ Hash-based routing for GitHub Pages compatibility (`createWebHashHistory`).
 
 | Route | View | Description |
 |-------|------|-------------|
-| `#/` | Home | Language and topic selection |
-| `#/:learning/:teaching/lessons` | LessonsOverview | Lesson grid for topic |
-| `#/:learning/:teaching/lesson/:number` | LessonDetail | Individual lesson with assessments |
-| `#/:learning/:teaching/items/:number?` | LearningItems | Vocabulary browser |
+| `#/` | Home | Language and workshop selection |
+| `#/:learning/:workshop/lessons` | LessonsOverview | Lesson grid for workshop |
+| `#/:learning/:workshop/lesson/:number` | LessonDetail | Individual lesson with assessments |
+| `#/:learning/:workshop/items/:number?` | LearningItems | Vocabulary browser |
 | `#/settings` | Settings | All settings + data export/import |
 | `#/add?source=URL` | AddSource | Add external workshop |
 
@@ -289,11 +289,11 @@ Hash-based routing for GitHub Pages compatibility (`createWebHashHistory`).
 | Key | Purpose |
 |-----|---------|
 | `settings` | User preferences (JSON) |
-| `progress` | Learned items per topic (JSON) |
+| `progress` | Learned items per workshop (JSON) |
 | `assessments` | Assessment answers per lesson (JSON) |
 | `contentSources` | External workshop URLs (JSON array) |
 | `lastLearningLanguage` | Last selected language (string) |
-| `lastTeachingTopic` | Last selected topic (string) |
+| `lastTeachingWorkshop` | Last selected workshop (string) |
 
 ---
 
@@ -323,10 +323,9 @@ Hash-based routing for GitHub Pages compatibility (`createWebHashHistory`).
 | Term | Meaning |
 |------|---------|
 | **Language** (`learning`) | Interface/base language the user knows (e.g. `deutsch`, `english`) |
-| **Topic** (`teaching`) | Subject being learned (e.g. `portugiesisch`, `open-learn-showcase`) |
-| **Lesson** | Single learning unit within a topic, numbered (e.g. `01-essential-verbs`) |
+| **Workshop** (`workshop`) | Subject being learned (e.g. `portugiesisch`, `open-learn-showcase`) |
+| **Lesson** | Single learning unit within a workshop, numbered (e.g. `01-essential-verbs`) |
 | **Section** | Group of examples within a lesson, with optional video/explanation |
 | **Example** | Single q/a pair, optionally with assessment type and related items |
-| **Workshop** | A complete topic from an external source (synonym for "external content source") |
 | **Learning Item** | Vocabulary/concept extracted from `rel` field, tracked independently |
 | **Coach** | Optional external service that receives assessment answers |
