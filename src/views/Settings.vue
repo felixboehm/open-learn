@@ -155,22 +155,22 @@
         <CardTitle class="text-2xl">Data</CardTitle>
       </CardHeader>
       <CardContent>
-        <div v-if="availableTopics.length === 0" class="text-sm text-muted-foreground mb-4">
+        <div v-if="availableWorkshops.length === 0" class="text-sm text-muted-foreground mb-4">
           No data yet. Start learning to track your progress.
         </div>
 
         <template v-else>
-          <!-- Topic selector -->
+          <!-- Workshop selector -->
           <div class="mb-4">
-            <Label class="text-lg font-semibold mb-2 block">Topic</Label>
+            <Label class="text-lg font-semibold mb-2 block">Workshop</Label>
             <div class="flex gap-2 flex-wrap">
               <Button
-                v-for="topic in availableTopics"
-                :key="topic.key"
-                :variant="selectedTopic === topic.key ? 'default' : 'outline'"
+                v-for="ws in availableWorkshops"
+                :key="ws.key"
+                :variant="selectedWorkshop === ws.key ? 'default' : 'outline'"
                 size="sm"
-                @click="selectedTopic = topic.key">
-                {{ topic.label }}
+                @click="selectedWorkshop = ws.key">
+                {{ ws.label }}
               </Button>
             </div>
           </div>
@@ -224,7 +224,7 @@ const { isLoggedIn, username: gunUser, authError, isSyncing, login, register, lo
 
 const importMessage = ref('')
 const importMessageError = ref(false)
-const selectedTopic = ref('')
+const selectedWorkshop = ref('')
 
 // Gun auth state
 const gunUsername = ref('')
@@ -278,37 +278,37 @@ async function handleSync() {
   syncMessage.value = 'Sync complete.'
 }
 
-// Collect all unique topic keys (learning:teaching) from progress + assessments
-const availableTopics = computed(() => {
+// Collect all unique workshop keys (learning:workshop) from progress + assessments
+const availableWorkshops = computed(() => {
   const keys = new Set()
   for (const key of Object.keys(progress.value)) {
-    keys.add(key) // progress keys are "learning:teaching"
+    keys.add(key) // progress keys are "learning:workshop"
   }
   for (const key of Object.keys(assessments.value)) {
-    // assessment keys are "learning:teaching:lessonNumber"
+    // assessment keys are "learning:workshop:lessonNumber"
     const parts = key.split(':')
     if (parts.length >= 2) keys.add(`${parts[0]}:${parts[1]}`)
   }
   const sorted = [...keys].sort()
-  // Auto-select first topic if none selected
-  if (sorted.length > 0 && !sorted.includes(selectedTopic.value)) {
-    selectedTopic.value = sorted[0]
+  // Auto-select first workshop if none selected
+  if (sorted.length > 0 && !sorted.includes(selectedWorkshop.value)) {
+    selectedWorkshop.value = sorted[0]
   }
   return sorted.map(key => {
-    const [learning, teaching] = key.split(':')
-    return { key, label: formatLangName(teaching) }
+    const [learning, workshop] = key.split(':')
+    return { key, label: formatLangName(workshop) }
   })
 })
 
-// Filter progress/assessments for the selected topic
-function getTopicProgress() {
+// Filter progress/assessments for the selected workshop
+function getWorkshopProgress() {
   const all = getProgress()
-  return all[selectedTopic.value] ? { [selectedTopic.value]: all[selectedTopic.value] } : {}
+  return all[selectedWorkshop.value] ? { [selectedWorkshop.value]: all[selectedWorkshop.value] } : {}
 }
 
-function getTopicAssessments() {
+function getWorkshopAssessments() {
   const all = getAssessments()
-  const prefix = selectedTopic.value + ':'
+  const prefix = selectedWorkshop.value + ':'
   const filtered = {}
   for (const [key, val] of Object.entries(all)) {
     if (key.startsWith(prefix)) filtered[key] = val
@@ -317,10 +317,10 @@ function getTopicAssessments() {
 }
 
 const dataSummary = computed(() => {
-  if (!selectedTopic.value) return ''
-  const topicProgress = progress.value[selectedTopic.value] || {}
-  const itemCount = Object.keys(topicProgress).length
-  const prefix = selectedTopic.value + ':'
+  if (!selectedWorkshop.value) return ''
+  const workshopProgress = progress.value[selectedWorkshop.value] || {}
+  const itemCount = Object.keys(workshopProgress).length
+  const prefix = selectedWorkshop.value + ':'
   let answerCount = 0
   for (const [key, answers] of Object.entries(assessments.value)) {
     if (key.startsWith(prefix)) answerCount += Object.keys(answers).length
@@ -332,17 +332,17 @@ function exportData() {
   const data = {
     version: 1,
     exportedAt: new Date().toISOString(),
-    topic: selectedTopic.value,
-    progress: getTopicProgress(),
-    assessments: getTopicAssessments()
+    workshop: selectedWorkshop.value,
+    progress: getWorkshopProgress(),
+    assessments: getWorkshopAssessments()
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const date = new Date().toISOString().slice(0, 10)
-  const topicSlug = selectedTopic.value.replace(/:/g, '-')
+  const workshopSlug = selectedWorkshop.value.replace(/:/g, '-')
   const a = document.createElement('a')
   a.href = url
-  a.download = `open-learn-${topicSlug}-${date}.json`
+  a.download = `open-learn-${workshopSlug}-${date}.json`
   a.click()
   URL.revokeObjectURL(url)
 }

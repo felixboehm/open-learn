@@ -2,9 +2,9 @@
 
 ## Overview
 
-This document describes the structure of individual lesson YAML files used for learning content. The schema is designed to be flexible and support learning any topic — languages, math, theory exams, and more.
+This document describes the structure of individual lesson YAML files used for learning content. The schema is designed to be flexible and support learning any subject — languages, math, theory exams, and more.
 
-> **Note**: This document covers individual lesson files only. For information about the index files that organize lessons (`index.yaml`, `topics.yaml`, `lessons.yaml`), see [YAML Schemas Documentation](yaml-schemas.md).
+> **Note**: This document covers individual lesson files only. For information about the index files that organize lessons (`index.yaml`, `workshops.yaml`, `lessons.yaml`), see [YAML Schemas Documentation](yaml-schemas.md).
 
 ## Format
 
@@ -16,8 +16,8 @@ Lessons are stored in **YAML** format for human readability and ease of editing.
 lessons/
 ├── index.yaml              # Root index: lists all languages
 ├── deutsch/                    # Language folder
-│   ├── topics.yaml            # Lists topics for this language
-│   ├── portugiesisch/         # Topic folder
+│   ├── workshops.yaml         # Lists workshops for this language
+│   ├── portugiesisch/         # Workshop folder
 │   │   ├── lessons.yaml       # Lists lesson folder names
 │   │   ├── 01-basics/         # Individual lesson folders
 │   │   │   ├── content.yaml   # Lesson content
@@ -36,11 +36,11 @@ lessons/
 │       │   └── audio/
 │       └── ...
 ├── english/                    # Another language folder
-│   ├── topics.yaml
-│   ├── german/                # Topic folder
+│   ├── workshops.yaml
+│   ├── german/                # Workshop folder
 │   │   ├── lessons.yaml
 │   │   └── ...
-│   └── math-algebra/          # Non-language topics also supported
+│   └── math-algebra/          # Non-language workshops also supported
 │       ├── lessons.yaml
 │       └── ...
 └── ...
@@ -48,17 +48,17 @@ lessons/
 
 Lessons are organized in a **three-level hierarchy**:
 
-**Hierarchy**: Language → Topic → Lesson
+**Hierarchy**: Language → Workshop → Lesson
 
 1. **Root level**: `index.yaml` defines available languages (interface languages)
-2. **Language level**: Each language folder contains `topics.yaml` listing available topics
-3. **Topic level**: Each topic folder contains `lessons.yaml` listing lesson files
+2. **Language level**: Each language folder contains `workshops.yaml` listing available workshops
+3. **Workshop level**: Each workshop folder contains `lessons.yaml` listing lesson files
 
-**Language vs. Topic**:
+**Language vs. Workshop**:
 - **Language** (`deutsch`, `english`): The interface/base language used for explanations
-- **Topic** (`portugiesisch`, `englisch`, `math-algebra`): The subject being taught
+- **Workshop** (`portugiesisch`, `englisch`, `math-algebra`): The subject being taught
 
-This structure allows maximum flexibility - you can learn Portuguese in German (`deutsch/portugiesisch/`) or in English (`english/portugese/`), or even learn non-language topics like `english/driver-license/`.
+This structure allows maximum flexibility - you can learn Portuguese in German (`deutsch/portugiesisch/`) or in English (`english/portugese/`), or even learn non-language workshops like `english/driver-license/`.
 
 See [yaml-schemas.md](yaml-schemas.md) for detailed documentation on the index files.
 
@@ -336,12 +336,12 @@ const futurExamples = getExamplesByLabel(lesson, "Futur");
 
 Each lesson is self-contained in its own folder with content and audio files:
 
-- **Path**: `lessons/<language>/<topic>/<lesson-folder>/`
-- **Content**: `lessons/<language>/<topic>/<lesson-folder>/content.yaml`
-- **Audio**: `lessons/<language>/<topic>/<lesson-folder>/audio/`
+- **Path**: `lessons/<language>/<workshop>/<lesson-folder>/`
+- **Content**: `lessons/<language>/<workshop>/<lesson-folder>/content.yaml`
+- **Audio**: `lessons/<language>/<workshop>/<lesson-folder>/audio/`
 - **Example**: `lessons/deutsch/portugiesisch/01-verbs/`
   - Language: German (deutsch)
-  - Topic: Portuguese (portugiesisch)
+  - Workshop: Portuguese (portugiesisch)
   - Lesson: 01-verbs
 
 This folder-based structure makes lessons **portable** and **self-contained**:
@@ -392,19 +392,19 @@ The script uses:
 - **macOS `say`** for text-to-speech
 - **ffmpeg** for MP3 conversion
 
-Audio files are automatically generated based on the language codes defined in `topics.yaml` and `index.yaml`.
+Audio files are automatically generated based on the language codes defined in `workshops.yaml` and `index.yaml`.
 
 ## Best Practices
 
 1. **Number lessons sequentially** starting from 01
-2. **Keep sections focused** on one topic (5-10 sections per lesson)
+2. **Keep sections focused** on one concept (5-10 sections per lesson)
 3. **Include 3-5 examples** per section
 4. **Use markdown** in explanations for formatting
 5. **Be consistent** with vocabulary terms (same term = same ID)
 6. **Add context** in rel items (part of speech, usage notes)
 7. **Progressive difficulty** - order lessons from simple to complex
 8. **Use labels** to categorize examples by grammar concepts
-9. **Organize folders** by language/topic hierarchy
+9. **Organize folders** by language/workshop hierarchy
 
 ## Schema Flexibility
 

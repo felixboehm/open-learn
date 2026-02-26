@@ -1,5 +1,5 @@
-# Available topics for English interface
-topics:
+# Available workshops for English interface
+workshops:
   - folder: open-learn-showcase
     code: en-US
     coach:

@@ -11,13 +11,13 @@ Use **localStorage** for all user data persistence.
 
 Four keys are used:
 - `settings` — user preferences (dark mode, audio speed, etc.)
-- `progress` — learned items per topic
+- `progress` — learned items per workshop
 - `assessments` — assessment answers per lesson
 - `contentSources` — external workshop URLs
 
 Plus two convenience keys:
 - `lastLearningLanguage` — restore previous selection
-- `lastTeachingTopic` — restore previous selection
+- `lastTeachingWorkshop` — restore previous selection
 
 ## Consequences
 

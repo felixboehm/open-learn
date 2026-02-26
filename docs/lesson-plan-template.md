@@ -1,6 +1,6 @@
 # Universal Lesson Plan Template
 
-This document provides a suggested learning progression and lesson schema template. While the example below focuses on language learning, the same structure can be adapted for any topic on the Open Learn platform.
+This document provides a suggested learning progression and lesson schema template. While the example below focuses on language learning, the same structure can be adapted for any workshop on the Open Learn platform.
 
 ## Overview
 

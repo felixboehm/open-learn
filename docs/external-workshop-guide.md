@@ -20,8 +20,8 @@ Your repository must follow this exact directory structure. The root of your dep
 your-workshop-repo/
 ├── index.yaml              # Required: declares available interface languages
 ├── deutsch/                    # One folder per interface language
-│   ├── topics.yaml             # Required: declares available topics
-│   └── your-topic/             # One folder per topic
+│   ├── workshops.yaml          # Required: declares available workshops
+│   └── your-workshop/          # One folder per workshop
 │       ├── lessons.yaml        # Required: lists lesson folders
 │       ├── 01-first-lesson/    # Lesson folders
 │       │   ├── content.yaml    # Required: lesson content
@@ -35,8 +35,8 @@ your-workshop-repo/
 │           ├── content.yaml
 │           └── audio/
 └── english/                    # Optional: same content in English interface
-    ├── topics.yaml
-    └── your-topic-en/
+    ├── workshops.yaml
+    └── your-workshop-en/
         ├── lessons.yaml
         └── ...
 ```
@@ -68,14 +68,14 @@ languages:
 | `pt-PT` | Portuguese (EU) | Joana |
 | `es-ES` | Spanish | Mónica |
 
-> You can support a single language or multiple languages. Each language provides its own set of topics.
+> You can support a single language or multiple languages. Each language provides its own set of workshops.
 
-### 2. `<language>/topics.yaml`
+### 2. `<language>/workshops.yaml`
 
-Lists the topics available for a given interface language.
+Lists the workshops available for a given interface language.
 
 ```yaml
-topics:
+workshops:
   - folder: portugiesisch
     code: pt-PT
   - folder: first-aid
@@ -83,16 +83,16 @@ topics:
 ```
 
 **Fields:**
-- `folder` (string, required): Directory name of the topic — must match a folder inside the language directory
-- `code` (string, required): BCP 47 code for the **topic's** language
-  - For language-learning topics: use the target language code (e.g. `pt-PT` for Portuguese)
-  - For non-language topics (math, first aid, etc.): use the same code as the interface language (e.g. `de-DE`)
+- `folder` (string, required): Directory name of the workshop — must match a folder inside the language directory
+- `code` (string, required): BCP 47 code for the **workshop's** language
+  - For language-learning workshops: use the target language code (e.g. `pt-PT` for Portuguese)
+  - For non-language workshops (math, first aid, etc.): use the same code as the interface language (e.g. `de-DE`)
 
 > The `code` determines which text-to-speech voice is used for questions (`q` fields) in audio generation.
 
-### 3. `<language>/<topic>/lessons.yaml`
+### 3. `<language>/<workshop>/lessons.yaml`
 
-Lists all lesson folders for a topic, in order.
+Lists all lesson folders for a workshop, in order.
 
 ```yaml
 lessons:
@@ -105,7 +105,7 @@ Each entry is a **folder name** (not a file name). Each folder must contain a `c
 
 **Naming convention:** Prefix with zero-padded numbers for ordering: `01-`, `02-`, ... `10-`, `11-`.
 
-### 4. `<language>/<topic>/<lesson>/content.yaml`
+### 4. `<language>/<workshop>/<lesson>/content.yaml`
 
 The actual lesson content. This is where the learning material lives.
 
@@ -198,8 +198,8 @@ audio/
 | Content | Voice Language | Why |
 |---------|---------------|-----|
 | Lesson title (`title.mp3`) | Interface language (e.g. German) | It's navigation/metadata |
-| Section titles (`N-title.mp3`) | Topic language (e.g. Portuguese) | Introduces the topic content |
-| Questions (`N-N-q.mp3`) | Topic language | The content being learned |
+| Section titles (`N-title.mp3`) | Workshop language (e.g. Portuguese) | Introduces the workshop content |
+| Questions (`N-N-q.mp3`) | Workshop language | The content being learned |
 | Answers (`N-N-a.mp3`) | Interface language | The translation/explanation |
 
 #### Generating Audio
@@ -208,7 +208,7 @@ If you have access to the Open Learn repository, you can use the `generate-audio
 
 ```bash
 # From the open-learn repo, pointing to your workshop's lesson folder
-./generate-audio.sh /path/to/your-workshop/deutsch/your-topic/01-first-lesson/
+./generate-audio.sh /path/to/your-workshop/deutsch/your-workshop/01-first-lesson/
 ```
 
 Requirements: macOS with `say` command, `yq` (`brew install yq`), `ffmpeg` (`brew install ffmpeg`).
@@ -227,10 +227,10 @@ languages:
     code: de-DE
 ```
 
-### `deutsch/topics.yaml`
+### `deutsch/workshops.yaml`
 
 ```yaml
-topics:
+workshops:
   - folder: portugiesisch-basics
     code: pt-PT
 ```
@@ -329,7 +329,7 @@ sections:
 
 ## Non-Language Workshop Example
 
-The same format works for any topic. Here's a first-aid workshop example:
+The same format works for any subject. Here's a first-aid workshop example:
 
 ### `index.yaml`
 
@@ -339,12 +339,12 @@ languages:
     code: de-DE
 ```
 
-### `deutsch/topics.yaml`
+### `deutsch/workshops.yaml`
 
 ```yaml
-topics:
+workshops:
   - folder: erste-hilfe
-    code: de-DE          # Same as interface language for non-language topics
+    code: de-DE          # Same as interface language for non-language workshops
 ```
 
 ### `deutsch/erste-hilfe/01-basics/content.yaml`
@@ -385,7 +385,7 @@ mkdir my-workshop
 cd my-workshop
 git init
 
-# Create your content files (index.yaml, topics.yaml, etc.)
+# Create your content files (index.yaml, workshops.yaml, etc.)
 
 git add -A
 git commit -m "Initial workshop content"
@@ -464,17 +464,17 @@ https://felixboehm.github.io/open-learn/#/add?source=https://YOUR-USER.github.io
 
 When a learner clicks this link:
 1. Open Learn fetches the `index.yaml` URL to discover content
-2. Shows the learner what's available (languages, topics)
+2. Shows the learner what's available (languages, workshops)
 3. Learner confirms → your content is saved in their browser
-4. Your topics appear on the Home page alongside the built-in content
+4. Your workshops appear on the Home page alongside the built-in content
 
 ## Checklist
 
 Before sharing your workshop, verify:
 
 - [ ] `index.yaml` exists at the root and lists at least one language
-- [ ] Each language folder has a `topics.yaml`
-- [ ] Each topic folder has a `lessons.yaml`
+- [ ] Each language folder has a `workshops.yaml`
+- [ ] Each workshop folder has a `lessons.yaml`
 - [ ] Each lesson folder listed in `lessons.yaml` exists and contains `content.yaml`
 - [ ] Every `content.yaml` has `number`, `title`, and at least one section with examples
 - [ ] Every example has both `q` and `a` fields
@@ -494,7 +494,7 @@ Before sharing your workshop, verify:
 - Check that files are MP3 format
 - Ensure section/example indices are zero-based (first section = `0`, first example = `0`)
 
-**Topics not appearing after adding:**
+**Workshops not appearing after adding:**
 - Refresh the page (F5) to reload content sources
 - Check localStorage in browser DevTools: key `contentSources` should contain your URL
 
@@ -505,5 +505,5 @@ Before sharing your workshop, verify:
 ## See Also
 
 - [Lesson Schema Documentation](lesson-schema.md) — detailed field reference for `content.yaml`
-- [YAML Schemas Documentation](yaml-schemas.md) — index file schemas (`index.yaml`, `topics.yaml`, `lessons.yaml`)
+- [YAML Schemas Documentation](yaml-schemas.md) — index file schemas (`index.yaml`, `workshops.yaml`, `lessons.yaml`)
 - [Audio System Documentation](audio-system.md) — audio generation and playback details

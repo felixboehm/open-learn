@@ -11,9 +11,9 @@ Use **hash-based routing** (`createWebHashHistory` in Vue Router).
 
 All routes use the `#/` prefix:
 - `#/` — Home
-- `#/:learning/:teaching/lessons` — Lessons overview
-- `#/:learning/:teaching/lesson/:number` — Lesson detail
-- `#/:learning/:teaching/items/:number?` — Learning items
+- `#/:learning/:workshop/lessons` — Lessons overview
+- `#/:learning/:workshop/lesson/:number` — Lesson detail
+- `#/:learning/:workshop/items/:number?` — Learning items
 - `#/settings` — Settings
 - `#/add?source=URL` — Add external source
 

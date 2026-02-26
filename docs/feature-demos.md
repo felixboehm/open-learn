@@ -10,7 +10,7 @@ UI-Komponenten (Button, Card, Switch, Input, Checkbox, Radio, Select, Badge) dur
 
 1. **Settings** — Zahnrad oben rechts. Alle 7 Toggles durchklicken (Dark Mode, Show Answers, Show Labels, etc.). Export/Import und Audio-Speed Buttons testen.
 2. **Dark Mode** — In Settings aktivieren, dann durch Home → Lessons → Lektion → Learning Items navigieren. Alles sollte einheitlich dunkel sein.
-3. **Home** — Sprache waehlen, Topic waehlen, "Load Lessons" klicken.
+3. **Home** — Sprache waehlen, Workshop waehlen, "Load Lessons" klicken.
 4. **Lessons-Uebersicht** — Hover ueber Lesson-Cards. "Assessment Results" Button testen.
 5. **Lektion mit Assessments** — Text-Eingabe (Enter), Multiple-Choice (Checkboxen), Single-Choice (Radio) durchklicken. Gruen/rot Feedback pruefen.
 6. **Learning Items** — Lesson-Filter Dropdown, "Group by Status"/"Group by Lesson" Checkboxen, Items als gelernt markieren.
@@ -35,14 +35,14 @@ Lernfortschritt, Assessment-Antworten und Einstellungen werden ueber GunDB zwisc
 
 ## #29 — Assessment Results Button in Top Navigation
 
-Der Assessment-Results-Button wurde aus der Lessons-Uebersicht entfernt und als Icon (📋) in die obere Navigationsleiste verschoben. Sichtbar auf allen Seiten mit Topic-Kontext (Lessons Overview, Lesson Detail, Learning Items).
+Der Assessment-Results-Button wurde aus der Lessons-Uebersicht entfernt und als Icon (📋) in die obere Navigationsleiste verschoben. Sichtbar auf allen Seiten mit Workshop-Kontext (Lessons Overview, Lesson Detail, Learning Items).
 
 ### Demo
 
-1. **Lessons Overview** — Topic laden → oben rechts erscheint das 📋 Icon neben 📚 und ⚙️.
+1. **Lessons Overview** — Workshop laden → oben rechts erscheint das 📋 Icon neben 📚 und ⚙️.
 2. **Lesson Detail** — Lektion oeffnen → 📋 Icon ist sichtbar, klicken → Assessment Results Seite.
 3. **Learning Items** — Items-Seite → 📋 Icon ist sichtbar.
-4. **Home / Settings** — 📋 Icon ist NICHT sichtbar (kein Topic-Kontext).
+4. **Home / Settings** — 📋 Icon ist NICHT sichtbar (kein Workshop-Kontext).
 5. **Alter Button weg** — Auf der Lessons-Uebersicht gibt es keinen "Assessment Results" Button mehr unten.
 
 ---
@@ -82,7 +82,7 @@ Workshops mit konfiguriertem `coach.api` Endpoint werden mit einem KI-Service-Ag
 
 ### Demo
 
-1. **Coach Button** — Workshop mit `coach.api` in topics.yaml laden → 🤖 Icon erscheint in der Top-Navigation.
+1. **Coach Button** — Workshop mit `coach.api` in workshops.yaml laden → 🤖 Icon erscheint in der Top-Navigation.
 2. **Kein Coach** — Workshop ohne `coach.api` → 🤖 Icon ist NICHT sichtbar.
 3. **Chat** — Coach-Seite oeffnen → Vorschlaege ("How am I doing?", etc.) klicken oder eigene Frage tippen → Agent antwortet.
 4. **Kontext** — Agent erhaelt automatisch Assessment-Ergebnisse und Lernfortschritt als Kontext.

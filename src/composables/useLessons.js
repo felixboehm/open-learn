@@ -31,9 +31,9 @@ function parseSource(source) {
 export function useLessons() {
   const availableContent = ref({})
   const languageCodes = ref({}) // Store language codes
-  const topicCodes = ref({}) // Store topic codes
-  const topicSlugMap = ref({}) // slug → URL mapping for remote topics
-  const topicMeta = ref({}) // { lang: { topic: { title, description } } }
+  const workshopCodes = ref({}) // Store workshop codes
+  const workshopSlugMap = ref({}) // slug → URL mapping for remote workshops
+  const workshopMeta = ref({}) // { lang: { workshop: { title, description } } }
   const isLoading = ref(false)
 
   // Get content sources from localStorage
@@ -65,19 +65,19 @@ export function useLessons() {
     saveContentSources(sources)
   }
 
-  // Check if a topic key is from a remote content source
-  function isRemoteTopic(topicKey) {
-    return topicKey in topicSlugMap.value
+  // Check if a workshop key is from a remote content source
+  function isRemoteWorkshop(workshopKey) {
+    return workshopKey in workshopSlugMap.value
   }
 
-  // Resolve a topic key: if it's a slug, return the URL; otherwise return as-is
-  function resolveTopicKey(topicKey) {
-    return topicSlugMap.value[topicKey] || topicKey
+  // Resolve a workshop key: if it's a slug, return the URL; otherwise return as-is
+  function resolveWorkshopKey(workshopKey) {
+    return workshopSlugMap.value[workshopKey] || workshopKey
   }
 
-  // Get the source URL for a remote topic slug (for removing sources)
+  // Get the source URL for a remote workshop slug (for removing sources)
   function getSourceForSlug(slug) {
-    const url = topicSlugMap.value[slug]
+    const url = workshopSlugMap.value[slug]
     if (!url) return null
     const sources = getContentSources()
     // Sources include index.yaml filename, strip it for prefix matching
@@ -87,19 +87,19 @@ export function useLessons() {
     }) || null
   }
 
-  // Get metadata (title, description) for a topic
-  function getTopicMeta(langFolder, topicFolder) {
-    return topicMeta.value[langFolder]?.[topicFolder] || { title: null, description: null }
+  // Get metadata (title, description) for a workshop
+  function getWorkshopMeta(langFolder, workshopFolder) {
+    return workshopMeta.value[langFolder]?.[workshopFolder] || { title: null, description: null }
   }
 
-  // Get share URL for a remote topic
-  function getShareUrl(topicSlug) {
-    const sourceUrl = getSourceForSlug(topicSlug)
+  // Get share URL for a remote workshop
+  function getShareUrl(workshopSlug) {
+    const sourceUrl = getSourceForSlug(workshopSlug)
     if (!sourceUrl) return null
     return `https://felixboehm.github.io/open-learn/#/add?source=${encodeURIComponent(sourceUrl)}`
   }
 
-  // Load a remote content source's languages and topics
+  // Load a remote content source's languages and workshops
   // sourceUrl is the full URL to index.yaml (e.g. https://user.github.io/repo/index.yaml)
   async function loadContentSource(sourceUrl, content, codes) {
     try {
@@ -136,46 +136,60 @@ export function useLessons() {
           codes[langKey] = source.code || null
         }
 
-        // Load topics for this language from the remote source
-        const topicsUrl = `${baseUrl}/${langKey}/topics.yaml`
+        // Load workshops for this language from the remote source
+        // Try workshops.yaml first, fallback to topics.yaml for backwards compatibility
+        let workshopsData = null
+        for (const filename of ['workshops.yaml', 'topics.yaml']) {
+          const workshopsUrl = `${baseUrl}/${langKey}/${filename}`
+          try {
+            const workshopsResponse = await fetch(workshopsUrl)
+            if (!workshopsResponse.ok) continue
+            const workshopsText = await workshopsResponse.text()
+            workshopsData = yaml.load(workshopsText)
+            break
+          } catch (e) {
+            continue
+          }
+        }
+
+        if (!workshopsData) {
+          console.warn(`⚠️ No workshops found for ${langKey}`)
+          continue
+        }
+
         try {
-          const topicsResponse = await fetch(topicsUrl)
-          if (!topicsResponse.ok) continue
+          const entries = workshopsData.workshops || workshopsData.topics || []
+          for (const entry of entries) {
+            const workshopSource = parseSource(entry)
+            if (!workshopSource) continue
 
-          const topicsText = await topicsResponse.text()
-          const topicsData = yaml.load(topicsText)
-
-          for (const topic of topicsData.topics) {
-            const topicSource = parseSource(topic)
-            if (!topicSource) continue
-
-            // Use the topic folder name as the slug for clean URLs
-            const slug = topicSource.path
-            const topicUrl = `${baseUrl}/${langKey}/${topicSource.path}`
+            // Use the workshop folder name as the slug for clean URLs
+            const slug = workshopSource.path
+            const workshopUrl = `${baseUrl}/${langKey}/${workshopSource.path}`
             content[langKey][slug] = []
 
             // Map slug → full URL for resolving later
-            topicSlugMap.value[slug] = topicUrl
+            workshopSlugMap.value[slug] = workshopUrl
 
-            // Store topic code and metadata
-            if (!topicCodes.value[langKey]) {
-              topicCodes.value[langKey] = {}
+            // Store workshop code and metadata
+            if (!workshopCodes.value[langKey]) {
+              workshopCodes.value[langKey] = {}
             }
-            topicCodes.value[langKey][slug] = topicSource.code || null
+            workshopCodes.value[langKey][slug] = workshopSource.code || null
 
-            if (!topicMeta.value[langKey]) {
-              topicMeta.value[langKey] = {}
+            if (!workshopMeta.value[langKey]) {
+              workshopMeta.value[langKey] = {}
             }
-            topicMeta.value[langKey][slug] = {
-              title: topicSource.title || null,
-              description: topicSource.description || null,
-              coach: topicSource.coach || null
+            workshopMeta.value[langKey][slug] = {
+              title: workshopSource.title || null,
+              description: workshopSource.description || null,
+              coach: workshopSource.coach || null
             }
 
-            console.log(`  ✓ Remote topic: ${slug} → ${topicUrl} (${topicSource.code || 'no code'})`)
+            console.log(`  ✓ Remote workshop: ${slug} → ${workshopUrl} (${workshopSource.code || 'no code'})`)
           }
         } catch (e) {
-          console.warn(`⚠️ Failed to load topics from ${topicsUrl}:`, e)
+          console.warn(`⚠️ Failed to load workshops for ${langKey}:`, e)
         }
       }
 
@@ -232,9 +246,9 @@ export function useLessons() {
     }
   }
 
-  async function loadTopicsForLanguage(lang) {
+  async function loadWorkshopsForLanguage(lang) {
     try {
-      console.log(`📚 Loading topics for language: ${lang}`)
+      console.log(`📚 Loading workshops for language: ${lang}`)
 
       // Ensure languages are loaded first
       if (!availableContent.value[lang]) {
@@ -246,113 +260,117 @@ export function useLessons() {
         }
       }
 
-      // Construct topics.yaml URL based on whether lang is a folder or URL
-      let topicsUrl
-      if (lang.startsWith('http://') || lang.startsWith('https://')) {
-        // Language is a URL
-        topicsUrl = `${lang}/topics.yaml`
-      } else {
-        // Language is a folder
-        topicsUrl = `lessons/${lang}/topics.yaml`
+      // Try workshops.yaml first, fallback to topics.yaml for backwards compatibility
+      let data = null
+      for (const filename of ['workshops.yaml', 'topics.yaml']) {
+        let workshopsUrl
+        if (lang.startsWith('http://') || lang.startsWith('https://')) {
+          workshopsUrl = `${lang}/${filename}`
+        } else {
+          workshopsUrl = `lessons/${lang}/${filename}`
+        }
+
+        const response = await fetch(workshopsUrl)
+        if (response.ok) {
+          const text = await response.text()
+          data = yaml.load(text)
+          console.log(`📖 Loaded workshops data for ${lang} from ${filename}:`, data)
+          break
+        }
       }
 
-      const response = await fetch(topicsUrl)
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch topics.yaml for ${lang}: ${response.status}`)
+      if (!data) {
+        throw new Error(`Failed to fetch workshops for ${lang}`)
       }
 
-      const text = await response.text()
-      const data = yaml.load(text)
-      console.log(`📖 Loaded topics data for ${lang}:`, data)
-
-      // Initialize topic codes storage for this language if needed
-      if (!topicCodes.value[lang]) {
-        topicCodes.value[lang] = {}
+      // Initialize workshop codes storage for this language if needed
+      if (!workshopCodes.value[lang]) {
+        workshopCodes.value[lang] = {}
       }
 
-      for (const topic of data.topics) {
-        const source = parseSource(topic)
+      const entries = data.workshops || data.topics || []
+      for (const entry of entries) {
+        const source = parseSource(entry)
         if (!source) {
-          console.warn(`⚠️ Invalid topic source:`, topic)
+          console.warn(`⚠️ Invalid workshop source:`, entry)
           continue
         }
 
         const key = source.path
         availableContent.value[lang][key] = []
-        topicCodes.value[lang][key] = source.code || null
+        workshopCodes.value[lang][key] = source.code || null
 
-        if (!topicMeta.value[lang]) {
-          topicMeta.value[lang] = {}
+        if (!workshopMeta.value[lang]) {
+          workshopMeta.value[lang] = {}
         }
-        topicMeta.value[lang][key] = {
+        workshopMeta.value[lang][key] = {
           title: source.title || null,
           description: source.description || null,
           coach: source.coach || null
         }
 
-        console.log(`  ✓ Topic: ${key} (${source.type}) (${source.code || 'no code'})`)
+        console.log(`  ✓ Workshop: ${key} (${source.type}) (${source.code || 'no code'})`)
       }
 
-      console.log(`✅ Topics loaded for ${lang}`)
+      console.log(`✅ Workshops loaded for ${lang}`)
     } catch (error) {
-      console.error(`❌ Error loading topics for ${lang}:`, error)
+      console.error(`❌ Error loading workshops for ${lang}:`, error)
     }
   }
 
-  async function loadLessonsForTopic(lang, topic) {
+  async function loadLessonsForWorkshop(lang, workshop) {
     try {
-      console.log(`📚 Loading lesson list for ${lang}/${topic}`)
+      console.log(`📚 Loading lesson list for ${lang}/${workshop}`)
 
-      // Ensure topics are loaded first
-      if (!availableContent.value[lang] || availableContent.value[lang][topic] === undefined) {
-        console.log('⚠️ Topics not loaded yet, loading now...')
-        await loadTopicsForLanguage(lang)
+      // Ensure workshops are loaded first
+      if (!availableContent.value[lang] || availableContent.value[lang][workshop] === undefined) {
+        console.log('⚠️ Workshops not loaded yet, loading now...')
+        await loadWorkshopsForLanguage(lang)
 
-        if (!availableContent.value[lang] || availableContent.value[lang][topic] === undefined) {
-          throw new Error(`Topic ${topic} not found for language ${lang}`)
+        if (!availableContent.value[lang] || availableContent.value[lang][workshop] === undefined) {
+          throw new Error(`Workshop ${workshop} not found for language ${lang}`)
         }
       }
 
       // Resolve slug to URL if needed
-      const resolvedTopic = resolveTopicKey(topic)
+      const resolvedWorkshop = resolveWorkshopKey(workshop)
 
       // Construct lessons.yaml URL
       let lessonsUrl
-      if (resolvedTopic.startsWith('http://') || resolvedTopic.startsWith('https://')) {
-        // Topic is a URL (resolved from slug or direct)
-        lessonsUrl = `${resolvedTopic}/lessons.yaml`
+      if (resolvedWorkshop.startsWith('http://') || resolvedWorkshop.startsWith('https://')) {
+        // Workshop is a URL (resolved from slug or direct)
+        lessonsUrl = `${resolvedWorkshop}/lessons.yaml`
       } else if (lang.startsWith('http://') || lang.startsWith('https://')) {
-        // Language is a URL, topic is a folder
-        lessonsUrl = `${lang}/${topic}/lessons.yaml`
+        // Language is a URL, workshop is a folder
+        lessonsUrl = `${lang}/${workshop}/lessons.yaml`
       } else {
         // Both are folders
-        lessonsUrl = `lessons/${lang}/${topic}/lessons.yaml`
+        lessonsUrl = `lessons/${lang}/${workshop}/lessons.yaml`
       }
 
       const response = await fetch(lessonsUrl)
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch lessons.yaml for ${lang}/${topic}: ${response.status}`)
+        throw new Error(`Failed to fetch lessons.yaml for ${lang}/${workshop}: ${response.status}`)
       }
 
       const text = await response.text()
       const data = yaml.load(text)
-      console.log(`📖 Loaded lessons list for ${lang}/${topic}:`, data.lessons)
+      console.log(`📖 Loaded lessons list for ${lang}/${workshop}:`, data.lessons)
 
-      availableContent.value[lang][topic] = data.lessons
+      availableContent.value[lang][workshop] = data.lessons
       console.log(`✅ Lesson list loaded: ${data.lessons.length} lessons found`)
     } catch (error) {
-      console.error(`❌ Error loading lessons for ${lang}/${topic}:`, error)
+      console.error(`❌ Error loading lessons for ${lang}/${workshop}:`, error)
     }
   }
 
-  async function loadLesson(lang, topic, filenameOrSource) {
+  async function loadLesson(lang, workshop, filenameOrSource) {
     try {
       const sourceDisplay = typeof filenameOrSource === 'string'
         ? filenameOrSource
         : JSON.stringify(filenameOrSource)
-      console.log(`📄 Loading lesson: ${lang}/${topic}/${sourceDisplay}`)
+      console.log(`📄 Loading lesson: ${lang}/${workshop}/${sourceDisplay}`)
 
       // Parse lesson source (can be string, folder object, or url object)
       const source = parseSource(filenameOrSource)
@@ -362,22 +380,22 @@ export function useLessons() {
       }
 
       // Resolve slug to URL if needed
-      const resolvedTopic = resolveTopicKey(topic)
+      const resolvedWorkshop = resolveWorkshopKey(workshop)
 
       // Construct content.yaml URL
       let lessonPath
       if (source.type === 'url') {
         // Lesson is a URL
         lessonPath = `${source.path}/content.yaml`
-      } else if (resolvedTopic.startsWith('http://') || resolvedTopic.startsWith('https://')) {
-        // Topic is a URL (resolved from slug), lesson is a folder
-        lessonPath = `${resolvedTopic}/${source.path}/content.yaml`
+      } else if (resolvedWorkshop.startsWith('http://') || resolvedWorkshop.startsWith('https://')) {
+        // Workshop is a URL (resolved from slug), lesson is a folder
+        lessonPath = `${resolvedWorkshop}/${source.path}/content.yaml`
       } else if (lang.startsWith('http://') || lang.startsWith('https://')) {
         // Language is a URL, others are folders
-        lessonPath = `${lang}/${topic}/${source.path}/content.yaml`
+        lessonPath = `${lang}/${workshop}/${source.path}/content.yaml`
       } else {
         // All are folders
-        lessonPath = `lessons/${lang}/${topic}/${source.path}/content.yaml`
+        lessonPath = `lessons/${lang}/${workshop}/${source.path}/content.yaml`
       }
 
       const response = await fetch(lessonPath)
@@ -405,17 +423,17 @@ export function useLessons() {
     }
   }
 
-  async function loadAllLessonsForTopic(lang, topic) {
+  async function loadAllLessonsForWorkshop(lang, workshop) {
     try {
-      console.log(`📚 Loading all lessons for ${lang}/${topic}`)
+      console.log(`📚 Loading all lessons for ${lang}/${workshop}`)
 
-      // Load the lesson list first (this will ensure topics are loaded too)
-      await loadLessonsForTopic(lang, topic)
+      // Load the lesson list first (this will ensure workshops are loaded too)
+      await loadLessonsForWorkshop(lang, workshop)
 
-      const lessonFiles = availableContent.value[lang]?.[topic]
+      const lessonFiles = availableContent.value[lang]?.[workshop]
 
       if (!lessonFiles || lessonFiles.length === 0) {
-        console.error(`❌ No lesson files found for ${lang}/${topic}`)
+        console.error(`❌ No lesson files found for ${lang}/${workshop}`)
         return []
       }
 
@@ -423,7 +441,7 @@ export function useLessons() {
 
       const lessons = []
       for (const filename of lessonFiles) {
-        const lesson = await loadLesson(lang, topic, filename)
+        const lesson = await loadLesson(lang, workshop, filename)
         if (lesson) {
           // Add filename (without .yaml extension) to lesson object for audio path
           const source = parseSource(filename)
@@ -437,7 +455,7 @@ export function useLessons() {
 
       return sortedLessons
     } catch (error) {
-      console.error(`❌ Error loading all lessons for ${lang}/${topic}:`, error)
+      console.error(`❌ Error loading all lessons for ${lang}/${workshop}:`, error)
       return []
     }
   }
@@ -447,30 +465,30 @@ export function useLessons() {
     return languageCodes.value[langFolder] || null
   }
 
-  // Get topic code for a topic folder
-  function getTopicCode(langFolder, topicFolder) {
-    return topicCodes.value[langFolder]?.[topicFolder] || getLanguageCode(langFolder)
+  // Get workshop code for a workshop folder
+  function getWorkshopCode(langFolder, workshopFolder) {
+    return workshopCodes.value[langFolder]?.[workshopFolder] || getLanguageCode(langFolder)
   }
 
   return {
     availableContent,
     languageCodes,
-    topicCodes,
+    workshopCodes,
     isLoading,
     loadAvailableContent,
-    loadTopicsForLanguage,
-    loadLessonsForTopic,
+    loadWorkshopsForLanguage,
+    loadLessonsForWorkshop,
     loadLesson,
-    loadAllLessonsForTopic,
+    loadAllLessonsForWorkshop,
     getLanguageCode,
-    getTopicCode,
+    getWorkshopCode,
     getContentSources,
     addContentSource,
     removeContentSource,
-    isRemoteTopic,
-    resolveTopicKey,
+    isRemoteWorkshop,
+    resolveWorkshopKey,
     getSourceForSlug,
-    getTopicMeta,
+    getWorkshopMeta,
     getShareUrl
   }
 }

@@ -25,7 +25,7 @@ The script reads language codes from YAML metadata files and maps them to native
 - **English (en-US)**: Samantha
 - **Spanish (es-ES)**: Mónica
 
-Voices are determined automatically based on the `code` field in `index.yaml` and `topics.yaml` files.
+Voices are determined automatically based on the `code` field in `index.yaml` and `workshops.yaml` files.
 
 #### Usage
 
@@ -50,14 +50,14 @@ Audio files are organized in a flat structure per lesson:
 ```
 public/audio/
 ├── {language}/
-│   └── {topic}/
+│   └── {workshop}/
 │       └── {lesson-filename}/
 │           ├── title.mp3           # Lesson title (in BASE language)
-│           ├── 0-title.mp3         # Section 0 title (in TOPIC language)
-│           ├── 1-title.mp3         # Section 1 title (in TOPIC language)
-│           ├── 0-0-q.mp3          # Section 0, Example 0, Question (in TOPIC language)
+│           ├── 0-title.mp3         # Section 0 title (in WORKSHOP language)
+│           ├── 1-title.mp3         # Section 1 title (in WORKSHOP language)
+│           ├── 0-0-q.mp3          # Section 0, Example 0, Question (in WORKSHOP language)
 │           ├── 0-0-a.mp3          # Section 0, Example 0, Answer (in BASE language)
-│           ├── 0-1-q.mp3          # Section 0, Example 1, Question (in TOPIC language)
+│           ├── 0-1-q.mp3          # Section 0, Example 1, Question (in WORKSHOP language)
 │           └── 0-1-a.mp3          # Section 0, Example 1, Answer (in BASE language)
 ```
 
@@ -72,14 +72,14 @@ public/audio/
 | Field | Language | Voice | Example (deutsch/portugiesisch) |
 |-------|----------|-------|--------------------------------|
 | **Lesson title** (`title`) | **Base** | `learning_voice` | German (Anna) |
-| **Section title** (`sections[].title`) | **Topic** | `teaching_voice` | Portuguese (Joana) |
-| **Question** (`sections[].examples[].q`) | **Topic** | `teaching_voice` | Portuguese (Joana) |
+| **Section title** (`sections[].title`) | **Workshop** | `workshop_voice` | Portuguese (Joana) |
+| **Question** (`sections[].examples[].q`) | **Workshop** | `workshop_voice` | Portuguese (Joana) |
 | **Answer** (`sections[].examples[].a`) | **Base** | `learning_voice` | German (Anna) |
 
 **Why this language mapping?**
 - **Lesson title** is read in the base language because it's metadata/navigation
-- **Section titles** introduce the topic content, so they use the topic language
-- **Questions** are in the language being taught (topic language)
+- **Section titles** introduce the workshop content, so they use the workshop language
+- **Questions** are in the language being taught (workshop language)
 - **Answers** are translations in the base/interface language
 
 #### Example
@@ -109,7 +109,7 @@ public/audio/deutsch/portugiesisch/01-basic-verbs/
 
 #### Key Functions
 
-**`initializeAudio(lesson, learning, teaching, settings)`**
+**`initializeAudio(lesson, learning, workshop, settings)`**
 - Pre-loads all audio files for the lesson
 - Sets up Media Session API for lock screen
 - Builds reading queue from lesson structure
@@ -136,9 +136,9 @@ public/audio/deutsch/portugiesisch/01-basic-verbs/
 The queue includes:
 1. **Lesson title** (`title.mp3` - in base language)
 2. For each section:
-   - **Section title** (`{sectionIdx}-title.mp3` - in topic language)
+   - **Section title** (`{sectionIdx}-title.mp3` - in workshop language)
    - For each example:
-     - **Question** (`{sectionIdx}-{exampleIdx}-q.mp3` - in topic language)
+     - **Question** (`{sectionIdx}-{exampleIdx}-q.mp3` - in workshop language)
      - **Answer** (`{sectionIdx}-{exampleIdx}-a.mp3` - in base language, if `readAnswers` enabled)
 
 The lesson title is played first to announce the lesson, followed by section content.
@@ -198,7 +198,7 @@ Lock screen controls are configured automatically when a lesson loads:
 ```javascript
 navigator.mediaSession.metadata = new MediaMetadata({
   title: lessonTitle,
-  artist: `Learning ${teaching}`,
+  artist: `Learning ${workshop}`,
   album: `Open Learn - ${learning}`,
   artwork: [
     { src: artworkUrl, sizes: '512x512', type: 'image/svg+xml' }
@@ -234,7 +234,7 @@ Native macOS voices provide high-quality, natural-sounding speech:
 
 ### Audio not loading
 - Check browser console for 404 errors
-- Verify audio files exist: `ls public/audio/{language}/{topic}/{lesson}/`
+- Verify audio files exist: `ls public/audio/{language}/{workshop}/{lesson}/`
 - Regenerate with: `./generate-lesson-audio.sh -f {path-to-lesson}`
 
 ### Playback speed not changing
@@ -248,7 +248,7 @@ Native macOS voices provide high-quality, natural-sounding speech:
 - Check console for: `✅ Media Session API configured`
 
 ### Section titles not playing
-- Ensure audio files exist: `ls public/audio/{language}/{topic}/{lesson}/*-title.mp3`
+- Ensure audio files exist: `ls public/audio/{language}/{workshop}/{lesson}/*-title.mp3`
 - Regenerate: `./generate-lesson-audio.sh -f {path-to-lesson}`
 
 ## File Locations
