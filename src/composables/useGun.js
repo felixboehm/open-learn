@@ -3,18 +3,23 @@ import { ref } from 'vue'
 // Gun is loaded dynamically to avoid SSR issues
 let Gun = null
 let gun = null
-let user = null
 let listeners = []
+
+// Guard flag to prevent sync loops when applying remote changes
+let isMergingRemote = false
 
 // Reactive state
 const isLoggedIn = ref(false)
 const username = ref('')
 const authError = ref('')
 const isSyncing = ref(false)
+const relayUrl = ref(localStorage.getItem('gunRelayUrl') || '')
+const isConnected = ref(false)
 
-const SESSION_KEY = 'gun-session'
+const RELAY_KEY = 'gunRelayUrl'
+const ALIAS_KEY = 'gun-alias'
 
-// Initialize Gun (browser-only, no relay peers)
+// Initialize Gun (browser-only, with WebRTC for peer discovery)
 async function initGun() {
   if (gun) return
 
@@ -22,8 +27,33 @@ async function initGun() {
   Gun = GunModule.default || GunModule
   await import('gun/sea')
 
-  gun = Gun({ localStorage: true, radisk: false, file: 'gun-data' })
-  user = gun.user().recall({ sessionStorage: false })
+  // WebRTC enables browser-to-browser mesh networking (same WLAN discovery)
+  try {
+    await import('gun/lib/webrtc')
+  } catch {
+    // WebRTC module not available, continue without peer mesh
+  }
+
+  const peers = relayUrl.value ? [relayUrl.value] : []
+  gun = Gun({
+    peers,
+    localStorage: true,
+    radisk: false,
+    file: 'gun-data',
+    multicast: true
+  })
+
+  // Listen for recall-based session restoration
+  gun.on('auth', () => {
+    if (gun.user().is) {
+      isLoggedIn.value = true
+      // After recall(), gun.user().is.alias may be the public key, not the readable name.
+      // The readable alias is stored separately.
+      username.value = localStorage.getItem(ALIAS_KEY) || ''
+      setupListeners()
+      pushLocalToGun()
+    }
+  })
 }
 
 // Register a new user
@@ -55,13 +85,16 @@ async function login(alias, pass) {
         authError.value = ack.err
         isLoggedIn.value = false
         username.value = ''
-        localStorage.removeItem(SESSION_KEY)
+        localStorage.removeItem(ALIAS_KEY)
         resolve(false)
       } else {
         isLoggedIn.value = true
         username.value = alias
-        localStorage.setItem(SESSION_KEY, JSON.stringify({ alias, pass }))
+        // Store only the alias for display — never the password.
+        // Session is handled by Gun's recall().
+        localStorage.setItem(ALIAS_KEY, alias)
         setupListeners()
+        pushLocalToGun()
         resolve(true)
       }
     })
@@ -70,33 +103,43 @@ async function login(alias, pass) {
 
 // Logout
 function logout() {
+  teardownListeners()
   if (gun && gun.user()) {
     gun.user().leave()
   }
   isLoggedIn.value = false
   username.value = ''
   authError.value = ''
-  localStorage.removeItem(SESSION_KEY)
-  teardownListeners()
+  localStorage.removeItem(ALIAS_KEY)
 }
 
-// Auto-login from saved session
+// Auto-login via Gun's recall (session stored by Gun internally, no password needed)
 async function autoLogin() {
-  const saved = localStorage.getItem(SESSION_KEY)
-  if (!saved) return false
+  if (!gun) await initGun()
 
-  try {
-    const { alias, pass } = JSON.parse(saved)
-    return await login(alias, pass)
-  } catch {
-    localStorage.removeItem(SESSION_KEY)
-    return false
-  }
+  // Gun's recall() + gun.on('auth') handler in initGun() restores the session.
+  // We use recall() with sessionStorage to trigger it, then wait briefly.
+  gun.user().recall({ sessionStorage: true })
+
+  return new Promise((resolve) => {
+    if (isLoggedIn.value) {
+      resolve(true)
+      return
+    }
+    const timeout = setTimeout(() => resolve(false), 2000)
+    const check = setInterval(() => {
+      if (isLoggedIn.value) {
+        clearTimeout(timeout)
+        clearInterval(check)
+        resolve(true)
+      }
+    }, 100)
+  })
 }
 
 // Sync data to Gun (encrypted under user space)
 async function syncToGun(key, data) {
-  if (!isLoggedIn.value || !gun) return
+  if (!isLoggedIn.value || !gun || isMergingRemote) return
 
   try {
     gun.user().get('openlearn').get(key).put(JSON.stringify(data))
@@ -105,7 +148,7 @@ async function syncToGun(key, data) {
   }
 }
 
-// Load all data from Gun into localStorage
+// Load all data from Gun (one-time read)
 async function loadFromGun() {
   if (!isLoggedIn.value || !gun) return null
 
@@ -117,7 +160,10 @@ async function loadFromGun() {
   try {
     for (const key of keys) {
       const data = await new Promise((resolve) => {
+        let resolved = false
         gun.user().get('openlearn').get(key).once((val) => {
+          if (resolved) return
+          resolved = true
           if (val && typeof val === 'string') {
             try {
               resolve(JSON.parse(val))
@@ -128,8 +174,12 @@ async function loadFromGun() {
             resolve(null)
           }
         })
-        // Timeout after 3 seconds
-        setTimeout(() => resolve(null), 3000)
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true
+            resolve(null)
+          }
+        }, 3000)
       })
       if (data) results[key] = data
     }
@@ -140,7 +190,8 @@ async function loadFromGun() {
   return results
 }
 
-// Set up real-time listeners for cross-tab/device sync
+// Set up real-time listeners (Gun .on()) for continuous cross-tab/device sync.
+// These fire whenever data changes in Gun — from local writes or remote peers.
 function setupListeners() {
   teardownListeners()
 
@@ -149,27 +200,30 @@ function setupListeners() {
   const keys = ['settings', 'progress', 'assessments']
 
   for (const key of keys) {
-    const ref = gun.user().get('openlearn').get(key)
-    const handler = ref.on((val) => {
+    const gunRef = gun.user().get('openlearn').get(key)
+    const cb = (val) => {
+      if (isMergingRemote) return
       if (!val || typeof val !== 'string') return
 
       try {
         const data = JSON.parse(val)
-        // Dispatch custom event so composables can react
+        isMergingRemote = true
         window.dispatchEvent(new CustomEvent('gun-sync', { detail: { key, data } }))
+        isMergingRemote = false
       } catch {
-        // ignore parse errors
+        isMergingRemote = false
       }
-    })
-    listeners.push({ ref, handler })
+    }
+    gunRef.on(cb)
+    listeners.push({ ref: gunRef, cb })
   }
 }
 
-// Remove listeners
+// Remove listeners — pass callback reference for proper cleanup
 function teardownListeners() {
-  for (const { ref: gunRef } of listeners) {
+  for (const { ref: gunRef, cb } of listeners) {
     try {
-      gunRef.off()
+      gunRef.off(cb)
     } catch {
       // ignore
     }
@@ -177,8 +231,8 @@ function teardownListeners() {
   listeners = []
 }
 
-// Sync all current localStorage data to Gun
-async function syncAll() {
+// Push all current localStorage data to Gun
+async function pushLocalToGun() {
   if (!isLoggedIn.value) return
 
   isSyncing.value = true
@@ -201,12 +255,38 @@ async function syncAll() {
   }
 }
 
+// Set relay peer URL (requires page reload to take effect)
+function setRelayUrl(url) {
+  relayUrl.value = url
+  if (url) {
+    localStorage.setItem(RELAY_KEY, url)
+  } else {
+    localStorage.removeItem(RELAY_KEY)
+  }
+}
+
+// Check connection status to relay peer
+function updateConnectionStatus() {
+  if (!gun || !relayUrl.value) {
+    isConnected.value = false
+    return
+  }
+  try {
+    const peers = gun._.opt.peers || {}
+    isConnected.value = Object.values(peers).some(p => p.wire?.readyState === 1)
+  } catch {
+    isConnected.value = false
+  }
+}
+
 export function useGun() {
   return {
     isLoggedIn,
     username,
     authError,
     isSyncing,
+    relayUrl,
+    isConnected,
     initGun,
     register,
     login,
@@ -214,6 +294,8 @@ export function useGun() {
     autoLogin,
     syncToGun,
     loadFromGun,
-    syncAll
+    pushLocalToGun,
+    setRelayUrl,
+    updateConnectionStatus
   }
 }

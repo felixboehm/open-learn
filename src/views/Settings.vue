@@ -20,8 +20,12 @@
               <Input v-model="gunPassword" type="password" placeholder="Password" />
             </div>
             <div class="flex gap-3">
-              <Button @click="handleLogin" :disabled="!gunUsername || !gunPassword">Login</Button>
-              <Button variant="secondary" @click="handleRegister" :disabled="!gunUsername || !gunPassword">Register</Button>
+              <Button @click="handleLogin" :disabled="!gunUsername || !gunPassword || isAuthLoading">
+                {{ isAuthLoading ? 'Logging in...' : 'Login' }}
+              </Button>
+              <Button variant="secondary" @click="handleRegister" :disabled="!gunUsername || !gunPassword || isAuthLoading">
+                {{ isAuthLoading ? 'Registering...' : 'Register' }}
+              </Button>
             </div>
           </div>
         </template>
@@ -29,11 +33,9 @@
         <template v-else>
           <p class="text-sm text-muted-foreground mb-4">
             Signed in as <span class="font-semibold text-foreground">{{ gunUser }}</span>
+            <span v-if="isSyncing" class="ml-2 text-xs text-muted-foreground">(syncing...)</span>
           </p>
           <div class="flex gap-3">
-            <Button @click="handleSync" :disabled="isSyncing">
-              {{ isSyncing ? 'Syncing...' : 'Sync Now' }}
-            </Button>
             <Button variant="secondary" @click="handleLogout">Logout</Button>
           </div>
         </template>
@@ -43,6 +45,25 @@
         </div>
         <div v-if="syncMessage" class="mt-3 text-sm text-green-600 dark:text-green-400">
           {{ syncMessage }}
+        </div>
+
+        <!-- Relay Peer URL -->
+        <div class="mt-6 pt-4 border-t">
+          <Label class="text-sm font-medium mb-1 block">Relay Peer</Label>
+          <p class="text-xs text-muted-foreground mb-2">
+            Connect to a Gun relay server for cross-device sync (e.g. http://192.168.1.10:8765/gun)
+          </p>
+          <div class="flex gap-2">
+            <Input v-model="relayUrlInput" placeholder="http://192.168.1.10:8765/gun" class="flex-1" />
+            <Button size="sm" @click="saveRelay">Save</Button>
+          </div>
+          <div v-if="relayUrl" class="mt-2 flex items-center gap-2 text-sm">
+            <span class="w-2 h-2 rounded-full" :class="isConnected ? 'bg-green-500' : 'bg-red-500'"></span>
+            {{ isConnected ? 'Connected' : 'Disconnected' }}
+          </div>
+          <p v-if="relaySaved" class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+            Reload the page to connect to the new relay.
+          </p>
         </div>
       </CardContent>
     </Card>
@@ -205,7 +226,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useSettings } from '../composables/useSettings'
 import { useProgress } from '../composables/useProgress'
 import { useAssessments } from '../composables/useAssessments'
@@ -220,7 +241,7 @@ import { Input } from '@/components/ui/input'
 const { settings } = useSettings()
 const { progress, getProgress, mergeProgress } = useProgress()
 const { assessments, getAssessments, mergeAssessments } = useAssessments()
-const { isLoggedIn, username: gunUser, authError, isSyncing, login, register, logout, syncAll, loadFromGun } = useGun()
+const { isLoggedIn, username: gunUser, authError, isSyncing, relayUrl, isConnected, login, register, logout, setRelayUrl, updateConnectionStatus } = useGun()
 
 const importMessage = ref('')
 const importMessageError = ref(false)
@@ -230,52 +251,62 @@ const selectedWorkshop = ref('')
 const gunUsername = ref('')
 const gunPassword = ref('')
 const syncMessage = ref('')
+const isAuthLoading = ref(false)
+const relayUrlInput = ref(relayUrl.value)
+const relaySaved = ref(false)
 
 async function handleLogin() {
+  if (isAuthLoading.value) return
+  isAuthLoading.value = true
   syncMessage.value = ''
-  const ok = await login(gunUsername.value, gunPassword.value)
-  if (ok) {
-    gunUsername.value = ''
-    gunPassword.value = ''
-    // Load remote data and merge
-    const remote = await loadFromGun()
-    if (remote) {
-      if (remote.progress) mergeProgress(remote.progress)
-      if (remote.assessments) mergeAssessments(remote.assessments)
-      if (remote.settings) {
-        Object.assign(settings, remote.settings)
-      }
+  try {
+    const ok = await login(gunUsername.value, gunPassword.value)
+    if (ok) {
+      gunUsername.value = ''
+      gunPassword.value = ''
+      // Auto-sync happens via gun.on('auth') → pushLocalToGun() + setupListeners().
+      // Real-time .on() listeners handle continuous sync from remote peers.
+      syncMessage.value = 'Logged in. Syncing automatically.'
     }
-    syncMessage.value = 'Logged in and synced.'
+  } finally {
+    isAuthLoading.value = false
   }
 }
 
 async function handleRegister() {
+  if (isAuthLoading.value) return
+  isAuthLoading.value = true
   syncMessage.value = ''
-  const ok = await register(gunUsername.value, gunPassword.value)
-  if (ok) {
-    gunUsername.value = ''
-    gunPassword.value = ''
-    // Push local data to Gun after registration
-    await syncAll()
-    syncMessage.value = 'Registered and synced.'
+  try {
+    const ok = await register(gunUsername.value, gunPassword.value)
+    if (ok) {
+      gunUsername.value = ''
+      gunPassword.value = ''
+      syncMessage.value = 'Registered. Syncing automatically.'
+    }
+  } finally {
+    isAuthLoading.value = false
   }
+}
+
+// Periodic connection status check
+let statusInterval
+onMounted(() => {
+  statusInterval = setInterval(updateConnectionStatus, 5000)
+  updateConnectionStatus()
+})
+onUnmounted(() => {
+  clearInterval(statusInterval)
+})
+
+function saveRelay() {
+  setRelayUrl(relayUrlInput.value.trim())
+  relaySaved.value = true
 }
 
 function handleLogout() {
   logout()
   syncMessage.value = ''
-}
-
-async function handleSync() {
-  syncMessage.value = ''
-  await syncAll()
-  const remote = await loadFromGun()
-  if (remote) {
-    if (remote.progress) mergeProgress(remote.progress)
-    if (remote.assessments) mergeAssessments(remote.assessments)
-  }
-  syncMessage.value = 'Sync complete.'
 }
 
 // Collect all unique workshop keys (learning:workshop) from progress + assessments

@@ -79,6 +79,14 @@ function initializeWatchers() {
   watch(progress, () => {
     saveProgress()
   }, { deep: true })
+
+  // Listen for remote sync events from Gun
+  window.addEventListener('gun-sync', (event) => {
+    const { key, data } = event.detail
+    if (key === 'progress' && data) {
+      mergeProgress(data)
+    }
+  })
 }
 
 // Return raw progress object

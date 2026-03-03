@@ -101,6 +101,14 @@ function initializeWatchers() {
   watch(assessments, () => {
     saveAssessments()
   }, { deep: true })
+
+  // Listen for remote sync events from Gun
+  window.addEventListener('gun-sync', (event) => {
+    const { key, data } = event.detail
+    if (key === 'assessments' && data) {
+      mergeAssessments(data)
+    }
+  })
 }
 
 // --- Sent history tracking ---

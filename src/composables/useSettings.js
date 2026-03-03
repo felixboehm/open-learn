@@ -50,6 +50,18 @@ function loadSettings() {
   }
 }
 
+// Merge remote settings into local state (used by Gun sync)
+function mergeSettings(remote) {
+  if (!remote || typeof remote !== 'object') return
+  for (const [key, value] of Object.entries(remote)) {
+    if (key in settings.value) {
+      settings.value[key] = value
+    }
+  }
+  applyDarkMode(settings.value.darkMode)
+  saveSettings()
+}
+
 // Initialize watchers only once
 function initializeWatchers() {
   if (isInitialized) return
@@ -89,6 +101,14 @@ function initializeWatchers() {
   watch(() => settings.value.showDebugOverlay, () => {
     saveSettings()
   })
+
+  // Listen for remote sync events from Gun
+  window.addEventListener('gun-sync', (event) => {
+    const { key, data } = event.detail
+    if (key === 'settings' && data) {
+      mergeSettings(data)
+    }
+  })
 }
 
 export function useSettings() {
@@ -98,6 +118,7 @@ export function useSettings() {
   return {
     settings,
     loadSettings,
-    saveSettings
+    saveSettings,
+    mergeSettings
   }
 }
