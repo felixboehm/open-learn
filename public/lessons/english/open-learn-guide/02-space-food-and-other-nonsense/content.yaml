@@ -1,7 +1,7 @@
 version: 2
 number: 2
-title: "Space, Food & Other Nonsense"
-description: "Test your useless knowledge with quizzes! This lesson showcases all assessment types: text input, multiple choice, and single select."
+title: "Feature Demo: Quizzes & Assessments"
+description: "Try all assessment types Open Learn offers — text input, single select, and multiple choice — using trivia questions as examples."
 
 sections:
   - title: "Space Quiz"
@@ -10,6 +10,12 @@ sections:
 
       **How it works:** Type your answer, pick checkboxes, or select a radio button — then hit Submit.
       Your answers are saved locally so you can come back later.
+
+      > **YAML tip — Input assessment:** Use `type: input` with `a:` as a list of accepted answers (case-sensitive). Example: `a: ["Saturn", "saturn"]`.
+
+      > **YAML tip — Single select:** Use `type: select` with `options:` and mark one option `correct: true`.
+
+      > **YAML tip — Multiple choice:** Use `type: multiple-choice` with `options:` — multiple options can be `correct: true`.
     examples:
       - type: input
         q: "What planet in our solar system has the most moons?"
@@ -49,6 +55,8 @@ sections:
   - title: "Food Trivia"
     explanation: |
       Food facts that will make you look at your kitchen differently.
+
+      > **YAML tip — Mixing types:** You can mix Q&A and assessment examples in the same section. Examples without `type:` default to standard Q&A.
     examples:
       - type: input
         q: "Which fruit floats in water because it is 25% air?"
@@ -90,6 +98,8 @@ sections:
   - title: "Random Nonsense Round"
     explanation: |
       The weirdest facts that don't fit any category. Good luck.
+
+      > **YAML tip — Labels:** Use `labels: ["Tag1", "Tag2"]` on any example to categorize it. Users can filter by label in the UI.
     examples:
       - type: input
         q: "In what country is it illegal to own just one guinea pig (because they get lonely)?"

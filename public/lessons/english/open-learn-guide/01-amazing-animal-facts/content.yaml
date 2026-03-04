@@ -1,7 +1,7 @@
 version: 2
 number: 1
-title: "Amazing Animal Facts"
-description: "Mind-blowing things you never knew about the animal kingdom. This lesson showcases Q&A examples, labels, related items, video, and markdown explanations."
+title: "Feature Demo: Videos, Q&A & Vocabulary"
+description: "See how Open Learn handles video embeds, Q&A cards, labels, related vocabulary items, and markdown explanations — using fun animal facts as examples."
 
 sections:
   - title: "Ocean Creatures"
@@ -10,7 +10,9 @@ sections:
       The ocean covers **71%** of Earth's surface, and we've explored less than 5% of it.
       Here are some incredible facts about the creatures living down there.
 
-      > This section demonstrates: video embeds, markdown explanations, Q&A examples, and related items.
+      > **YAML tip — Video:** Add `video: "https://youtube.com/watch?v=..."` to any section. Local files work too: `video: "video/sample.mp4"`.
+
+      > **YAML tip — Q&A:** Each example has `q:` and `a:`. Add `labels: [...]` for tags and `rel:` for related vocabulary items.
     examples:
       - q: "How many hearts does an octopus have?"
         a: "Three — two pump blood to the gills, one pumps it to the rest of the body."
@@ -45,6 +47,8 @@ sections:
     explanation: |
       Insects make up about **80%** of all known animal species.
       Some of their abilities put science fiction to shame.
+
+      > **YAML tip — Local video:** This section uses a local file: `video: "video/sample.mp4"`. Place MP3/MP4 files next to your `content.yaml`.
     examples:
       - q: "How far can a flea jump relative to its body size?"
         a: "A flea can jump 150 times its own body length — like a human jumping over a 75-story building."
@@ -77,6 +81,8 @@ sections:
   - title: "Mammals Gone Wild"
     explanation: |
       Even the animals we think we know well have some _seriously weird_ hidden talents.
+
+      > **YAML tip — Markdown:** Explanations support full **Markdown**: bold, _italic_, lists, blockquotes, and more.
     examples:
       - q: "How long does a sloth take to digest a meal?"
         a: "Up to 30 days — they have the slowest digestion of any mammal."

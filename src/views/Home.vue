@@ -143,10 +143,7 @@ const selectedWorkshop = ref(null)
 const copiedWorkshop = ref(null)
 
 // Known workshops that can be discovered
-const knownWorkshops = [
-  { url: 'https://felixboehm.github.io/workshop-open-learn/index.yaml', title: 'Open Learn Workshop', host: 'felixboehm.github.io' },
-  { url: 'https://felixboehm.github.io/workshop-english/index.yaml', title: 'Englisch lernen', host: 'felixboehm.github.io' }
-]
+const knownWorkshops = []
 
 const learningLanguages = computed(() => {
   return Object.keys(availableContent.value)
@@ -259,7 +256,21 @@ async function restorePreviousSelection() {
   }
 }
 
+// Remove legacy external sources that are now replaced by local workshops
+function cleanupLegacySources() {
+  const legacyUrls = [
+    'https://felixboehm.github.io/workshop-open-learn/index.yaml',
+    'https://felixboehm.github.io/workshop-english/index.yaml'
+  ]
+  const sources = getContentSources()
+  const cleaned = sources.filter(s => !legacyUrls.includes(s))
+  if (cleaned.length !== sources.length) {
+    localStorage.setItem('contentSources', JSON.stringify(cleaned))
+  }
+}
+
 onMounted(async () => {
+  cleanupLegacySources()
   await loadAvailableContent()
   await restorePreviousSelection()
 })

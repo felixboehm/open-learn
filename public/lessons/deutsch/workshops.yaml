@@ -1,7 +1,18 @@
 # Available workshops for German interface
-# This file lists all available workshops that can be learned through German
 workshops:
+  - folder: open-learn-guide
+    code: de-DE
+    title: "Open Learn Anleitung"
+    description: "Lerne die Plattform kennen — Videos, Quizze, Labels und mehr. Perfekt für neue Nutzer und Workshop-Ersteller."
+  - folder: open-learn-feedback
+    code: de-DE
+    title: "Open Learn Feedback"
+    description: "Teile deine Meinung und hilf mit, die Zukunft von Open Learn zu gestalten."
+    coach:
+      email: "open-learn@felixboehm.it"
   - folder: portugiesisch
     code: pt-PT
+    title: "Portugiesisch"
+    description: "10 Lektionen zu den 30 wichtigsten portugiesischen Verben und ihren Konjugationen."
     coach:
       email: "open-learn@felixboehm.it"

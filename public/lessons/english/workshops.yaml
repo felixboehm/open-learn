@@ -1,6 +1,12 @@
 # Available workshops for English interface
 workshops:
-  - folder: open-learn-showcase
+  - folder: open-learn-guide
     code: en-US
+    title: "Open Learn Guide"
+    description: "Learn how the platform works — videos, quizzes, labels, and more. Perfect for new users and workshop creators."
+  - folder: open-learn-feedback
+    code: en-US
+    title: "Open Learn Feedback"
+    description: "Share your thoughts and help shape the future of Open Learn."
     coach:
       email: "open-learn@felixboehm.it"
