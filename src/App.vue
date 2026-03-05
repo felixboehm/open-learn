@@ -1,7 +1,7 @@
 <template>
   <div class="w-full md:max-w-6xl md:mx-auto bg-background md:rounded-xl md:shadow-2xl">
     <!-- Header with unified navigation - sticky on desktop -->
-    <header class="bg-gradient-to-br from-primary to-secondary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
+    <header class="bg-primary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
       <div class="flex items-center justify-between gap-2">
         <!-- Left side: language dropdown + nav buttons -->
         <div class="flex items-center gap-2 min-w-fit">
@@ -9,7 +9,7 @@
           <div v-if="learningLanguages.length > 0" class="relative">
             <button
               @click="toggleLanguageMenu"
-              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-lg px-2.5 py-1.5 text-sm font-medium transition flex-shrink-0"
+              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-full px-3 py-1.5 text-sm font-medium transition flex-shrink-0"
               title="Change language"
               aria-label="Change language">
               <span class="text-base leading-none">{{ getFlag(selectedLanguage) }}</span>
@@ -52,7 +52,7 @@
             v-if="route.name === 'lesson-detail'"
             variant="ghost"
             @click="goBackToLessons"
-            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-lg text-sm flex-shrink-0"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-full text-sm flex-shrink-0"
             title="Back to lessons"
             aria-label="Back to lessons">
             ←
