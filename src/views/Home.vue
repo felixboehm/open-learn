@@ -7,62 +7,33 @@
     </div>
 
     <div v-else>
-      <!-- Hero section (always visible, adapts to language) -->
-      <div class="mb-8">
-        <p class="text-sm font-semibold text-primary mb-1 tracking-wide uppercase">Open Learn</p>
-        <h2 class="text-3xl font-bold mb-2 text-foreground">
+
+      <!-- Hero section -->
+      <div class="mb-10">
+        <h2 class="text-3xl sm:text-4xl font-extrabold mb-3 text-foreground leading-tight">
           {{ t('title') }}
         </h2>
-        <p class="text-muted-foreground mb-5 leading-relaxed">
+        <p class="text-base text-muted-foreground leading-relaxed max-w-2xl">
           {{ t('subtitle') }}
         </p>
 
-        <!-- Feature highlights -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-          <div v-for="feature in features" :key="feature.key"
-            class="flex items-start gap-3 p-3 rounded-lg bg-accent/30">
-            <span class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-base flex-shrink-0">
-              {{ feature.icon }}
-            </span>
-            <div>
-              <div class="text-sm font-medium text-foreground">{{ feature.title }}</div>
-              <div class="text-xs text-muted-foreground">{{ feature.desc }}</div>
-            </div>
-          </div>
-        </div>
-
         <!-- Getting started hint (when no language selected) -->
-        <div v-if="!selectedLanguage" class="p-4 rounded-lg border border-primary/20 bg-primary/5">
-          <p class="text-sm text-foreground font-medium mb-1">
-            {{ t('getStartedTitle') }}
-          </p>
-          <p class="text-sm text-muted-foreground">
-            {{ t('getStartedDesc') }}
-          </p>
-        </div>
-      </div>
-
-      <!-- How it works section (always visible) -->
-      <div v-if="!selectedLanguage || workshops.length === 0" class="mb-8">
-        <h3 class="text-lg font-semibold text-foreground mb-4">{{ t('howItWorks') }}</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div v-for="(step, i) in steps" :key="i" class="text-center p-4">
-            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
-              {{ i + 1 }}
-            </div>
-            <div class="text-sm font-medium text-foreground mb-1">{{ step.title }}</div>
-            <div class="text-xs text-muted-foreground">{{ step.desc }}</div>
+        <div v-if="!selectedLanguage" class="mt-5 flex items-center gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
+          <span class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-lg flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+          </span>
+          <div>
+            <p class="text-sm font-medium text-foreground">{{ t('getStartedTitle') }}</p>
+            <p class="text-sm text-muted-foreground">{{ t('getStartedDesc') }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Workshops as tiles -->
-      <div v-if="selectedLanguage && workshops.length > 0">
-        <div class="flex items-center justify-between mb-3">
-          <label class="text-sm font-medium text-muted-foreground">
-            {{ t('workshops') }}
-          </label>
-          <span class="text-xs text-muted-foreground">
+      <!-- Workshops section (when language selected) -->
+      <div v-if="selectedLanguage && workshops.length > 0" class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-foreground">{{ t('workshops') }}</h3>
+          <span class="text-xs text-muted-foreground bg-accent px-2 py-1 rounded-full">
             {{ workshops.length }} {{ workshops.length === 1 ? 'Workshop' : 'Workshops' }}
           </span>
         </div>
@@ -74,20 +45,19 @@
             @click="openWorkshop(ws)"
             class="group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/50 overflow-hidden">
 
-            <!-- Color accent bar at top -->
-            <div class="h-1.5 bg-gradient-to-r from-primary to-secondary"></div>
+            <div class="h-1 bg-primary"></div>
 
             <div class="p-5">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <h3 class="font-semibold text-foreground text-lg group-hover:text-primary transition-colors leading-tight">
+                <h3 class="font-semibold text-foreground text-base group-hover:text-primary transition-colors leading-tight">
                   {{ getWorkshopTitle(ws) }}
                 </h3>
                 <button
                   @click.stop="copyWorkshopLink(ws)"
                   class="p-1.5 rounded-md text-muted-foreground/40 hover:text-primary hover:bg-accent transition opacity-0 group-hover:opacity-100 flex-shrink-0"
                   title="Copy link">
-                  <svg v-if="copiedWorkshop !== ws" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg v-if="copiedWorkshop !== ws" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
               </div>
 
@@ -109,11 +79,11 @@
                     title="Remove">
                     Remove
                   </button>
-                  <span v-if="isRemoteWorkshop(ws)" class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform" title="Opens external website">
-                    ↗
+                  <span v-if="isRemoteWorkshop(ws)" class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform">
+                    &#8599;
                   </span>
                   <span v-else class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform">
-                    →
+                    &rarr;
                   </span>
                 </div>
               </div>
@@ -125,7 +95,7 @@
         <div v-if="workshops.length > maxVisible && !showAll" class="mt-4 text-center">
           <button
             @click="showAll = true"
-            class="px-6 py-2 text-sm font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition">
+            class="px-6 py-2.5 text-sm font-medium text-primary border border-primary/30 rounded-full hover:bg-primary/5 transition">
             {{ t('showAll') }} ({{ workshops.length - maxVisible }} {{ t('more') }})
           </button>
         </div>
@@ -146,110 +116,15 @@
               </div>
               <a
                 :href="'#/add?source=' + encodeURIComponent(workshop.url)"
-                class="px-3 py-1 rounded text-sm font-semibold text-primary border border-primary hover:bg-accent transition">
+                class="px-3 py-1 rounded-full text-sm font-semibold text-primary border border-primary hover:bg-accent transition">
                 Add
               </a>
             </Card>
           </div>
         </div>
-      </div>
 
-      <!-- Detailed feature sections (visible when no workshops shown) -->
-      <div v-if="!selectedLanguage || workshops.length === 0">
-
-        <!-- What you can learn -->
-        <div class="mb-8">
-          <h3 class="text-lg font-semibold text-foreground mb-3">{{ t('whatYouCanLearn') }}</h3>
-          <p class="text-sm text-muted-foreground mb-4">{{ t('whatYouCanLearnDesc') }}</p>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <div v-for="example in useCaseExamples" :key="example.key"
-              class="flex items-center gap-2 p-2 rounded-md bg-accent/20 text-sm">
-              <span class="text-base">{{ example.icon }}</span>
-              <span class="text-foreground text-xs">{{ example.label }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Built-in tools -->
-        <div class="mb-8">
-          <h3 class="text-lg font-semibold text-foreground mb-3">{{ t('builtInTools') }}</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div v-for="tool in tools" :key="tool.key" class="p-3 rounded-lg border border-border">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-base">{{ tool.icon }}</span>
-                <span class="text-sm font-medium text-foreground">{{ tool.title }}</span>
-              </div>
-              <p class="text-xs text-muted-foreground">{{ tool.desc }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- For creators -->
-        <div class="mb-8">
-          <h3 class="text-lg font-semibold text-foreground mb-3">{{ t('forCreators') }}</h3>
-          <p class="text-sm text-muted-foreground mb-4">{{ t('forCreatorsDesc') }}</p>
-          <div class="p-4 rounded-lg bg-accent/30 font-mono text-xs text-muted-foreground leading-relaxed">
-            <div>sections:</div>
-            <div class="pl-4">- title: "{{ t('yamlExampleTitle') }}"</div>
-            <div class="pl-6">explanation: |</div>
-            <div class="pl-8">{{ t('yamlExampleExplanation') }}</div>
-            <div class="pl-6">video: "https://..."</div>
-            <div class="pl-6">examples:</div>
-            <div class="pl-8">- q: "{{ t('yamlExampleQ') }}"</div>
-            <div class="pl-10">a: "{{ t('yamlExampleA') }}"</div>
-            <div class="pl-10">type: select</div>
-          </div>
-        </div>
-
-        <!-- Privacy & ownership -->
-        <div class="mb-8">
-          <h3 class="text-lg font-semibold text-foreground mb-3">{{ t('privacyTitle') }}</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div v-for="item in privacyPoints" :key="item.key" class="p-3 rounded-lg bg-accent/20">
-              <div class="text-sm font-medium text-foreground mb-1">{{ item.title }}</div>
-              <p class="text-xs text-muted-foreground">{{ item.desc }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Roadmap -->
-        <div class="mb-8">
-          <h3 class="text-lg font-semibold text-foreground mb-3">{{ t('roadmapTitle') }}</h3>
-          <p class="text-sm text-muted-foreground mb-4">{{ t('roadmapDesc') }}</p>
-          <div class="space-y-2">
-            <div v-for="item in roadmapItems" :key="item.key"
-              class="flex items-start gap-3 p-3 rounded-lg border border-border">
-              <span class="text-base mt-0.5">{{ item.icon }}</span>
-              <div class="flex-grow">
-                <div class="text-sm font-medium text-foreground">{{ item.title }}</div>
-                <p class="text-xs text-muted-foreground">{{ item.desc }}</p>
-              </div>
-              <a v-if="item.issue"
-                :href="'https://github.com/felixboehm/open-learn/issues/' + item.issue"
-                target="_blank" rel="noopener"
-                class="text-xs text-primary hover:underline flex-shrink-0"
-                @click.stop>
-                #{{ item.issue }}
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Open source CTA -->
-        <div class="mb-8 p-5 rounded-lg border border-primary/20 bg-primary/5 text-center">
-          <h3 class="text-lg font-semibold text-foreground mb-2">{{ t('openSourceTitle') }}</h3>
-          <p class="text-sm text-muted-foreground mb-4">{{ t('openSourceDesc') }}</p>
-          <a href="https://github.com/felixboehm/open-learn"
-            target="_blank" rel="noopener"
-            class="inline-block px-5 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition">
-            {{ t('viewOnGitHub') }}
-          </a>
-        </div>
-      </div>
-
-      <!-- Info links -->
-      <div v-if="selectedLanguage" class="mt-8 pt-4 border-t border-border">
-        <div class="flex flex-wrap gap-4 text-sm">
+        <!-- Info links -->
+        <div class="mt-6 flex flex-wrap gap-4 text-sm">
           <a
             :href="'#/' + selectedLanguage + '/open-learn-guide/lessons'"
             class="text-primary hover:underline">
@@ -269,6 +144,130 @@
           </a>
         </div>
       </div>
+
+      <!-- How it works -->
+      <div class="mb-10">
+        <h3 class="text-lg font-semibold text-foreground mb-4">{{ t('howItWorks') }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div v-for="(step, i) in steps" :key="i" class="text-center p-5 rounded-xl bg-accent/30">
+            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
+              {{ i + 1 }}
+            </div>
+            <div class="text-sm font-semibold text-foreground mb-1">{{ step.title }}</div>
+            <div class="text-xs text-muted-foreground leading-relaxed">{{ step.desc }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature highlights -->
+      <div class="mb-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div v-for="feature in features" :key="feature.key"
+            class="flex items-start gap-3 p-4 rounded-xl border border-border hover:border-primary/30 transition">
+            <span class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-lg flex-shrink-0">
+              {{ feature.icon }}
+            </span>
+            <div>
+              <div class="text-sm font-semibold text-foreground">{{ feature.title }}</div>
+              <div class="text-xs text-muted-foreground leading-relaxed">{{ feature.desc }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- What you can learn -->
+      <div class="mb-10">
+        <h3 class="text-lg font-semibold text-foreground mb-2">{{ t('whatYouCanLearn') }}</h3>
+        <p class="text-sm text-muted-foreground mb-4">{{ t('whatYouCanLearnDesc') }}</p>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="example in useCaseExamples" :key="example.key"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/40 text-sm text-foreground">
+            <span>{{ example.icon }}</span>
+            <span class="text-xs font-medium">{{ example.label }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Built-in tools -->
+      <div class="mb-10">
+        <h3 class="text-lg font-semibold text-foreground mb-4">{{ t('builtInTools') }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div v-for="tool in tools" :key="tool.key" class="p-4 rounded-xl border border-border">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-lg">{{ tool.icon }}</span>
+              <span class="text-sm font-semibold text-foreground">{{ tool.title }}</span>
+            </div>
+            <p class="text-xs text-muted-foreground leading-relaxed">{{ tool.desc }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- For creators -->
+      <div class="mb-10">
+        <h3 class="text-lg font-semibold text-foreground mb-2">{{ t('forCreators') }}</h3>
+        <p class="text-sm text-muted-foreground mb-4">{{ t('forCreatorsDesc') }}</p>
+        <div class="p-4 rounded-xl bg-accent/30 font-mono text-xs text-muted-foreground leading-relaxed overflow-x-auto">
+          <div>sections:</div>
+          <div class="pl-4">- title: "{{ t('yamlExampleTitle') }}"</div>
+          <div class="pl-6">explanation: |</div>
+          <div class="pl-8">{{ t('yamlExampleExplanation') }}</div>
+          <div class="pl-6">video: "https://..."</div>
+          <div class="pl-6">examples:</div>
+          <div class="pl-8">- q: "{{ t('yamlExampleQ') }}"</div>
+          <div class="pl-10">a: "{{ t('yamlExampleA') }}"</div>
+          <div class="pl-10">type: select</div>
+        </div>
+      </div>
+
+      <!-- Privacy & Roadmap side by side on desktop -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+
+        <!-- Privacy & ownership -->
+        <div>
+          <h3 class="text-lg font-semibold text-foreground mb-4">{{ t('privacyTitle') }}</h3>
+          <div class="space-y-3">
+            <div v-for="item in privacyPoints" :key="item.key" class="p-3 rounded-xl bg-accent/20">
+              <div class="text-sm font-semibold text-foreground mb-1">{{ item.title }}</div>
+              <p class="text-xs text-muted-foreground leading-relaxed">{{ item.desc }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Roadmap -->
+        <div>
+          <h3 class="text-lg font-semibold text-foreground mb-2">{{ t('roadmapTitle') }}</h3>
+          <p class="text-xs text-muted-foreground mb-4">{{ t('roadmapDesc') }}</p>
+          <div class="space-y-2">
+            <div v-for="item in roadmapItems" :key="item.key"
+              class="flex items-start gap-3 p-3 rounded-xl border border-border">
+              <span class="text-base mt-0.5">{{ item.icon }}</span>
+              <div class="flex-grow min-w-0">
+                <div class="text-sm font-medium text-foreground">{{ item.title }}</div>
+                <p class="text-xs text-muted-foreground leading-relaxed">{{ item.desc }}</p>
+              </div>
+              <a v-if="item.issue"
+                :href="'https://github.com/felixboehm/open-learn/issues/' + item.issue"
+                target="_blank" rel="noopener"
+                class="text-xs text-primary hover:underline flex-shrink-0"
+                @click.stop>
+                #{{ item.issue }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Open source CTA -->
+      <div class="mb-6 p-6 rounded-2xl border border-primary/20 bg-primary/5 text-center">
+        <h3 class="text-lg font-semibold text-foreground mb-2">{{ t('openSourceTitle') }}</h3>
+        <p class="text-sm text-muted-foreground mb-4 max-w-lg mx-auto">{{ t('openSourceDesc') }}</p>
+        <a href="https://github.com/felixboehm/open-learn"
+          target="_blank" rel="noopener"
+          class="inline-block px-6 py-2.5 text-sm font-medium text-white bg-primary rounded-full hover:bg-primary/90 transition">
+          {{ t('viewOnGitHub') }}
+        </a>
+      </div>
+
     </div>
   </div>
 </template>
@@ -318,7 +317,7 @@ function t(key) {
     yamlExampleExplanation: isDE.value ? 'Markdown-Erklärungen mit **fett** und Listen' : 'Markdown explanations with **bold** and lists',
     yamlExampleQ: isDE.value ? 'Was ist 2 + 2?' : 'What is 2 + 2?',
     yamlExampleA: isDE.value ? '4' : '4',
-    privacyTitle: isDE.value ? 'Privatsphäre und Datenhoheit' : 'Privacy & Data Ownership',
+    privacyTitle: isDE.value ? 'Privatsphäre & Datenhoheit' : 'Privacy & Data Ownership',
     roadmapTitle: isDE.value ? 'Was kommt als Nächstes' : 'What\'s Coming Next',
     roadmapDesc: isDE.value
       ? 'Open Learn wird aktiv weiterentwickelt. Hier sind einige der geplanten Funktionen:'
@@ -328,7 +327,7 @@ function t(key) {
       ? 'Open Learn ist quelloffen und kostenlos. Schau dir den Code an, melde Fehler, oder trage bei.'
       : 'Open Learn is open source and free. View the code, report issues, or contribute.',
     viewOnGitHub: isDE.value ? 'Auf GitHub ansehen' : 'View on GitHub',
-    workshops: isDE.value ? 'Workshops' : 'Workshops',
+    workshops: isDE.value ? 'Deine Workshops' : 'Your Workshops',
     showAll: isDE.value ? 'Alle anzeigen' : 'Show all',
     more: isDE.value ? 'weitere' : 'more',
     discover: isDE.value ? 'Workshops entdecken' : 'Discover Workshops',
@@ -482,7 +481,6 @@ function getWorkshopWebsite(workshop) {
   if (!sourceUrl) return null
   try {
     const url = new URL(sourceUrl)
-    // Strip index.yaml to get the website root
     url.pathname = url.pathname.replace(/\/index\.yaml$/, '/')
     return url.toString()
   } catch {
@@ -536,7 +534,6 @@ onMounted(async () => {
   if (Object.keys(availableContent.value).length === 0) {
     await loadAvailableContent()
   }
-  // If language was already selected (by App.vue), ensure workshops are loaded
   if (selectedLanguage.value) {
     await loadWorkshopsForLanguage(selectedLanguage.value)
   }
