@@ -12,17 +12,80 @@
       </CardContent>
     </Card>
 
-    <!-- Language selection -->
+    <!-- Intro + Language selection -->
     <Card v-else class="p-6">
       <CardContent class="p-0">
+
+        <!-- Intro section for new users -->
+        <div v-if="!selectedLearning" class="mb-8">
+          <h2 class="text-3xl font-bold mb-3 text-primary">
+            Open Learn
+          </h2>
+          <p class="text-muted-foreground mb-4 leading-relaxed">
+            A free, open-source learning platform. No ads, no tracking, no account required.
+            Your progress is saved in your browser.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div class="flex items-start gap-2">
+              <span class="text-primary font-bold text-lg leading-none mt-0.5">+</span>
+              <span class="text-sm text-foreground">Videos, quizzes, Q&amp;A cards and audio</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-primary font-bold text-lg leading-none mt-0.5">+</span>
+              <span class="text-sm text-foreground">Create and share your own workshops</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-primary font-bold text-lg leading-none mt-0.5">+</span>
+              <span class="text-sm text-foreground">Works offline — no backend needed</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-primary font-bold text-lg leading-none mt-0.5">+</span>
+              <span class="text-sm text-foreground">Load external content from any URL</span>
+            </div>
+          </div>
+          <p class="text-sm text-muted-foreground">
+            Select your language below to get started.
+          </p>
+        </div>
+
+        <!-- Intro section (German) -->
+        <div v-if="selectedLearning === 'deutsch'" class="mb-6 p-4 rounded-lg bg-accent/50">
+          <h3 class="font-semibold text-foreground mb-2">Willkommen bei Open Learn</h3>
+          <p class="text-sm text-muted-foreground mb-2">
+            Eine kostenlose, offene Lernplattform. Keine Werbung, kein Tracking, kein Konto nötig.
+            Dein Fortschritt wird im Browser gespeichert.
+          </p>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>+ Videos, Quizze &amp; Audio</span>
+            <span>+ Eigene Workshops erstellen</span>
+            <span>+ Offline-fähig</span>
+            <span>+ Externe Inhalte laden</span>
+          </div>
+        </div>
+
+        <!-- Intro section (English) -->
+        <div v-if="selectedLearning === 'english'" class="mb-6 p-4 rounded-lg bg-accent/50">
+          <h3 class="font-semibold text-foreground mb-2">Welcome to Open Learn</h3>
+          <p class="text-sm text-muted-foreground mb-2">
+            A free, open-source learning platform. No ads, no tracking, no account required.
+            Your progress is saved in your browser.
+          </p>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>+ Videos, quizzes &amp; audio</span>
+            <span>+ Create your own workshops</span>
+            <span>+ Works offline</span>
+            <span>+ Load external content</span>
+          </div>
+        </div>
+
         <h2 class="text-3xl font-bold mb-4 text-primary">
-          Select Learning Options
+          {{ selectedLearning === 'deutsch' ? 'Lernoptionen auswählen' : 'Select Learning Options' }}
         </h2>
 
         <!-- Learning language selection -->
         <div class="mb-4">
           <Label class="block font-semibold mb-3">
-            I want to learn in:
+            {{ selectedLearning === 'deutsch' ? 'Ich möchte lernen auf:' : 'I want to learn in:' }}
           </Label>
           <div class="flex flex-wrap gap-2">
             <Button
@@ -38,7 +101,7 @@
         <!-- Workshop selection -->
         <div class="mb-4">
           <Label class="block font-semibold mb-3">
-            What I want to learn:
+            {{ selectedLearning === 'deutsch' ? 'Was ich lernen möchte:' : 'What I want to learn:' }}
           </Label>
           <div v-if="workshops.length > 0" class="flex flex-col gap-3">
             <Card
@@ -119,8 +182,31 @@
               ? 'bg-green-500 hover:bg-green-600 text-white hover:-translate-y-0.5'
               : ''
           ]">
-          Load Lessons
+          {{ selectedLearning === 'deutsch' ? 'Lektionen laden' : 'Load Lessons' }}
         </Button>
+
+        <!-- Info links -->
+        <div v-if="selectedLearning" class="mt-6 pt-4 border-t border-border">
+          <div class="flex flex-wrap gap-4 text-sm">
+            <a
+              :href="'#/' + selectedLearning + '/open-learn-guide/lessons'"
+              class="text-primary hover:underline">
+              {{ selectedLearning === 'deutsch' ? 'Anleitung &amp; Erste Schritte' : 'Guide &amp; First Steps' }}
+            </a>
+            <a
+              :href="'#/' + selectedLearning + '/open-learn-feedback/lessons'"
+              class="text-primary hover:underline">
+              {{ selectedLearning === 'deutsch' ? 'Feedback geben' : 'Give Feedback' }}
+            </a>
+            <a
+              href="https://github.com/felixboehm/open-learn/issues"
+              target="_blank"
+              rel="noopener"
+              class="text-primary hover:underline">
+              {{ selectedLearning === 'deutsch' ? 'Fehler melden' : 'Report a Bug' }}
+            </a>
+          </div>
+        </div>
       </CardContent>
     </Card>
   </div>
