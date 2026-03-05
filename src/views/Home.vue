@@ -8,7 +8,7 @@
 
     <div v-else>
       <!-- Hero section (only when no language selected yet) -->
-      <div v-if="!selectedLearning" class="mb-8">
+      <div v-if="!selectedLanguage" class="mb-8">
         <h2 class="text-3xl font-bold mb-3 text-primary">
           Open Learn
         </h2>
@@ -34,54 +34,29 @@
             Load external content
           </div>
         </div>
+        <p class="text-sm text-muted-foreground">
+          Select your language in the top-left dropdown to get started.
+        </p>
       </div>
 
       <!-- Language-specific welcome (compact, shown after selection) -->
-      <div v-if="selectedLearning === 'deutsch'" class="mb-6 p-4 rounded-lg bg-accent/50">
+      <div v-if="selectedLanguage === 'deutsch'" class="mb-6 p-4 rounded-lg bg-accent/50">
         <h3 class="font-semibold text-foreground mb-1">Willkommen bei Open Learn</h3>
         <p class="text-sm text-muted-foreground">
           Eine kostenlose, offene Lernplattform. Keine Werbung, kein Tracking, kein Konto nötig.
         </p>
       </div>
-      <div v-else-if="selectedLearning === 'english'" class="mb-6 p-4 rounded-lg bg-accent/50">
+      <div v-else-if="selectedLanguage === 'english'" class="mb-6 p-4 rounded-lg bg-accent/50">
         <h3 class="font-semibold text-foreground mb-1">Welcome to Open Learn</h3>
         <p class="text-sm text-muted-foreground">
           A free, open-source learning platform. No ads, no tracking, no account required.
         </p>
       </div>
 
-      <!-- Language selector (Dropdown with flags) -->
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-muted-foreground mb-2">
-          {{ selectedLearning === 'deutsch' ? 'Sprache' : 'Language' }}
-        </label>
-        <Select :model-value="selectedLearning || ''" @update:model-value="selectLearning">
-          <SelectTrigger class="w-full sm:w-72 h-11 text-base">
-            <SelectValue :placeholder="'Select language...'">
-              <span v-if="selectedLearning" class="flex items-center gap-2">
-                <span class="text-lg leading-none">{{ languageFlags[selectedLearning] || '🌐' }}</span>
-                <span>{{ formatLangName(selectedLearning) }}</span>
-              </span>
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem
-              v-for="lang in learningLanguages"
-              :key="lang"
-              :value="lang">
-              <span class="flex items-center gap-2">
-                <span class="text-lg leading-none">{{ languageFlags[lang] || '🌐' }}</span>
-                <span>{{ formatLangName(lang) }}</span>
-              </span>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <!-- Workshops as tiles -->
-      <div v-if="selectedLearning">
+      <div v-if="selectedLanguage">
         <label class="block text-sm font-medium text-muted-foreground mb-3">
-          {{ selectedLearning === 'deutsch' ? 'Workshops' : 'Workshops' }}
+          {{ selectedLanguage === 'deutsch' ? 'Workshops' : 'Workshops' }}
         </label>
 
         <div v-if="workshops.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -136,7 +111,7 @@
         </div>
 
         <p v-else class="text-muted-foreground text-sm py-4">
-          {{ selectedLearning === 'deutsch' ? 'Keine Workshops verfügbar.' : 'No workshops available.' }}
+          {{ selectedLanguage === 'deutsch' ? 'Keine Workshops verfügbar.' : 'No workshops available.' }}
         </p>
 
         <!-- Workshop discovery -->
@@ -166,21 +141,21 @@
         <div class="mt-8 pt-4 border-t border-border">
           <div class="flex flex-wrap gap-4 text-sm">
             <a
-              :href="'#/' + selectedLearning + '/open-learn-guide/lessons'"
+              :href="'#/' + selectedLanguage + '/open-learn-guide/lessons'"
               class="text-primary hover:underline">
-              {{ selectedLearning === 'deutsch' ? 'Anleitung & Erste Schritte' : 'Guide & First Steps' }}
+              {{ selectedLanguage === 'deutsch' ? 'Anleitung & Erste Schritte' : 'Guide & First Steps' }}
             </a>
             <a
-              :href="'#/' + selectedLearning + '/open-learn-feedback/lessons'"
+              :href="'#/' + selectedLanguage + '/open-learn-feedback/lessons'"
               class="text-primary hover:underline">
-              {{ selectedLearning === 'deutsch' ? 'Feedback geben' : 'Give Feedback' }}
+              {{ selectedLanguage === 'deutsch' ? 'Feedback geben' : 'Give Feedback' }}
             </a>
             <a
               href="https://github.com/felixboehm/open-learn/issues"
               target="_blank"
               rel="noopener"
               class="text-primary hover:underline">
-              {{ selectedLearning === 'deutsch' ? 'Fehler melden' : 'Report a Bug' }}
+              {{ selectedLanguage === 'deutsch' ? 'Fehler melden' : 'Report a Bug' }}
             </a>
           </div>
         </div>
@@ -190,45 +165,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
+import { useLanguage } from '../composables/useLanguage'
 import { formatLangName } from '../utils/formatters'
 import { Card } from '@/components/ui/card'
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
 
 const router = useRouter()
 const { availableContent, isLoading, loadAvailableContent, loadWorkshopsForLanguage, removeContentSource, isRemoteWorkshop, getSourceForSlug, getWorkshopMeta, getContentSources } = useLessons()
+const { selectedLanguage } = useLanguage()
 
-const selectedLearning = ref(null)
 const copiedWorkshop = ref(null)
-
-// Flag emoji mapping for languages
-const languageFlags = {
-  'deutsch': '🇩🇪',
-  'english': '🇬🇧',
-  'français': '🇫🇷',
-  'español': '🇪🇸',
-  'italiano': '🇮🇹',
-  'português': '🇵🇹',
-  'polski': '🇵🇱',
-  'türkçe': '🇹🇷',
-  'العربية': '🇸🇦',
-  '中文': '🇨🇳',
-  '日本語': '🇯🇵',
-  '한국어': '🇰🇷',
-}
 
 // Known workshops that can be discovered
 const knownWorkshops = []
 
-const learningLanguages = computed(() => {
-  return Object.keys(availableContent.value)
-})
-
 const workshops = computed(() => {
-  if (!selectedLearning.value) return []
-  return Object.keys(availableContent.value[selectedLearning.value] || {})
+  if (!selectedLanguage.value) return []
+  return Object.keys(availableContent.value[selectedLanguage.value] || {})
 })
 
 // Workshops not yet added by the user
@@ -238,12 +193,12 @@ const availableWorkshops = computed(() => {
 })
 
 function getWorkshopTitle(workshop) {
-  const meta = getWorkshopMeta(selectedLearning.value, workshop)
+  const meta = getWorkshopMeta(selectedLanguage.value, workshop)
   return meta.title || formatLangName(workshop)
 }
 
 function getWorkshopDescription(workshop) {
-  const meta = getWorkshopMeta(selectedLearning.value, workshop)
+  const meta = getWorkshopMeta(selectedLanguage.value, workshop)
   return meta.description || null
 }
 
@@ -261,7 +216,7 @@ function getWorkshopSourceLabel(workshop) {
 
 async function copyWorkshopLink(workshop) {
   const base = window.location.href.replace(/#.*$/, '')
-  const url = `${base}#/${selectedLearning.value}/${workshop}/lessons`
+  const url = `${base}#/${selectedLanguage.value}/${workshop}/lessons`
   try {
     await navigator.clipboard.writeText(url)
     copiedWorkshop.value = workshop
@@ -271,20 +226,13 @@ async function copyWorkshopLink(workshop) {
   }
 }
 
-async function selectLearning(lang) {
-  selectedLearning.value = lang
-  localStorage.setItem('lastLearningLanguage', lang)
-  localStorage.removeItem('lastWorkshop')
-  await loadWorkshopsForLanguage(lang)
-}
-
-// Navigate directly to the workshop — no "Load Lessons" button needed
+// Navigate directly to the workshop
 function openWorkshop(workshop) {
   localStorage.setItem('lastWorkshop', workshop)
   router.push({
     name: 'lessons-overview',
     params: {
-      learning: selectedLearning.value,
+      learning: selectedLanguage.value,
       workshop: workshop
     }
   })
@@ -295,14 +243,13 @@ async function removeSource(workshopSlug) {
   if (sourceUrl) {
     removeContentSource(sourceUrl)
   }
-  // Reload content
   await loadAvailableContent()
-  if (selectedLearning.value) {
-    await loadWorkshopsForLanguage(selectedLearning.value)
+  if (selectedLanguage.value) {
+    await loadWorkshopsForLanguage(selectedLanguage.value)
   }
 }
 
-// Remove legacy external sources that are now replaced by local workshops
+// Remove legacy external sources
 function cleanupLegacySources() {
   const legacyUrls = [
     'https://felixboehm.github.io/workshop-open-learn/index.yaml',
@@ -315,18 +262,11 @@ function cleanupLegacySources() {
   }
 }
 
-async function restorePreviousSelection() {
-  const lastLearning = localStorage.getItem('lastLearningLanguage')
-
-  if (lastLearning && learningLanguages.value.includes(lastLearning)) {
-    selectedLearning.value = lastLearning
-    await loadWorkshopsForLanguage(lastLearning)
-  }
-}
-
 onMounted(async () => {
   cleanupLegacySources()
-  await loadAvailableContent()
-  await restorePreviousSelection()
+  // Content is loaded by App.vue — just wait for it
+  if (Object.keys(availableContent.value).length === 0) {
+    await loadAvailableContent()
+  }
 })
 </script>
