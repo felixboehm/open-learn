@@ -7,7 +7,7 @@ test.describe('Open Learn Guide Workshop', () => {
     await page.waitForTimeout(1000);
 
     // Select English language from dropdown
-    await page.locator('[role="combobox"]').click();
+    await page.locator('[aria-label="Change language"]').click();
     await page.getByText('English', { exact: false }).click();
     await page.waitForTimeout(500);
 
@@ -28,7 +28,7 @@ test.describe('Open Learn Guide Workshop', () => {
     await page.waitForTimeout(1000);
 
     // Select Deutsch language from dropdown
-    await page.locator('[role="combobox"]').click();
+    await page.locator('[aria-label="Change language"]').click();
     await page.getByText('Deutsch', { exact: false }).click();
     await page.waitForTimeout(500);
 

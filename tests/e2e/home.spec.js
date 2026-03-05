@@ -6,8 +6,8 @@ test.describe('Home Page — Redesigned', () => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Should have a select/combobox for language selection
-    const dropdown = page.locator('[role="combobox"]');
+    // Should have a language dropdown button
+    const dropdown = page.locator('[aria-label="Change language"]');
     await expect(dropdown).toBeVisible();
 
     // Should NOT have a "Load Lessons" button
@@ -20,7 +20,7 @@ test.describe('Home Page — Redesigned', () => {
     await page.waitForTimeout(1000);
 
     // Open the language dropdown
-    await page.locator('[role="combobox"]').click();
+    await page.locator('[aria-label="Change language"]').click();
     await page.waitForTimeout(300);
 
     // Should show flag emojis in dropdown items
@@ -33,7 +33,7 @@ test.describe('Home Page — Redesigned', () => {
     await page.waitForTimeout(1000);
 
     // Select English
-    await page.locator('[role="combobox"]').click();
+    await page.locator('[aria-label="Change language"]').click();
     await page.getByText('English', { exact: false }).click();
     await page.waitForTimeout(500);
 
@@ -47,7 +47,7 @@ test.describe('Home Page — Redesigned', () => {
     await page.waitForTimeout(1000);
 
     // Select English
-    await page.locator('[role="combobox"]').click();
+    await page.locator('[aria-label="Change language"]').click();
     await page.getByText('English', { exact: false }).click();
     await page.waitForTimeout(500);
 
@@ -64,7 +64,7 @@ test.describe('Home Page — Redesigned', () => {
     await page.waitForTimeout(1000);
 
     // Select Deutsch
-    await page.locator('[role="combobox"]').click();
+    await page.locator('[aria-label="Change language"]').click();
     await page.getByText('Deutsch', { exact: false }).click();
     await page.waitForTimeout(500);
 
@@ -84,7 +84,7 @@ test.describe('Home Page — Redesigned', () => {
     await page.waitForTimeout(1000);
 
     // Select English
-    await page.locator('[role="combobox"]').click();
+    await page.locator('[aria-label="Change language"]').click();
     await page.getByText('English', { exact: false }).click();
     await page.waitForTimeout(500);
 
