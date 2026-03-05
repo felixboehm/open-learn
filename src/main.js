@@ -8,13 +8,10 @@ import { useAssessments } from './composables/useAssessments'
 import { useGun } from './composables/useGun'
 
 // Initialize and load settings, progress, and assessments before mounting the app
-const { loadSettings, settings } = useSettings()
-loadSettings()
+useSettings().loadSettings()
+useProgress().loadProgress()
 
-const { loadProgress, mergeProgress } = useProgress()
-loadProgress()
-
-const { loadAssessments, mergeAssessments, loadSentHistory } = useAssessments()
+const { loadAssessments, loadSentHistory } = useAssessments()
 loadAssessments()
 loadSentHistory()
 
@@ -22,18 +19,8 @@ const app = createApp(App)
 app.use(router)
 app.mount('#app')
 
-// Gun auto-login (async, after mount so UI is ready)
-const { initGun, autoLogin, loadFromGun } = useGun()
-initGun().then(async () => {
-  const ok = await autoLogin()
-  if (ok) {
-    const remote = await loadFromGun()
-    if (remote) {
-      if (remote.progress) mergeProgress(remote.progress)
-      if (remote.assessments) mergeAssessments(remote.assessments)
-      if (remote.settings) {
-        Object.assign(settings, remote.settings)
-      }
-    }
-  }
-})
+// Gun auto-login (async, after mount so UI is ready).
+// On successful recall, gun.on('auth') fires → setupListeners() + autoSyncAll().
+// The .on() listeners provide continuous real-time sync from remote peers.
+const { initGun, autoLogin } = useGun()
+initGun().then(() => autoLogin())
