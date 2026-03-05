@@ -9,7 +9,8 @@
     <div v-else>
       <!-- Hero section (always visible, adapts to language) -->
       <div class="mb-8">
-        <h2 class="text-3xl font-bold mb-3 text-primary">
+        <p class="text-sm font-semibold text-primary mb-1 tracking-wide uppercase">Open Learn</p>
+        <h2 class="text-3xl font-bold mb-2 text-foreground">
           {{ t('title') }}
         </h2>
         <p class="text-muted-foreground mb-5 leading-relaxed">
@@ -199,10 +200,10 @@ const isDE = computed(() => selectedLanguage.value === 'deutsch')
 // Simple i18n helper
 function t(key) {
   const strings = {
-    title: isDE.value ? 'Willkommen bei Open Learn' : 'Welcome to Open Learn',
+    title: isDE.value ? 'Lerne alles. Kostenlos. In deinem Tempo.' : 'Learn anything. For free. On your terms.',
     subtitle: isDE.value
-      ? 'Eine kostenlose, quelloffene Lernplattform. Keine Werbung, kein Tracking, kein Konto nötig. Dein Fortschritt wird im Browser gespeichert.'
-      : 'A free, open-source learning platform. No ads, no tracking, no account required. Your progress is saved in your browser.',
+      ? 'Ohne Konto, ohne Werbung, ohne Tracking. Dein Fortschritt bleibt in deinem Browser — immer.'
+      : 'No account, no ads, no tracking. Your data stays in your browser — always.',
     getStartedTitle: isDE.value ? 'Erste Schritte' : 'Get Started',
     getStartedDesc: isDE.value
       ? 'Wähle oben links deine Sprache aus, um verfügbare Workshops zu sehen.'
@@ -220,25 +221,25 @@ function t(key) {
 }
 
 const features = computed(() => isDE.value ? [
-  { key: 'qa', icon: '💬', title: 'Fragen & Antworten', desc: 'Lerne mit Karteikarten, Quizzen und interaktiven Assessments' },
-  { key: 'video', icon: '🎬', title: 'Videos & Audio', desc: 'YouTube-Videos, lokale Dateien und Audioaussprache' },
-  { key: 'progress', icon: '📊', title: 'Fortschritt verfolgen', desc: 'Markiere Gelerntes und sieh deinen Fortschritt pro Lektion' },
-  { key: 'create', icon: '✏️', title: 'Workshops erstellen', desc: 'Erstelle eigene Workshops mit einfachen YAML-Dateien' },
+  { key: 'any', icon: '🎯', title: 'Jedes Thema', desc: 'Sprachen, Mathe, Führerschein-Theorie, Musik — alles, was sich strukturieren lässt' },
+  { key: 'rich', icon: '🎬', title: 'Reichhaltiges Lernerlebnis', desc: 'Videos, Audio mit variabler Geschwindigkeit, Quizze, Multiple-Choice und Fortschrittsverfolgung' },
+  { key: 'create', icon: '✏️', title: 'Eigene Inhalte erstellen', desc: 'Workshops in einfachem YAML schreiben. Auf GitHub, IPFS oder beliebiger URL hosten und per Link teilen' },
+  { key: 'infra', icon: '🔒', title: 'Null Infrastruktur', desc: 'Läuft als statische Seite. Kein Server, keine Datenbank. Offline-fähig. Optionaler P2P-Sync zwischen Geräten' },
 ] : [
-  { key: 'qa', icon: '💬', title: 'Q&A Cards & Quizzes', desc: 'Learn with flashcards, quizzes, and interactive assessments' },
-  { key: 'video', icon: '🎬', title: 'Videos & Audio', desc: 'YouTube embeds, local files, and audio pronunciation' },
-  { key: 'progress', icon: '📊', title: 'Track Progress', desc: 'Mark items as learned and see your progress per lesson' },
-  { key: 'create', icon: '✏️', title: 'Create Workshops', desc: 'Build your own workshops with simple YAML files' },
+  { key: 'any', icon: '🎯', title: 'Any Subject', desc: 'Languages, math, driving theory, music — if it can be structured, it can be learned here' },
+  { key: 'rich', icon: '🎬', title: 'Rich Learning Experience', desc: 'Videos, audio with variable speed, interactive quizzes, multiple-choice, and progress tracking' },
+  { key: 'create', icon: '✏️', title: 'Your Content, Your Way', desc: 'Write workshops in simple YAML. Host on GitHub, IPFS, or any URL. Share with a link' },
+  { key: 'infra', icon: '🔒', title: 'Zero Infrastructure', desc: 'Runs as a static site. No server, no database. Works offline. Optional P2P sync across devices' },
 ])
 
 const steps = computed(() => isDE.value ? [
   { title: 'Sprache wählen', desc: 'Wähle oben links deine Sprache — die Oberfläche passt sich an.' },
-  { title: 'Workshop starten', desc: 'Klicke auf einen Workshop und starte mit der ersten Lektion.' },
-  { title: 'Lernen & Fortschritt', desc: 'Beantworte Fragen, markiere Gelerntes und verfolge deinen Fortschritt.' },
+  { title: 'Workshop starten', desc: 'Klicke auf einen Workshop und starte sofort — kein Konto nötig.' },
+  { title: 'Lernen & Fortschritt', desc: 'Beantworte Fragen, höre Audio, markiere Gelerntes — alles lokal gespeichert.' },
 ] : [
   { title: 'Pick a Language', desc: 'Choose your language in the top-left dropdown — the interface adapts.' },
-  { title: 'Start a Workshop', desc: 'Click on any workshop tile to jump into the first lesson.' },
-  { title: 'Learn & Track', desc: 'Answer questions, mark items as learned, and track your progress.' },
+  { title: 'Start a Workshop', desc: 'Click any workshop and start immediately — no sign-up required.' },
+  { title: 'Learn & Track', desc: 'Answer questions, listen to audio, mark items learned — all saved locally.' },
 ])
 
 const workshops = computed(() => {
