@@ -109,7 +109,10 @@
                     title="Remove">
                     Remove
                   </button>
-                  <span class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform">
+                  <span v-if="isRemoteWorkshop(ws)" class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform" title="Opens external website">
+                    ↗
+                  </span>
+                  <span v-else class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform">
                     →
                   </span>
                 </div>
@@ -296,7 +299,27 @@ async function copyWorkshopLink(workshop) {
   }
 }
 
+function getWorkshopWebsite(workshop) {
+  const sourceUrl = getSourceForSlug(workshop)
+  if (!sourceUrl) return null
+  try {
+    const url = new URL(sourceUrl)
+    // Strip index.yaml to get the website root
+    url.pathname = url.pathname.replace(/\/index\.yaml$/, '/')
+    return url.toString()
+  } catch {
+    return null
+  }
+}
+
 function openWorkshop(workshop) {
+  if (isRemoteWorkshop(workshop)) {
+    const website = getWorkshopWebsite(workshop)
+    if (website) {
+      window.open(website, '_blank', 'noopener')
+      return
+    }
+  }
   localStorage.setItem('lastWorkshop', workshop)
   router.push({
     name: 'lessons-overview',
