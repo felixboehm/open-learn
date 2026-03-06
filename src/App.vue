@@ -1,7 +1,7 @@
 <template>
   <div class="w-full md:max-w-6xl md:mx-auto bg-background md:rounded-xl md:shadow-2xl">
     <!-- Header with unified navigation - sticky on desktop -->
-    <header class="bg-gradient-to-br from-primary to-secondary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
+    <header class="bg-primary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
       <div class="flex items-center justify-between gap-2">
         <!-- Left side: language dropdown + nav buttons -->
         <div class="flex items-center gap-2 min-w-fit">
@@ -9,24 +9,26 @@
           <div v-if="learningLanguages.length > 0" class="relative">
             <button
               @click="toggleLanguageMenu"
-              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-lg px-2.5 py-1.5 text-sm font-medium transition flex-shrink-0"
-              title="Change language"
-              aria-label="Change language">
+              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-full px-3 py-1.5 text-sm font-medium transition flex-shrink-0"
+              :title="$t('nav.changeLanguage')"
+              :aria-label="$t('nav.changeLanguage')">
               <span class="text-base leading-none">{{ getFlag(selectedLanguage) }}</span>
-              <span class="hidden sm:inline">{{ selectedLanguage ? formatLangName(selectedLanguage) : 'Language' }}</span>
+              <span class="hidden sm:inline">{{ selectedLanguage ? formatLangName(selectedLanguage) : $t('nav.changeLanguage') }}</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="m6 9 6 6 6-6"/></svg>
             </button>
 
             <!-- Dropdown menu -->
             <div
               v-if="showLanguageMenu"
-              class="absolute top-full left-0 mt-1 bg-popover text-popover-foreground border rounded-lg shadow-lg overflow-hidden min-w-[160px] z-[100]">
+              class="absolute top-full mt-1 bg-popover text-popover-foreground border rounded-lg shadow-lg overflow-hidden min-w-[160px] z-[100]"
+              :class="isRtl ? 'right-0' : 'left-0'">
               <button
                 v-for="lang in learningLanguages"
                 :key="lang"
                 @click="switchLanguage(lang)"
                 :class="[
-                  'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-accent transition',
+                  'flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-accent transition',
+                  isRtl ? 'text-right' : 'text-left',
                   selectedLanguage === lang ? 'bg-accent font-medium' : ''
                 ]">
                 <span class="text-base leading-none">{{ getFlag(lang) }}</span>
@@ -42,8 +44,8 @@
             size="icon"
             @click="goHome"
             class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-10 h-10 text-xl flex-shrink-0"
-            title="Go to home"
-            aria-label="Go to home">
+            :title="$t('nav.goHome')"
+            :aria-label="$t('nav.goHome')">
             🏠
           </Button>
 
@@ -52,10 +54,10 @@
             v-if="route.name === 'lesson-detail'"
             variant="ghost"
             @click="goBackToLessons"
-            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-lg text-sm flex-shrink-0"
-            title="Back to lessons"
-            aria-label="Back to lessons">
-            ←
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-full text-sm flex-shrink-0"
+            :title="$t('nav.backToLessons')"
+            :aria-label="$t('nav.backToLessons')">
+            {{ isRtl ? '→' : '←' }}
           </Button>
         </div>
 
@@ -73,8 +75,8 @@
             size="icon"
             @click="togglePlayPause"
             class="hidden md:flex bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
-            :title="isPlaying ? 'Pause' : 'Play'"
-            :aria-label="isPlaying ? 'Pause audio' : 'Play audio'">
+            :title="isPlaying ? $t('nav.pause') : $t('nav.play')"
+            :aria-label="isPlaying ? $t('nav.pauseAudio') : $t('nav.playAudio')">
             {{ isPlaying ? '⏸' : '▶️' }}
           </Button>
 
@@ -85,8 +87,8 @@
             size="icon"
             @click="goToResults"
             class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
-            title="Assessment Results"
-            aria-label="Assessment Results">
+            :title="$t('nav.assessmentResults')"
+            :aria-label="$t('nav.assessmentResults')">
             📋
           </Button>
 
@@ -97,8 +99,8 @@
             size="icon"
             @click="goToCoach"
             class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
-            title="Coach"
-            aria-label="Coach">
+            :title="$t('nav.coach')"
+            :aria-label="$t('nav.coach')">
             🤖
           </Button>
 
@@ -109,8 +111,8 @@
             size="icon"
             @click="goToItems"
             class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
-            title="Learning Items"
-            aria-label="Learning items">
+            :title="$t('nav.learningItems')"
+            :aria-label="$t('nav.learningItems')">
             📚
           </Button>
 
@@ -121,8 +123,8 @@
             size="icon"
             @click="goToSettings"
             class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl hover:rotate-90 flex-shrink-0"
-            title="Settings"
-            aria-label="Settings">
+            :title="$t('nav.settings')"
+            :aria-label="$t('nav.settings')">
             ⚙️
           </Button>
 
@@ -133,8 +135,8 @@
             size="icon"
             @click="goBack"
             class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
-            title="Done"
-            aria-label="Done">
+            :title="$t('nav.done')"
+            :aria-label="$t('nav.done')">
             ✓
           </Button>
         </div>
@@ -155,15 +157,18 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAudio } from './composables/useAudio'
 import { useSettings } from './composables/useSettings'
 import { useLessons } from './composables/useLessons'
 import { useLanguage } from './composables/useLanguage'
+import { isRtlLocale } from './i18n'
 import { formatLangName } from './utils/formatters'
 import { Button } from '@/components/ui/button'
 
 const router = useRouter()
 const route = useRoute()
+const { locale } = useI18n()
 
 const pageTitle = ref('🎓 Open Learn')
 const showLanguageMenu = ref(false)
@@ -172,6 +177,8 @@ const { isPlaying, play, pause, resume } = useAudio()
 const { settings } = useSettings()
 const { availableContent, getWorkshopMeta, loadAvailableContent, loadWorkshopsForLanguage } = useLessons()
 const { selectedLanguage, getFlag, setLanguage } = useLanguage()
+
+const isRtl = computed(() => isRtlLocale(locale.value))
 
 // Deduplicated list of available languages
 const learningLanguages = computed(() => {
@@ -222,7 +229,7 @@ async function switchLanguage(lang) {
 
 // Close dropdown when clicking outside
 function handleClickOutside(e) {
-  if (showLanguageMenu.value && !e.target.closest('[aria-label="Change language"]') && !e.target.closest('.absolute')) {
+  if (showLanguageMenu.value && !e.target.closest('[aria-label]') && !e.target.closest('.absolute')) {
     showLanguageMenu.value = false
   }
 }

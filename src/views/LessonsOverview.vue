@@ -11,7 +11,7 @@
         variant="outline"
         size="sm"
         @click="copyShareLink">
-        {{ copied ? 'Copied!' : 'Share' }}
+        {{ copied ? $t('lesson.copied') : $t('lesson.share') }}
       </Button>
     </div>
 
@@ -32,7 +32,7 @@
           {{ lesson.description || '' }}
         </div>
         <div class="text-primary font-semibold">
-          {{ lesson.sections.length }} sections
+          {{ lesson.sections.length }} {{ $t('lesson.sections') }}
         </div>
       </Card>
     </div>
@@ -40,14 +40,14 @@
     <!-- Loading state -->
     <div v-else-if="isLoading" class="text-center py-8">
       <div class="text-2xl font-bold text-primary mb-4">
-        Loading lessons...
+        {{ $t('lesson.loadingLessons') }}
       </div>
     </div>
 
     <!-- Empty state -->
     <div v-else class="text-center py-8">
       <div class="text-xl text-muted-foreground">
-        No lessons found
+        {{ $t('lesson.noLessonsFound') }}
       </div>
     </div>
   </div>
@@ -117,12 +117,10 @@ async function loadLessons() {
   lessons.value = await loadAllLessonsForWorkshop(learning.value, workshop.value)
   isLoading.value = false
 
-  // Update page title with workshop name
   const meta = getWorkshopMeta(learning.value, workshop.value)
   emit('update-title', meta.title || formatLangName(workshop.value))
 }
 
-// Watch for route changes and reload lessons
 watch([learning, workshop], () => {
   loadLessons()
 }, { immediate: true })
