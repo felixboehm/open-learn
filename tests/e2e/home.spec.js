@@ -32,9 +32,11 @@ test.describe('Home Page — Redesigned', () => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Select English
+    // Open dropdown and select English
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(300);
+    const dropdown = page.locator('.absolute.top-full');
+    await dropdown.getByText('English').click();
     await page.waitForTimeout(500);
 
     // Should show workshop tiles with titles
@@ -46,9 +48,11 @@ test.describe('Home Page — Redesigned', () => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Select English
+    // Open dropdown and select English
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(300);
+    const dropdown = page.locator('.absolute.top-full');
+    await dropdown.getByText('English').click();
     await page.waitForTimeout(500);
 
     // Click on workshop tile directly
@@ -65,7 +69,9 @@ test.describe('Home Page — Redesigned', () => {
 
     // Select Deutsch
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('Deutsch', { exact: false }).click();
+    await page.waitForTimeout(300);
+    const dropdown = page.locator('.absolute.top-full');
+    await dropdown.getByText('Deutsch').click();
     await page.waitForTimeout(500);
 
     // Reload page
@@ -83,9 +89,11 @@ test.describe('Home Page — Redesigned', () => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Select English
+    // Open dropdown and select English
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(300);
+    const dropdown = page.locator('.absolute.top-full');
+    await dropdown.getByText('English').click();
     await page.waitForTimeout(500);
 
     // Should show Guide, Feedback, and Bug Report links

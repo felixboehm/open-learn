@@ -10,3 +10,11 @@ workshops:
     description: "Share your thoughts and help shape the future of Open Learn."
     coach:
       email: "open-learn@felixboehm.it"
+  - folder: farsi
+    code: fa-IR
+    title: "Farsi"
+    description: "5 lessons to learn the most important words and phrases in Farsi (Persian)."
+  - folder: arabic
+    code: ar-SA
+    title: "Arabic"
+    description: "5 lessons to learn the most important words and phrases in Arabic."

@@ -16,3 +16,11 @@ workshops:
     description: "10 Lektionen zu den 30 wichtigsten portugiesischen Verben und ihren Konjugationen."
     coach:
       email: "open-learn@felixboehm.it"
+  - folder: farsi
+    code: fa-IR
+    title: "Farsi"
+    description: "5 Lektionen zum Erlernen der wichtigsten Wörter und Ausdrücke auf Farsi (Persisch)."
+  - folder: arabisch
+    code: ar-SA
+    title: "Arabisch"
+    description: "5 Lektionen zum Erlernen der wichtigsten Wörter und Ausdrücke auf Arabisch."
