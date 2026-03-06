@@ -8,7 +8,8 @@ test.describe('Open Learn Guide Workshop', () => {
 
     // Select English language from dropdown
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(300);
+    await page.locator('.absolute button', { hasText: 'English' }).click();
     await page.waitForTimeout(500);
 
     // Click on Open Learn Guide workshop tile
@@ -29,7 +30,8 @@ test.describe('Open Learn Guide Workshop', () => {
 
     // Select Deutsch language from dropdown
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('Deutsch', { exact: false }).click();
+    await page.waitForTimeout(300);
+    await page.locator('.absolute button', { hasText: 'Deutsch' }).click();
     await page.waitForTimeout(500);
 
     // Click on Open Learn Anleitung workshop tile

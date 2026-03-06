@@ -32,9 +32,10 @@ test.describe('Home Page — Redesigned', () => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Select English
+    // Select English from dropdown
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(300);
+    await page.locator('.absolute button', { hasText: 'English' }).click();
     await page.waitForTimeout(500);
 
     // Should show workshop tiles with titles
@@ -46,9 +47,10 @@ test.describe('Home Page — Redesigned', () => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Select English
+    // Select English from dropdown
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(300);
+    await page.locator('.absolute button', { hasText: 'English' }).click();
     await page.waitForTimeout(500);
 
     // Click on workshop tile directly
@@ -83,9 +85,10 @@ test.describe('Home Page — Redesigned', () => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Select English
+    // Select English from dropdown
     await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(300);
+    await page.locator('.absolute button', { hasText: 'English' }).click();
     await page.waitForTimeout(500);
 
     // Should show Guide, Feedback, and Bug Report links
