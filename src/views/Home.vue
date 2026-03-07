@@ -58,7 +58,7 @@
                 <button
                   v-for="lang in learningLanguages"
                   :key="lang"
-                  @click="goToWorkshops(lang)"
+                  @click="selectLanguage(lang)"
                   :class="[
                     'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-accent transition',
                     currentLanguage === lang ? 'bg-accent font-medium' : ''
@@ -329,8 +329,12 @@ const roadmapItems = computed(() => isDE.value ? [
   { key: 'upload', icon: '📄', title: 'File Uploads', desc: 'Upload PDFs, scripts, and other documents as learning material.', issue: 51 },
 ])
 
-function goToWorkshops(lang) {
+function selectLanguage(lang) {
   showLanguageMenu.value = false
+  setLanguage(lang)
+}
+
+function goToWorkshops(lang) {
   setLanguage(lang)
   router.push({ name: 'workshop-overview', params: { learning: lang } })
 }
