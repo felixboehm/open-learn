@@ -113,6 +113,11 @@
       <div class="mt-8 pt-4 border-t border-border">
         <div class="flex flex-wrap gap-4 text-sm">
           <a
+            href="#/"
+            class="text-primary hover:underline">
+            Home
+          </a>
+          <a
             :href="'#/' + learning + '/open-learn-guide/lessons'"
             class="text-primary hover:underline">
             {{ t('guide') }}

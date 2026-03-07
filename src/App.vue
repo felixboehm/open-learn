@@ -35,18 +35,6 @@
             </div>
           </div>
 
-          <!-- Home button (only on workshop overview) -->
-          <Button
-            v-if="isWorkshopOverview"
-            variant="ghost"
-            size="icon"
-            @click="goHome"
-            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-10 h-10 text-xl flex-shrink-0"
-            title="Go to home"
-            aria-label="Go to home">
-            🏠
-          </Button>
-
           <!-- Back to workshop overview (on lessons overview) -->
           <Button
             v-if="route.name === 'lessons-overview'"
