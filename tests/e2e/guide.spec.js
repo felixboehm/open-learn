@@ -3,13 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Open Learn Guide Workshop', () => {
 
   test('should navigate to English guide and show 3 lessons', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/english/workshops');
     await page.waitForTimeout(1000);
-
-    // Select English language from dropdown
-    await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
-    await page.waitForTimeout(500);
 
     // Click on Open Learn Guide workshop tile
     await page.getByText('Open Learn Guide').click();
@@ -24,13 +19,8 @@ test.describe('Open Learn Guide Workshop', () => {
   });
 
   test('should navigate to German guide and show 3 lessons', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/deutsch/workshops');
     await page.waitForTimeout(1000);
-
-    // Select Deutsch language from dropdown
-    await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('Deutsch', { exact: false }).click();
-    await page.waitForTimeout(500);
 
     // Click on Open Learn Anleitung workshop tile
     await page.getByText('Open Learn Anleitung').click();

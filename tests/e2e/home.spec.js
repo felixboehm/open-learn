@@ -1,57 +1,61 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Home Page — Redesigned', () => {
+test.describe('Home Page', () => {
 
-  test('should show language dropdown instead of buttons', async ({ page }) => {
+  test('should show intro content and language buttons', async ({ page }) => {
     await page.goto('/');
     await page.waitForTimeout(1000);
 
-    // Should have a language dropdown button
+    // Should show the tagline
+    await expect(page.getByText('Learn anything')).toBeVisible();
+
+    // Should show language buttons
+    await expect(page.getByText('Deutsch', { exact: false })).toBeVisible();
+    await expect(page.getByText('English', { exact: false })).toBeVisible();
+
+    // Should NOT show navbar (hidden on home page)
+    await expect(page.locator('[aria-label="Settings"]')).not.toBeVisible();
+  });
+
+  test('should navigate to workshop overview on language click', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(1000);
+
+    // Click English language button
+    await page.getByText('English', { exact: false }).click();
+    await page.waitForTimeout(1000);
+
+    // Should navigate to workshop overview
+    await expect(page).toHaveURL(/#\/english\/workshops/);
+
+    // Should show workshop tiles
+    await expect(page.getByText('Open Learn Guide')).toBeVisible();
+
+    // Clean up
+    await page.evaluate(() => localStorage.clear());
+  });
+});
+
+test.describe('Workshop Overview', () => {
+
+  test('should show workshops and language dropdown', async ({ page }) => {
+    await page.goto('/#/english/workshops');
+    await page.waitForTimeout(1000);
+
+    // Should show language dropdown in navbar
     const dropdown = page.locator('[aria-label="Change language"]');
     await expect(dropdown).toBeVisible();
 
-    // Should NOT have a "Load Lessons" button
-    await expect(page.getByText('Load Lessons')).not.toBeVisible();
-    await expect(page.getByText('Lektionen laden')).not.toBeVisible();
-  });
-
-  test('should show flag emoji in language dropdown', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(1000);
-
-    // Open the language dropdown
-    await page.locator('[aria-label="Change language"]').click();
-    await page.waitForTimeout(300);
-
-    // Should show flag emojis in dropdown items
-    await expect(page.getByText('🇩🇪')).toBeVisible();
-    await expect(page.getByText('🇬🇧')).toBeVisible();
-  });
-
-  test('should show workshops as clickable tiles after selecting language', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForTimeout(1000);
-
-    // Select English
-    await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
-    await page.waitForTimeout(500);
-
-    // Should show workshop tiles with titles
+    // Should show workshop tiles
     await expect(page.getByText('Open Learn Guide')).toBeVisible();
     await expect(page.getByText('Open Learn Feedback')).toBeVisible();
   });
 
-  test('should navigate directly to workshop on tile click (no Load button)', async ({ page }) => {
-    await page.goto('/');
+  test('should navigate to lessons on workshop click', async ({ page }) => {
+    await page.goto('/#/english/workshops');
     await page.waitForTimeout(1000);
 
-    // Select English
-    await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
-    await page.waitForTimeout(500);
-
-    // Click on workshop tile directly
+    // Click on workshop tile
     await page.getByText('Open Learn Guide').click();
     await page.waitForTimeout(1000);
 
@@ -59,34 +63,26 @@ test.describe('Home Page — Redesigned', () => {
     await expect(page).toHaveURL(/#\/english\/open-learn-guide\/lessons/);
   });
 
-  test('should remember language selection on reload', async ({ page }) => {
-    await page.goto('/');
+  test('should switch language via dropdown', async ({ page }) => {
+    await page.goto('/#/english/workshops');
     await page.waitForTimeout(1000);
 
-    // Select Deutsch
+    // Switch to Deutsch
     await page.locator('[aria-label="Change language"]').click();
     await page.getByText('Deutsch', { exact: false }).click();
     await page.waitForTimeout(500);
 
-    // Reload page
-    await page.reload();
-    await page.waitForTimeout(1000);
-
-    // Should still show Deutsch workshops
+    // Should navigate to deutsch workshops
+    await expect(page).toHaveURL(/#\/deutsch\/workshops/);
     await expect(page.getByText('Open Learn Anleitung')).toBeVisible();
 
     // Clean up
     await page.evaluate(() => localStorage.clear());
   });
 
-  test('should show info links after language selection', async ({ page }) => {
-    await page.goto('/');
+  test('should show info links', async ({ page }) => {
+    await page.goto('/#/english/workshops');
     await page.waitForTimeout(1000);
-
-    // Select English
-    await page.locator('[aria-label="Change language"]').click();
-    await page.getByText('English', { exact: false }).click();
-    await page.waitForTimeout(500);
 
     // Should show Guide, Feedback, and Bug Report links
     await expect(page.getByText('Guide & First Steps')).toBeVisible();

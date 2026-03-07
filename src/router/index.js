@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '../views/Home.vue'
+import WorkshopOverview from '../views/WorkshopOverview.vue'
 import LessonsOverview from '../views/LessonsOverview.vue'
 import LessonDetail from '../views/LessonDetail.vue'
 import LearningItems from '../views/LearningItems.vue'
@@ -14,6 +15,12 @@ const routes = [
     name: 'home',
     component: Home,
     meta: { title: '🎓 Open Learn' }
+  },
+  {
+    path: '/:learning/workshops',
+    name: 'workshop-overview',
+    component: WorkshopOverview,
+    meta: { title: 'Workshops' }
   },
   {
     path: '/:learning/:workshop/lessons',

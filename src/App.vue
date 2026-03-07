@@ -1,15 +1,15 @@
 <template>
   <div class="w-full md:max-w-6xl md:mx-auto bg-background md:rounded-xl md:shadow-2xl">
     <!-- Header with unified navigation - sticky on desktop -->
-    <header class="bg-gradient-to-br from-primary to-secondary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
+    <header v-if="!isHomePage" class="bg-primary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
       <div class="flex items-center justify-between gap-2">
         <!-- Left side: language dropdown + nav buttons -->
         <div class="flex items-center gap-2 min-w-fit">
-          <!-- Language dropdown (always visible) -->
-          <div v-if="learningLanguages.length > 0" class="relative">
+          <!-- Language dropdown (only on workshop overview) -->
+          <div v-if="isWorkshopOverview && learningLanguages.length > 0" class="relative">
             <button
               @click="toggleLanguageMenu"
-              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-lg px-2.5 py-1.5 text-sm font-medium transition flex-shrink-0"
+              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-full px-3 py-1.5 text-sm font-medium transition flex-shrink-0"
               title="Change language"
               aria-label="Change language">
               <span class="text-base leading-none">{{ getFlag(selectedLanguage) }}</span>
@@ -35,9 +35,9 @@
             </div>
           </div>
 
-          <!-- Home button (visible except on home page and lesson detail page) -->
+          <!-- Home button (only on workshop overview) -->
           <Button
-            v-if="canGoBack && route.name !== 'lesson-detail'"
+            v-if="isWorkshopOverview"
             variant="ghost"
             size="icon"
             @click="goHome"
@@ -47,12 +47,23 @@
             🏠
           </Button>
 
-          <!-- Back button (only on lesson detail page) -->
+          <!-- Back to workshop overview (on lessons overview) -->
           <Button
-            v-if="route.name === 'lesson-detail'"
+            v-if="route.name === 'lessons-overview'"
+            variant="ghost"
+            @click="goToWorkshopOverview"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-full text-sm flex-shrink-0"
+            title="Back to workshops"
+            aria-label="Back to workshops">
+            ←
+          </Button>
+
+          <!-- Back to lessons (on lesson detail and other workshop subpages) -->
+          <Button
+            v-if="isWorkshopSubpage && route.name !== 'lessons-overview'"
             variant="ghost"
             @click="goBackToLessons"
-            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-lg text-sm flex-shrink-0"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-full text-sm flex-shrink-0"
             title="Back to lessons"
             aria-label="Back to lessons">
             ←
@@ -114,9 +125,9 @@
             📚
           </Button>
 
-          <!-- Settings button (hidden on settings page) -->
+          <!-- Settings button (hidden on home and settings pages) -->
           <Button
-            v-if="route.name !== 'settings'"
+            v-if="!isHomePage && route.name !== 'settings'"
             variant="ghost"
             size="icon"
             @click="goToSettings"
@@ -178,9 +189,11 @@ const learningLanguages = computed(() => {
   return [...new Set(Object.keys(availableContent.value))]
 })
 
-const canGoBack = computed(() => {
-  return route.name !== 'home'
-})
+const isHomePage = computed(() => route.name === 'home')
+const isWorkshopOverview = computed(() => route.name === 'workshop-overview')
+const isWorkshopSubpage = computed(() =>
+  ['lesson-detail', 'lessons-overview', 'learning-items', 'assessment-results', 'coach'].includes(route.name)
+)
 
 const isLessonPage = computed(() => {
   return route.name === 'lesson-detail'
@@ -214,10 +227,8 @@ async function switchLanguage(lang) {
   showLanguageMenu.value = false
   setLanguage(lang)
   await loadWorkshopsForLanguage(lang)
-  // If on home page, stay there. If elsewhere, navigate home to show workshops for new language.
-  if (route.name !== 'home') {
-    router.push({ name: 'home' })
-  }
+  // Navigate to workshop overview for new language
+  router.push({ name: 'workshop-overview', params: { learning: lang } })
 }
 
 // Close dropdown when clicking outside
@@ -244,6 +255,15 @@ onUnmounted(() => {
 
 function goHome() {
   router.push({ name: 'home' })
+}
+
+function goToWorkshopOverview() {
+  const learning = route.params.learning || selectedLanguage.value
+  if (learning) {
+    router.push({ name: 'workshop-overview', params: { learning } })
+  } else {
+    router.push({ name: 'home' })
+  }
 }
 
 function goBackToLessons() {
