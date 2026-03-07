@@ -258,11 +258,11 @@ const features = computed(() => isDE.value ? [
 ])
 
 const steps = computed(() => isDE.value ? [
-  { title: 'Sprache wählen', desc: 'Wähle deine Sprache — die Oberfläche passt sich an.' },
+  { title: 'Sprache wählen', desc: 'Workshops sind in verschiedenen Sprachen verfügbar. Wähle deine Sprache — Oberfläche und Inhalte passen sich an.' },
   { title: 'Workshop starten', desc: 'Klicke auf einen Workshop und starte sofort — kein Konto nötig.' },
   { title: 'Lernen & Fortschritt', desc: 'Starte eine Lektion, beantworte Fragen, höre Audio, markiere Gelerntes und gestalte deinen eigenen Lernpfad.' },
 ] : [
-  { title: 'Pick a Language', desc: 'Choose your language below — the interface adapts.' },
+  { title: 'Pick a Language', desc: 'Workshops are available in different languages. Choose yours — the interface and content adapt.' },
   { title: 'Start a Workshop', desc: 'Click any workshop and start immediately — no sign-up required.' },
   { title: 'Learn & Track', desc: 'Start a lesson, answer questions, listen to audio, mark items learned, and customize your learning path.' },
 ])
