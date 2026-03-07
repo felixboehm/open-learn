@@ -45,16 +45,28 @@
             <div class="text-sm font-medium text-foreground mb-2">{{ steps[0].title }}</div>
             <div class="text-xs text-muted-foreground mb-3">{{ steps[0].desc }}</div>
             <div class="relative inline-block">
-              <select
-                :value="selectedLanguage || ''"
-                @change="goToWorkshops($event.target.value)"
-                class="appearance-none bg-primary text-white font-medium text-sm rounded-full px-5 py-2 pr-8 cursor-pointer hover:bg-primary/90 transition">
-                <option value="" disabled>{{ isDE ? 'Sprache wählen...' : 'Select language...' }}</option>
-                <option v-for="lang in learningLanguages" :key="lang" :value="lang">
-                  {{ getFlag(lang) }}  {{ formatLangName(lang) }}
-                </option>
-              </select>
-              <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/70" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              <button
+                @click="showLanguageMenu = !showLanguageMenu"
+                class="flex items-center gap-1.5 bg-primary text-white font-medium text-sm rounded-full px-4 py-2 cursor-pointer hover:bg-primary/90 transition">
+                <span class="text-base leading-none">{{ getFlag(currentLanguage) }}</span>
+                <span>{{ formatLangName(currentLanguage) }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div
+                v-if="showLanguageMenu"
+                class="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-popover text-popover-foreground border rounded-lg shadow-lg overflow-hidden min-w-[160px] z-[100]">
+                <button
+                  v-for="lang in learningLanguages"
+                  :key="lang"
+                  @click="goToWorkshops(lang)"
+                  :class="[
+                    'flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-accent transition',
+                    currentLanguage === lang ? 'bg-accent font-medium' : ''
+                  ]">
+                  <span class="text-base leading-none">{{ getFlag(lang) }}</span>
+                  <span>{{ formatLangName(lang) }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -159,7 +171,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
 import { useLanguage } from '../composables/useLanguage'
@@ -169,9 +181,21 @@ const router = useRouter()
 const { availableContent, isLoading, loadAvailableContent } = useLessons()
 const { selectedLanguage, getFlag, setLanguage } = useLanguage()
 
+const showLanguageMenu = ref(false)
+
 const learningLanguages = computed(() => {
   return [...new Set(Object.keys(availableContent.value))]
 })
+
+const currentLanguage = computed(() => {
+  return selectedLanguage.value || learningLanguages.value[0] || 'english'
+})
+
+function handleClickOutside(e) {
+  if (showLanguageMenu.value && !e.target.closest('.relative')) {
+    showLanguageMenu.value = false
+  }
+}
 
 const isDE = computed(() => selectedLanguage.value === 'deutsch')
 
@@ -292,13 +316,19 @@ const roadmapItems = computed(() => isDE.value ? [
 ])
 
 function goToWorkshops(lang) {
+  showLanguageMenu.value = false
   setLanguage(lang)
   router.push({ name: 'workshop-overview', params: { learning: lang } })
 }
 
 onMounted(async () => {
+  document.addEventListener('click', handleClickOutside)
   if (Object.keys(availableContent.value).length === 0) {
     await loadAvailableContent()
   }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
