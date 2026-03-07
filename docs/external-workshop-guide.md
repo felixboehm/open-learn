@@ -78,8 +78,14 @@ Lists the workshops available for a given interface language.
 workshops:
   - folder: portugiesisch
     code: pt-PT
+    title: "Portugiesisch"
+    description: "Die wichtigsten portugiesischen Verben."
+    color: "30 50% 95%"
+    primaryColor: "25 80% 50%"
   - folder: first-aid
     code: de-DE
+    color: "0 70% 95%"
+    primaryColor: "0 65% 45%"
 ```
 
 **Fields:**
@@ -87,6 +93,10 @@ workshops:
 - `code` (string, required): BCP 47 code for the **workshop's** language
   - For language-learning workshops: use the target language code (e.g. `pt-PT` for Portuguese)
   - For non-language workshops (math, first aid, etc.): use the same code as the interface language (e.g. `de-DE`)
+- `title` (string, optional): Display name shown in the UI (defaults to formatted folder name)
+- `description` (string, optional): Short description shown on the workshop card
+- `color` (string, optional): HSL background color without the `hsl()` wrapper (e.g. `"145 45% 92%"`). Displayed as the accent bar on workshop cards and as the page background when inside the workshop. Light values (lightness > 80%) are automatically darkened for better visibility.
+- `primaryColor` (string, optional): HSL primary/accent color (e.g. `"220 75% 50%"`). Used for the header bar, links, and interactive elements when inside the workshop. If not set, the default blue is used.
 
 > The `code` determines which text-to-speech voice is used for questions (`q` fields) in audio generation.
 

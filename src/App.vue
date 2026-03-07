@@ -1,15 +1,15 @@
 <template>
-  <div class="w-full md:max-w-6xl md:mx-auto bg-background md:rounded-xl md:shadow-2xl">
+  <div class="w-full md:max-w-6xl md:mx-auto bg-primary md:rounded-xl md:shadow-2xl">
     <!-- Header with unified navigation - sticky on desktop -->
-    <header class="bg-gradient-to-br from-primary to-secondary text-white py-4 px-4 md:rounded-t-xl relative sticky top-0 z-50">
+    <header v-if="!isHomePage" class="bg-primary text-white py-4 px-4 relative sticky top-0 z-50">
       <div class="flex items-center justify-between gap-2">
         <!-- Left side: language dropdown + nav buttons -->
         <div class="flex items-center gap-2 min-w-fit">
-          <!-- Language dropdown (always visible) -->
-          <div v-if="learningLanguages.length > 0" class="relative">
+          <!-- Language dropdown (only on workshop overview) -->
+          <div v-if="isWorkshopOverview && learningLanguages.length > 0" class="relative">
             <button
               @click="toggleLanguageMenu"
-              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-lg px-2.5 py-1.5 text-sm font-medium transition flex-shrink-0"
+              class="flex items-center gap-1.5 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 rounded-full px-3 py-1.5 text-sm font-medium transition flex-shrink-0"
               title="Change language"
               aria-label="Change language">
               <span class="text-base leading-none">{{ getFlag(selectedLanguage) }}</span>
@@ -35,27 +35,28 @@
             </div>
           </div>
 
-          <!-- Home button (visible except on home page and lesson detail page) -->
+          <!-- Back to workshop overview (on lessons overview) -->
           <Button
-            v-if="canGoBack && route.name !== 'lesson-detail'"
+            v-if="route.name === 'lessons-overview'"
             variant="ghost"
             size="icon"
-            @click="goHome"
-            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-10 h-10 text-xl flex-shrink-0"
-            title="Go to home"
-            aria-label="Go to home">
-            🏠
+            @click="goToWorkshopOverview"
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
+            title="Workshops"
+            aria-label="Workshops">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
           </Button>
 
-          <!-- Back button (only on lesson detail page) -->
+          <!-- Back to lessons (on lesson detail and other workshop subpages) -->
           <Button
-            v-if="route.name === 'lesson-detail'"
+            v-if="isWorkshopSubpage && route.name !== 'lessons-overview'"
             variant="ghost"
+            size="icon"
             @click="goBackToLessons"
-            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white px-3 py-1.5 rounded-lg text-sm flex-shrink-0"
-            title="Back to lessons"
-            aria-label="Back to lessons">
-            ←
+            class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
+            title="Lessons"
+            aria-label="Lessons">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
           </Button>
         </div>
 
@@ -114,9 +115,9 @@
             📚
           </Button>
 
-          <!-- Settings button (hidden on settings page) -->
+          <!-- Settings button (hidden on home and settings pages) -->
           <Button
-            v-if="route.name !== 'settings'"
+            v-if="!isHomePage && route.name !== 'settings'"
             variant="ghost"
             size="icon"
             @click="goToSettings"
@@ -142,13 +143,47 @@
     </header>
 
     <!-- Content -->
-    <div class="p-8">
+    <div class="p-8" :class="contentBgClass">
       <RouterView v-slot="{ Component, route: currentRoute }">
         <Transition name="fade" mode="out-in">
           <component :is="Component" :key="currentRoute.path" @update-title="updatePageTitle" />
         </Transition>
       </RouterView>
     </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-border px-8 py-4 md:rounded-b-xl" :class="contentBgClass">
+      <div class="flex items-center gap-4 text-sm">
+        <a href="#/" class="text-primary hover:underline whitespace-nowrap">Home</a>
+        <a
+          :href="'#/' + footerLearning + '/open-learn-guide/lessons'"
+          class="text-primary hover:underline whitespace-nowrap">
+          {{ footerLearning === 'deutsch' ? 'Anleitung' : 'Guide' }}
+        </a>
+        <a
+          :href="'#/' + footerLearning + '/open-learn-feedback/lessons'"
+          class="text-primary hover:underline whitespace-nowrap">
+          {{ footerLearning === 'deutsch' ? 'Feedback' : 'Feedback' }}
+        </a>
+        <a
+          href="https://github.com/felixboehm/open-learn/issues"
+          target="_blank"
+          rel="noopener"
+          class="text-primary hover:underline whitespace-nowrap">
+          {{ footerLearning === 'deutsch' ? 'Fehler melden' : 'Report a Bug' }}
+        </a>
+
+        <!-- Next Lesson button (right-aligned) -->
+        <router-link
+          v-if="isLessonPage && footerNextLesson"
+          :to="`/${lessonLearning}/${lessonWorkshop}/lesson/${footerNextLesson}`"
+          class="ml-auto">
+          <Button size="sm">
+            Next Lesson →
+          </Button>
+        </router-link>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -159,6 +194,7 @@ import { useAudio } from './composables/useAudio'
 import { useSettings } from './composables/useSettings'
 import { useLessons } from './composables/useLessons'
 import { useLanguage } from './composables/useLanguage'
+import { useFooter } from './composables/useFooter'
 import { formatLangName } from './utils/formatters'
 import { Button } from '@/components/ui/button'
 
@@ -170,20 +206,83 @@ const showLanguageMenu = ref(false)
 
 const { isPlaying, play, pause, resume } = useAudio()
 const { settings } = useSettings()
-const { availableContent, getWorkshopMeta, loadAvailableContent, loadWorkshopsForLanguage } = useLessons()
+const { availableContent, getWorkshopMeta, workshopMeta, loadAvailableContent, loadWorkshopsForLanguage } = useLessons()
 const { selectedLanguage, getFlag, setLanguage } = useLanguage()
+const { nextLessonNumber: footerNextLesson, lessonLearning, lessonWorkshop } = useFooter()
 
 // Deduplicated list of available languages
 const learningLanguages = computed(() => {
   return [...new Set(Object.keys(availableContent.value))]
 })
 
-const canGoBack = computed(() => {
-  return route.name !== 'home'
-})
+const isHomePage = computed(() => route.name === 'home')
+const isWorkshopOverview = computed(() => route.name === 'workshop-overview')
+const isWorkshopSubpage = computed(() =>
+  ['lesson-detail', 'lessons-overview', 'learning-items', 'assessment-results', 'coach'].includes(route.name)
+)
 
 const isLessonPage = computed(() => {
   return route.name === 'lesson-detail'
+})
+
+// Footer: learning param for links (from route or last known)
+const footerLearning = computed(() => {
+  return route.params.learning || selectedLanguage.value || 'deutsch'
+})
+const footerWorkshop = computed(() => route.params.workshop)
+
+const defaultBackground = { light: '0 0% 100%', dark: '222.2 84% 4.9%' }
+const defaultPrimary = '228 78% 66%'
+
+function darkenColor(hslStr) {
+  const parts = hslStr.split(/\s+/)
+  if (parts.length === 3) {
+    const lightness = parseFloat(parts[2])
+    if (lightness > 80) {
+      return `${parts[0]} ${parts[1]} ${lightness - 40}%`
+    }
+  }
+  return hslStr
+}
+
+function applyWorkshopColors() {
+  const learning = route.params.learning
+  const workshop = route.params.workshop
+  const el = document.documentElement.style
+  const body = document.body
+  const fallbackBg = settings.value.darkMode ? defaultBackground.dark : defaultBackground.light
+
+  if (learning && workshop) {
+    const meta = getWorkshopMeta(learning, workshop)
+    el.setProperty('--background', meta.color ? darkenColor(meta.color) : fallbackBg)
+    el.setProperty('--primary', meta.primaryColor || defaultPrimary)
+  } else {
+    el.setProperty('--background', fallbackBg)
+    el.setProperty('--primary', defaultPrimary)
+  }
+
+  // Use gradient when no workshop color is active, solid bg-background otherwise
+  const hasWorkshopColor = learning && workshop && getWorkshopMeta(learning, workshop).color
+  body.classList.toggle('bg-background', !!hasWorkshopColor)
+  body.classList.toggle('bg-gradient-to-br', !hasWorkshopColor)
+  body.classList.toggle('from-primary', !hasWorkshopColor)
+  body.classList.toggle('to-secondary', !hasWorkshopColor)
+}
+
+// Re-apply when route, meta data, or dark mode changes
+watch([() => route.params.learning, () => route.params.workshop, workshopMeta, () => settings.value.darkMode], applyWorkshopColors, { immediate: true, deep: true })
+
+const workshopColors = computed(() => {
+  const learning = route.params.learning
+  const workshop = route.params.workshop
+  if (!learning || !workshop) return null
+  const meta = getWorkshopMeta(learning, workshop)
+  if (!meta.color && !meta.primaryColor) return null
+  return { background: meta.color || null, primary: meta.primaryColor || null }
+})
+
+const contentBgClass = computed(() => {
+  return workshopColors.value?.background ? 'bg-card' : 'bg-background'
 })
 
 const canShowResultsButton = computed(() => {
@@ -214,10 +313,8 @@ async function switchLanguage(lang) {
   showLanguageMenu.value = false
   setLanguage(lang)
   await loadWorkshopsForLanguage(lang)
-  // If on home page, stay there. If elsewhere, navigate home to show workshops for new language.
-  if (route.name !== 'home') {
-    router.push({ name: 'home' })
-  }
+  // Navigate to workshop overview for new language
+  router.push({ name: 'workshop-overview', params: { learning: lang } })
 }
 
 // Close dropdown when clicking outside
@@ -230,11 +327,13 @@ function handleClickOutside(e) {
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   await loadAvailableContent()
-  // Restore language selection if stored
+  // Load workshops for route language or stored language
+  const routeLang = route.params.learning
   const stored = localStorage.getItem('lastLearningLanguage')
-  if (stored && learningLanguages.value.includes(stored)) {
-    setLanguage(stored)
-    await loadWorkshopsForLanguage(stored)
+  const lang = routeLang || (stored && learningLanguages.value.includes(stored) ? stored : null)
+  if (lang) {
+    setLanguage(lang)
+    await loadWorkshopsForLanguage(lang)
   }
 })
 
@@ -244,6 +343,15 @@ onUnmounted(() => {
 
 function goHome() {
   router.push({ name: 'home' })
+}
+
+function goToWorkshopOverview() {
+  const learning = route.params.learning || selectedLanguage.value
+  if (learning) {
+    router.push({ name: 'workshop-overview', params: { learning } })
+  } else {
+    router.push({ name: 'home' })
+  }
 }
 
 function goBackToLessons() {

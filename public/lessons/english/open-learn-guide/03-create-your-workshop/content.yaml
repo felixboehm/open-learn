@@ -41,6 +41,25 @@ sections:
         a: "Yes — put audio files in an audio/ subfolder and reference videos via YouTube URL or a local video/ subfolder."
         labels: ["Structure"]
 
+      - q: "How can I customize the colors of a workshop?"
+        a: "Add 'color' and 'primaryColor' to your workshops.yaml entry. Both are HSL values without the hsl() wrapper, e.g. color: \"145 45% 92%\" and primaryColor: \"220 75% 50%\"."
+        labels: ["Customization"]
+
+      - q: "What do 'color' and 'primaryColor' control?"
+        a: "color sets the page background color and the accent bar on the workshop card. primaryColor controls the header bar, links, and interactive elements."
+        labels: ["Customization"]
+
+      - q: "What does a workshops.yaml with colors look like?"
+        a: |
+          workshops:
+            - folder: my-workshop
+              code: en-US
+              title: "My Workshop"
+              description: "A short description"
+              color: "145 45% 92%"
+              primaryColor: "220 75% 50%"
+        labels: ["Customization"]
+
   - title: "Writing a Lesson"
     explanation: |
       Each `content.yaml` follows this schema:

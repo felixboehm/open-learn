@@ -4,15 +4,21 @@ workshops:
     code: de-DE
     title: "Open Learn Anleitung"
     description: "Lerne die Plattform kennen — Videos, Quizze, Labels und mehr. Perfekt für neue Nutzer und Workshop-Ersteller."
+    color: "145 45% 92%"
+    primaryColor: "220 75% 50%"
   - folder: open-learn-feedback
     code: de-DE
     title: "Open Learn Feedback"
     description: "Teile deine Meinung und hilf mit, die Zukunft von Open Learn zu gestalten."
+    color: "145 40% 94%"
+    primaryColor: "152 60% 36%"
     coach:
       email: "open-learn@felixboehm.it"
   - folder: portugiesisch
     code: pt-PT
     title: "Portugiesisch"
     description: "10 Lektionen zu den 30 wichtigsten portugiesischen Verben und ihren Konjugationen."
+    color: "30 50% 95%"
+    primaryColor: "25 80% 50%"
     coach:
       email: "open-learn@felixboehm.it"
