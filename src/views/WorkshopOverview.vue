@@ -23,19 +23,21 @@
           v-for="ws in visibleWorkshops"
           :key="ws"
           @click="openWorkshop(ws)"
-          class="group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/50 overflow-hidden">
+          class="group cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/50 overflow-hidden"
+          :style="getWorkshopCardStyle(ws)">
 
           <!-- Color accent bar at top -->
-          <div class="h-1.5 bg-gradient-to-r from-primary to-secondary"></div>
+          <div class="h-1.5 bg-gradient-to-r from-primary to-secondary" :style="getWorkshopBarStyle(ws)"></div>
 
           <div class="p-5">
             <div class="flex items-start justify-between gap-2 mb-2">
-              <h3 class="font-semibold text-foreground text-lg group-hover:text-primary transition-colors leading-tight">
+              <h3 class="font-semibold text-foreground text-lg group-hover:text-primary transition-colors leading-tight" :style="getWorkshopTitleStyle(ws)">
                 {{ getWorkshopTitle(ws) }}
               </h3>
               <button
                 @click.stop="copyWorkshopLink(ws)"
-                class="p-1.5 rounded-md text-muted-foreground/40 hover:text-primary hover:bg-accent transition opacity-0 group-hover:opacity-100 flex-shrink-0"
+                class="p-1.5 rounded-md hover:bg-accent transition flex-shrink-0"
+                :style="getWorkshopTitleStyle(ws)"
                 title="Copy link">
                 <svg v-if="copiedWorkshop !== ws" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                 <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><polyline points="20 6 9 17 4 12"/></svg>
@@ -46,27 +48,16 @@
               {{ getWorkshopDescription(ws) }}
             </p>
 
-            <div class="flex items-center justify-between">
-              <span v-if="isRemoteWorkshop(ws)" class="text-xs text-muted-foreground/50 truncate max-w-[60%]">
+            <div v-if="isRemoteWorkshop(ws)" class="flex items-center justify-between">
+              <span class="text-xs text-muted-foreground/50 truncate max-w-[60%]">
                 {{ getWorkshopSourceLabel(ws) }}
               </span>
-              <span v-else></span>
-
-              <div class="flex items-center gap-1">
-                <button
-                  v-if="isRemoteWorkshop(ws)"
-                  @click.stop="removeSource(ws)"
-                  class="p-1 rounded text-muted-foreground/40 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition text-xs"
-                  title="Remove">
-                  Remove
-                </button>
-                <span v-if="isRemoteWorkshop(ws)" class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform" title="Opens external website">
-                  ↗
-                </span>
-                <span v-else class="text-primary text-sm font-medium group-hover:translate-x-0.5 transition-transform">
-                  →
-                </span>
-              </div>
+              <button
+                @click.stop="removeSource(ws)"
+                class="p-1 rounded text-muted-foreground/40 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition text-xs"
+                title="Remove">
+                Remove
+              </button>
             </div>
           </div>
         </Card>
@@ -109,33 +100,6 @@
         </div>
       </div>
 
-      <!-- Info links -->
-      <div class="mt-8 pt-4 border-t border-border">
-        <div class="flex flex-wrap gap-4 text-sm">
-          <a
-            href="#/"
-            class="text-primary hover:underline">
-            Home
-          </a>
-          <a
-            :href="'#/' + learning + '/open-learn-guide/lessons'"
-            class="text-primary hover:underline">
-            {{ t('guide') }}
-          </a>
-          <a
-            :href="'#/' + learning + '/open-learn-feedback/lessons'"
-            class="text-primary hover:underline">
-            {{ t('feedback') }}
-          </a>
-          <a
-            href="https://github.com/felixboehm/open-learn/issues"
-            target="_blank"
-            rel="noopener"
-            class="text-primary hover:underline">
-            {{ t('bugReport') }}
-          </a>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -171,9 +135,6 @@ function t(key) {
     showAll: isDE.value ? 'Alle anzeigen' : 'Show all',
     more: isDE.value ? 'weitere' : 'more',
     discover: isDE.value ? 'Workshops entdecken' : 'Discover Workshops',
-    guide: isDE.value ? 'Anleitung & Erste Schritte' : 'Guide & First Steps',
-    feedback: isDE.value ? 'Feedback geben' : 'Give Feedback',
-    bugReport: isDE.value ? 'Fehler melden' : 'Report a Bug',
   }
   return strings[key] || key
 }
@@ -196,6 +157,33 @@ const availableWorkshops = computed(() => {
 watch(learning, () => {
   showAll.value = false
 })
+
+function getWorkshopCardStyle(workshop) {
+  const meta = getWorkshopMeta(learning.value, workshop)
+  if (!meta.primaryColor) return {}
+  return { borderColor: `hsl(${meta.primaryColor} / 0.3)` }
+}
+
+function getWorkshopBarStyle(workshop) {
+  const meta = getWorkshopMeta(learning.value, workshop)
+  if (!meta.color) return {}
+  // Use the hue/saturation from color but with visible lightness for the bar
+  const parts = meta.color.split(/\s+/)
+  if (parts.length === 3) {
+    const lightness = parseFloat(parts[2])
+    // If too light (>80%), darken it for visibility
+    if (lightness > 80) {
+      return { background: `hsl(${parts[0]} ${parts[1]} ${lightness - 40}%)` }
+    }
+  }
+  return { background: `hsl(${meta.color})` }
+}
+
+function getWorkshopTitleStyle(workshop) {
+  const meta = getWorkshopMeta(learning.value, workshop)
+  if (!meta.primaryColor) return {}
+  return { color: `hsl(${meta.primaryColor})` }
+}
 
 function getWorkshopTitle(workshop) {
   const meta = getWorkshopMeta(learning.value, workshop)
@@ -292,6 +280,11 @@ onMounted(async () => {
   }
   if (learning.value) {
     await loadWorkshopsForLanguage(learning.value)
+  }
+  // Debug: log colors for all workshops
+  for (const ws of workshops.value) {
+    const meta = getWorkshopMeta(learning.value, ws)
+    console.log(`🎨 [WorkshopOverview] ${ws}: color="${meta.color}", primaryColor="${meta.primaryColor}"`)
   }
   emit('update-title', 'Workshops')
 })

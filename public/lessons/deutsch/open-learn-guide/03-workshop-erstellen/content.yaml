@@ -41,6 +41,25 @@ sections:
         a: "Ja — lege Audiodateien in einen audio/-Unterordner und referenziere Videos über YouTube-URLs oder einen lokalen video/-Unterordner."
         labels: ["Struktur"]
 
+      - q: "Wie kann ich die Farben eines Workshops anpassen?"
+        a: "Füge 'color' und 'primaryColor' in der workshops.yaml hinzu. Beide sind HSL-Werte ohne hsl()-Klammer, z.B. color: \"145 45% 92%\" und primaryColor: \"220 75% 50%\"."
+        labels: ["Anpassung"]
+
+      - q: "Was bewirken 'color' und 'primaryColor'?"
+        a: "color setzt die Hintergrundfarbe der Workshop-Seiten und den Akzentbalken auf der Workshop-Karte. primaryColor bestimmt die Farbe der Kopfzeile, Links und interaktiven Elemente."
+        labels: ["Anpassung"]
+
+      - q: "Wie sieht ein Beispiel für eine workshops.yaml mit Farben aus?"
+        a: |
+          workshops:
+            - folder: mein-workshop
+              code: de-DE
+              title: "Mein Workshop"
+              description: "Eine kurze Beschreibung"
+              color: "145 45% 92%"
+              primaryColor: "220 75% 50%"
+        labels: ["Anpassung"]
+
   - title: "Eine Lektion schreiben"
     explanation: |
       Jede `content.yaml` folgt diesem Schema:

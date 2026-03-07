@@ -139,12 +139,20 @@ workshops:
   - **Object format with `folder`**:
     - **folder** (string, required): Directory name for this workshop (e.g., "portugiesisch", "math-algebra")
     - **code** (string, optional): Language/locale code for text-to-speech (BCP 47 format)
+    - **title** (string, optional): Display name shown in the UI (defaults to formatted folder name)
+    - **description** (string, optional): Short description shown on the workshop card
+    - **color** (string, optional): HSL background color for the workshop (e.g., `"145 45% 92%"`). Shown as the accent bar on workshop cards. When lightness > 80%, it is automatically darkened by 40% for the page background.
+    - **primaryColor** (string, optional): HSL primary/accent color for the workshop (e.g., `"220 75% 50%"`). Used for the header bar, links, and UI accents when inside the workshop.
     - **coach** (object, optional): Workshop coach configuration
       - **email** (string, required): Coach's email address for `mailto:` results
       - **name** (string, optional): Coach or workshop name displayed in the UI
   - **Object format with `url`**:
     - **url** (string, required): Remote URL to the workshop folder
     - **code** (string, optional): Language/locale code for text-to-speech
+    - **title** (string, optional): Display name shown in the UI
+    - **description** (string, optional): Short description shown on the workshop card
+    - **color** (string, optional): HSL background color (same as above)
+    - **primaryColor** (string, optional): HSL primary/accent color (same as above)
     - **coach** (object, optional): Workshop coach configuration (same fields as above)
 
 For language workshops, use the target language code (e.g., "pt-PT" for Portuguese). For non-language workshops, use the base language code.
@@ -157,14 +165,24 @@ When `coach` is configured, the Assessment Results page (`/:learning/:workshop/r
 # Available workshops for German language
 # This file lists all workshops available in the German interface
 workshops:
-  # Object format with folder + coach
+  # Object format with folder, colors + coach
   - folder: portugiesisch
     code: pt-PT
+    title: "Portugiesisch"
+    description: "10 Lektionen zu den wichtigsten portugiesischen Verben."
+    color: "30 50% 95%"            # Light orange background
+    primaryColor: "25 80% 50%"     # Orange accent for header/links
     coach:
       email: "coach@example.com"
 
   # String format (backward compatible)
   - englisch
+
+  # Workshop with green theme
+  - folder: open-learn-guide
+    code: de-DE
+    color: "145 45% 92%"           # Light green background
+    primaryColor: "220 75% 50%"    # Blue accent
 
   # Object format with URL
   - url: https://example.com/workshops/spanish
