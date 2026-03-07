@@ -181,29 +181,6 @@
         </CardContent>
       </Card>
 
-      <!-- End of lesson actions -->
-      <Card class="p-5 mb-5">
-        <div class="flex flex-wrap gap-3">
-          <!-- Next lesson button -->
-          <router-link
-            v-if="nextLessonNumber"
-            :to="`/${learning}/${workshop}/lesson/${nextLessonNumber}`"
-            @click="flushOnLeave">
-            <Button>
-              Next Lesson
-            </Button>
-          </router-link>
-
-          <!-- Back to overview -->
-          <router-link
-            :to="`/${learning}/${workshop}/lessons`"
-            @click="flushOnLeave">
-            <Button variant="secondary">
-              All Lessons
-            </Button>
-          </router-link>
-        </div>
-      </Card>
     </div>
 
     <!-- Loading state -->
@@ -242,6 +219,7 @@ import { useSettings } from '../composables/useSettings'
 import { useProgress } from '../composables/useProgress'
 import { useAudio } from '../composables/useAudio'
 import { useAssessments } from '../composables/useAssessments'
+import { useFooter } from '../composables/useFooter'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { Button } from '@/components/ui/button'
@@ -261,6 +239,7 @@ const { settings } = useSettings()
 const { isItemLearned, toggleItemLearned, areAllItemsLearned, progress } = useProgress()
 const { isPlaying, isPaused, currentItem, initializeAudio, jumpToExample, cleanup, play, pause } = useAudio()
 const { getAnswer, saveAnswer, validateAnswer } = useAssessments()
+const { setLessonFooter, clearLessonFooter } = useFooter()
 
 const lesson = ref(null)
 const allLessons = ref([])
@@ -537,6 +516,13 @@ watch(currentItem, async (newItem) => {
   }
 })
 
+// Keep footer in sync with next lesson number
+watch(nextLessonNumber, (val) => {
+  if (lesson.value) {
+    setLessonFooter(learning.value, workshop.value, val)
+  }
+})
+
 // Rebuild audio queue when hideLearnedExamples or readAnswers setting changes
 watch(
   () => [settings.value.hideLearnedExamples, settings.value.readAnswers],
@@ -576,6 +562,9 @@ onMounted(async () => {
   if (lesson.value) {
     emit('update-title', `Lesson ${lesson.value.number}`)
 
+    // Set footer navigation data
+    setLessonFooter(currentLearning, currentWorkshop, nextLessonNumber.value)
+
     // Initialize audio for this lesson (load voices once)
     await initializeAudio(lesson.value, currentLearning, currentWorkshop, settings.value)
 
@@ -586,5 +575,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   cleanup()
+  clearLessonFooter()
 })
 </script>

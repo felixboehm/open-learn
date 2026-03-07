@@ -42,9 +42,8 @@
             <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
               1
             </div>
-            <div class="text-sm font-medium text-foreground mb-2">{{ steps[0].title }}</div>
-            <div class="text-xs text-muted-foreground mb-3">{{ steps[0].desc }}</div>
-            <div class="relative inline-block">
+            <div class="text-sm font-medium text-foreground mb-3">{{ steps[0].title }}</div>
+            <div class="relative inline-block mb-3">
               <button
                 @click="showLanguageMenu = !showLanguageMenu"
                 class="flex items-center gap-1.5 bg-primary text-white font-medium text-sm rounded-full px-4 py-2 cursor-pointer hover:bg-primary/90 transition">
@@ -68,6 +67,7 @@
                 </button>
               </div>
             </div>
+            <div class="text-xs text-muted-foreground">{{ steps[0].desc }}</div>
           </div>
 
           <!-- Step 2: Start a Workshop (links to workshop overview) -->
@@ -75,13 +75,13 @@
             <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
               2
             </div>
-            <div class="text-sm font-medium text-foreground mb-1">{{ steps[1].title }}</div>
-            <div class="text-xs text-muted-foreground mb-2">{{ steps[1].desc }}</div>
+            <div class="text-sm font-medium text-foreground mb-3">{{ steps[1].title }}</div>
             <a
               :href="'#/' + currentLanguage + '/workshops'"
-              class="text-xs font-medium text-primary hover:underline">
+              class="inline-flex items-center gap-1.5 bg-primary text-white font-medium text-sm rounded-full px-4 py-2 cursor-pointer hover:bg-primary/90 transition mb-3">
               {{ isDE ? 'Workshops ansehen' : 'Browse workshops' }} →
             </a>
+            <div class="text-xs text-muted-foreground">{{ steps[1].desc }}</div>
           </div>
 
           <!-- Step 3: Learn & Track -->

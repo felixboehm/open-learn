@@ -19,10 +19,10 @@ function parseSource(source) {
   }
   if (typeof source === 'object') {
     if (source.folder) {
-      return { type: 'folder', path: source.folder, code: source.code, title: source.title || null, description: source.description || null, coach: source.coach || null }
+      return { type: 'folder', path: source.folder, code: source.code, title: source.title || null, description: source.description || null, coach: source.coach || null, color: source.color || null, primaryColor: source.primaryColor || null }
     }
     if (source.url) {
-      return { type: 'url', path: resolveUrl(source.url), code: source.code, title: source.title || null, description: source.description || null, coach: source.coach || null }
+      return { type: 'url', path: resolveUrl(source.url), code: source.code, title: source.title || null, description: source.description || null, coach: source.coach || null, color: source.color || null, primaryColor: source.primaryColor || null }
     }
   }
   return null
@@ -183,7 +183,9 @@ export function useLessons() {
             workshopMeta.value[langKey][slug] = {
               title: workshopSource.title || null,
               description: workshopSource.description || null,
-              coach: workshopSource.coach || null
+              coach: workshopSource.coach || null,
+              color: workshopSource.color || null,
+              primaryColor: workshopSource.primaryColor || null
             }
 
             console.log(`  ✓ Remote workshop: ${slug} → ${workshopUrl} (${workshopSource.code || 'no code'})`)
@@ -306,7 +308,9 @@ export function useLessons() {
         workshopMeta.value[lang][key] = {
           title: source.title || null,
           description: source.description || null,
-          coach: source.coach || null
+          coach: source.coach || null,
+          color: source.color || null,
+          primaryColor: source.primaryColor || null
         }
 
         console.log(`  ✓ Workshop: ${key} (${source.type}) (${source.code || 'no code'})`)
@@ -489,6 +493,7 @@ export function useLessons() {
     resolveWorkshopKey,
     getSourceForSlug,
     getWorkshopMeta,
+    workshopMeta,
     getShareUrl
   }
 }

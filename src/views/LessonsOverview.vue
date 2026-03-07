@@ -22,11 +22,13 @@
         :key="lesson.number"
         @click="openLesson(lesson.number)"
         class="p-6 cursor-pointer transition hover:-translate-y-1 hover:shadow-xl">
-        <div class="text-6xl font-bold opacity-20 text-primary">
-          {{ lesson.number }}
-        </div>
-        <div class="text-2xl font-semibold my-2 text-foreground">
-          {{ lesson.title }}
+        <div class="flex items-center gap-3 mb-2">
+          <div class="text-5xl font-bold text-primary flex-shrink-0 leading-none">
+            {{ lesson.number }}
+          </div>
+          <div class="text-2xl font-semibold text-foreground">
+            {{ lesson.title }}
+          </div>
         </div>
         <div class="text-muted-foreground mb-2">
           {{ lesson.description || '' }}
@@ -119,6 +121,7 @@ async function loadLessons() {
 
   // Update page title with workshop name
   const meta = getWorkshopMeta(learning.value, workshop.value)
+  console.log(`🎨 [LessonsOverview] ${workshop.value}: color="${meta.color}", primaryColor="${meta.primaryColor}"`)
   emit('update-title', meta.title || formatLangName(workshop.value))
 }
 
