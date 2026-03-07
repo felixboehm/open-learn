@@ -70,13 +70,27 @@
             </div>
           </div>
 
-          <!-- Steps 2 & 3 -->
-          <div v-for="(step, i) in steps.slice(1)" :key="i + 1" class="text-center p-4">
+          <!-- Step 2: Start a Workshop (links to workshop overview) -->
+          <div class="text-center p-4">
             <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
-              {{ i + 2 }}
+              2
             </div>
-            <div class="text-sm font-medium text-foreground mb-1">{{ step.title }}</div>
-            <div class="text-xs text-muted-foreground">{{ step.desc }}</div>
+            <div class="text-sm font-medium text-foreground mb-1">{{ steps[1].title }}</div>
+            <div class="text-xs text-muted-foreground mb-2">{{ steps[1].desc }}</div>
+            <a
+              :href="'#/' + currentLanguage + '/workshops'"
+              class="text-xs font-medium text-primary hover:underline">
+              {{ isDE ? 'Workshops ansehen' : 'Browse workshops' }} →
+            </a>
+          </div>
+
+          <!-- Step 3: Learn & Track -->
+          <div class="text-center p-4">
+            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
+              3
+            </div>
+            <div class="text-sm font-medium text-foreground mb-1">{{ steps[2].title }}</div>
+            <div class="text-xs text-muted-foreground">{{ steps[2].desc }}</div>
           </div>
         </div>
       </div>
