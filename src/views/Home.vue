@@ -31,35 +31,37 @@
           </div>
         </div>
 
-        <!-- Language selector + CTA -->
-        <div class="p-5 rounded-lg border border-primary/20 bg-primary/5">
-          <p class="text-sm text-foreground font-medium mb-3">
-            {{ t('getStartedTitle') }}
-          </p>
-          <div class="flex flex-wrap items-center gap-3">
-            <button
-              v-for="lang in learningLanguages"
-              :key="lang"
-              @click="goToWorkshops(lang)"
-              class="px-4 py-2 text-sm font-medium rounded-lg border-2 transition hover:-translate-y-0.5"
-              :class="[
-                selectedLanguage === lang
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-background text-foreground border-border hover:border-primary/50'
-              ]">
-              {{ getFlag(lang) }} {{ formatLangName(lang) }}
-            </button>
-          </div>
-        </div>
       </div>
 
-      <!-- How it works -->
+      <!-- How it works (with integrated language selector as step 1) -->
       <div class="mb-8">
         <h3 class="text-lg font-semibold text-foreground mb-4">{{ t('howItWorks') }}</h3>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div v-for="(step, i) in steps" :key="i" class="text-center p-4">
+          <!-- Step 1: Pick a language (interactive dropdown) -->
+          <div class="text-center p-4">
             <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
-              {{ i + 1 }}
+              1
+            </div>
+            <div class="text-sm font-medium text-foreground mb-2">{{ steps[0].title }}</div>
+            <div class="text-xs text-muted-foreground mb-3">{{ steps[0].desc }}</div>
+            <div class="relative inline-block">
+              <select
+                :value="selectedLanguage || ''"
+                @change="goToWorkshops($event.target.value)"
+                class="appearance-none bg-primary text-white font-medium text-sm rounded-full px-5 py-2 pr-8 cursor-pointer hover:bg-primary/90 transition">
+                <option value="" disabled>{{ isDE ? 'Sprache wählen...' : 'Select language...' }}</option>
+                <option v-for="lang in learningLanguages" :key="lang" :value="lang">
+                  {{ getFlag(lang) }}  {{ formatLangName(lang) }}
+                </option>
+              </select>
+              <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/70" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
+
+          <!-- Steps 2 & 3 -->
+          <div v-for="(step, i) in steps.slice(1)" :key="i + 1" class="text-center p-4">
+            <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold mx-auto mb-3">
+              {{ i + 2 }}
             </div>
             <div class="text-sm font-medium text-foreground mb-1">{{ step.title }}</div>
             <div class="text-xs text-muted-foreground">{{ step.desc }}</div>
@@ -94,20 +96,17 @@
         </div>
       </div>
 
-      <!-- For creators -->
-      <div class="mb-8">
-        <h3 class="text-lg font-semibold text-foreground mb-3">{{ t('forCreators') }}</h3>
-        <p class="text-sm text-muted-foreground mb-4">{{ t('forCreatorsDesc') }}</p>
-        <div class="p-4 rounded-lg bg-accent/30 font-mono text-xs text-muted-foreground leading-relaxed">
-          <div>sections:</div>
-          <div class="pl-4">- title: "{{ t('yamlExampleTitle') }}"</div>
-          <div class="pl-6">explanation: |</div>
-          <div class="pl-8">{{ t('yamlExampleExplanation') }}</div>
-          <div class="pl-6">video: "https://..."</div>
-          <div class="pl-6">examples:</div>
-          <div class="pl-8">- q: "{{ t('yamlExampleQ') }}"</div>
-          <div class="pl-10">a: "{{ t('yamlExampleA') }}"</div>
-          <div class="pl-10">type: select</div>
+      <!-- For creators (teaser) -->
+      <div class="mb-8 p-5 rounded-lg border border-border bg-accent/10">
+        <div class="flex items-start gap-4">
+          <span class="text-3xl flex-shrink-0">✏️</span>
+          <div>
+            <h3 class="text-lg font-semibold text-foreground mb-1">{{ t('forCreators') }}</h3>
+            <p class="text-sm text-muted-foreground mb-3">{{ t('forCreatorsDesc') }}</p>
+            <a href="#/creators" class="text-sm font-medium text-primary hover:underline">
+              {{ t('forCreatorsLink') }} →
+            </a>
+          </div>
         </div>
       </div>
 
@@ -186,17 +185,14 @@ function t(key) {
     howItWorks: isDE.value ? 'So funktioniert es' : 'How It Works',
     whatYouCanLearn: isDE.value ? 'Was du lernen kannst' : 'What You Can Learn',
     whatYouCanLearnDesc: isDE.value
-      ? 'Open Learn ist nicht auf Sprachen beschränkt. Jedes Wissen, das sich in Lektionen mit Fragen und Antworten strukturieren lässt, funktioniert.'
-      : 'Open Learn is not limited to languages. Any knowledge that can be structured into lessons with questions and answers works.',
+      ? 'Open Learn eignet sich für jedes Thema — von Fremdsprachen über Mathe bis zur Führerschein-Theorie. Alles, was sich in Lektionen mit Fragen und Antworten strukturieren lässt, funktioniert.'
+      : 'Open Learn works for any subject — from foreign languages to math to driving theory. Anything that can be structured into lessons with questions and answers works.',
     builtInTools: isDE.value ? 'Was alles eingebaut ist' : 'Built-in Tools',
-    forCreators: isDE.value ? 'Für Workshop-Ersteller' : 'For Workshop Creators',
+    forCreators: isDE.value ? 'Eigene Workshops erstellen' : 'Create Your Own Workshops',
     forCreatorsDesc: isDE.value
-      ? 'Workshops werden in einfachem YAML geschrieben — kein Code nötig. Hoste sie auf GitHub Pages, IPFS oder jeder URL. Nutzer fügen sie mit einem Link hinzu.'
-      : 'Workshops are written in simple YAML — no code needed. Host them on GitHub Pages, IPFS, or any URL. Learners add them with a single link.',
-    yamlExampleTitle: isDE.value ? 'Grundlagen' : 'The Basics',
-    yamlExampleExplanation: isDE.value ? 'Markdown-Erklärungen mit **fett** und Listen' : 'Markdown explanations with **bold** and lists',
-    yamlExampleQ: isDE.value ? 'Was ist 2 + 2?' : 'What is 2 + 2?',
-    yamlExampleA: isDE.value ? '4' : '4',
+      ? 'Erstelle dein eigenes Lernmaterial und teile es mit der Welt. Kein Programmieren nötig — hoste kostenlos auf GitHub Pages und teile mit einem Link.'
+      : 'Build your own learning content and share it with the world. No coding required — host for free on GitHub Pages and share with a link.',
+    forCreatorsLink: isDE.value ? 'So erstellst du einen Workshop' : 'Learn how to create a workshop',
     privacyTitle: isDE.value ? 'Privatsphäre und Datenhoheit' : 'Privacy & Data Ownership',
     roadmapTitle: isDE.value ? 'Was kommt als Nächstes' : 'What\'s Coming Next',
     roadmapDesc: isDE.value

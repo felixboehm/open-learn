@@ -8,6 +8,7 @@ import AssessmentResults from '../views/AssessmentResults.vue'
 import Coach from '../views/Coach.vue'
 import Settings from '../views/Settings.vue'
 import AddSource from '../views/AddSource.vue'
+import Creators from '../views/Creators.vue'
 
 const routes = [
   {
@@ -63,6 +64,12 @@ const routes = [
     name: 'add-source',
     component: AddSource,
     meta: { title: '🎓 Open Learn' }
+  },
+  {
+    path: '/creators',
+    name: 'creators',
+    component: Creators,
+    meta: { title: null }
   }
 ]
 
