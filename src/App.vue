@@ -105,16 +105,17 @@
             🤖
           </Button>
 
-          <!-- Items button (visible on lesson pages and overview page) -->
+          <!-- Items/Lessons toggle button -->
           <Button
             v-if="canShowItemsButton"
             variant="ghost"
             size="icon"
             @click="goToItems"
             class="bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:text-white rounded-full w-12 h-12 text-2xl flex-shrink-0"
-            :title="$t('nav.learningItems')"
-            :aria-label="$t('nav.learningItems')">
-            📚
+            :title="isOnItemsPage ? $t('nav.backToLessons') : $t('nav.learningItems')"
+            :aria-label="isOnItemsPage ? $t('nav.backToLessons') : $t('nav.learningItems')">
+            <svg v-if="isOnItemsPage" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+            <span v-else>📚</span>
           </Button>
 
           <!-- Settings button (hidden on home and settings pages) -->
@@ -231,6 +232,7 @@ const isWorkshopSubpage = computed(() =>
 const isLessonPage = computed(() => {
   return route.name === 'lesson-detail'
 })
+const isOnItemsPage = computed(() => route.name === 'learning-items')
 
 // Footer: learning param for links (from route or last known)
 const footerLearning = computed(() => {
