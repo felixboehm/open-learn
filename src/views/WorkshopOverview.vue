@@ -7,6 +7,17 @@
     </div>
 
     <div v-else>
+      <!-- Workshop added notification (different language) -->
+      <div v-if="addedNotice" class="mb-4 p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
+        <p class="text-sm text-blue-800 dark:text-blue-200">
+          <span class="font-semibold">{{ addedNotice.name }}</span> {{ t('addedNotice') }}
+          <span class="font-medium">{{ addedNotice.languages }}</span>
+        </p>
+        <button @click="dismissNotice" class="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline">
+          {{ t('dismiss') }}
+        </button>
+      </div>
+
       <!-- Workshop count -->
       <div class="flex items-center justify-between mb-3">
         <label class="text-sm font-medium text-muted-foreground">
@@ -122,6 +133,7 @@ const { selectedLanguage, setLanguage } = useLanguage()
 const copiedWorkshop = ref(null)
 const showAll = ref(false)
 const maxVisible = 6
+const addedNotice = ref(null)
 
 const knownWorkshops = []
 
@@ -135,8 +147,16 @@ function t(key) {
     showAll: isDE.value ? 'Alle anzeigen' : 'Show all',
     more: isDE.value ? 'weitere' : 'more',
     discover: isDE.value ? 'Workshops entdecken' : 'Discover Workshops',
+    addedNotice: isDE.value ? 'wurde hinzugefügt. Verfügbar in: ' : 'was added. Available in: ',
+    dismiss: isDE.value ? 'Ausblenden' : 'Dismiss',
   }
   return strings[key] || key
+}
+
+function dismissNotice() {
+  addedNotice.value = null
+  // Clear query params
+  router.replace({ name: 'workshop-overview', params: { learning: learning.value } })
 }
 
 const workshops = computed(() => {
@@ -251,6 +271,13 @@ function cleanupLegacySources() {
 
 onMounted(async () => {
   cleanupLegacySources()
+  // Show notification if redirected from add source with language mismatch
+  if (route.query.added && route.query.availableIn) {
+    addedNotice.value = {
+      name: route.query.added,
+      languages: route.query.availableIn
+    }
+  }
   // Sync language state with route param
   if (learning.value && learning.value !== selectedLanguage.value) {
     setLanguage(learning.value)
