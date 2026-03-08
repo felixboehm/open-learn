@@ -153,10 +153,13 @@
         <p class="text-sm text-muted-foreground mb-4">{{ $t('home.roadmapDesc') }}</p>
         <div class="space-y-2">
           <div v-for="item in roadmapItems" :key="item.key"
-            class="flex items-start gap-3 p-3 rounded-lg border border-border">
+            :class="[
+              'flex items-start gap-3 p-3 rounded-lg border',
+              item.done ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20' : 'border-border'
+            ]">
             <span class="text-base mt-0.5">{{ item.icon }}</span>
             <div class="flex-grow">
-              <div class="text-sm font-medium text-foreground">{{ item.title }}</div>
+              <div :class="['text-sm font-medium', item.done ? 'text-green-700 dark:text-green-400 line-through' : 'text-foreground']">{{ item.title }}</div>
               <p class="text-xs text-muted-foreground">{{ item.desc }}</p>
             </div>
             <a v-if="item.issue"
@@ -257,7 +260,7 @@ const roadmapItems = computed(() => [
   { key: 'coach', icon: '🤖', title: t('home.roadmap.aiCoach'), desc: t('home.roadmap.aiCoachDesc'), issue: 45 },
   { key: 'kids', icon: '🧒', title: t('home.roadmap.kidsMode'), desc: t('home.roadmap.kidsModeDesc'), issue: 46 },
   { key: 'images', icon: '🖼️', title: t('home.roadmap.images'), desc: t('home.roadmap.imagesDesc'), issue: 47 },
-  { key: 'i18n', icon: '🌐', title: t('home.roadmap.i18n'), desc: t('home.roadmap.i18nDesc'), issue: 44 },
+  { key: 'i18n', icon: '✅', title: t('home.roadmap.i18n'), desc: t('home.roadmap.i18nDesc'), issue: 44, done: true },
   { key: 'upload', icon: '📄', title: t('home.roadmap.uploads'), desc: t('home.roadmap.uploadsDesc'), issue: 51 },
 ])
 
