@@ -5,7 +5,7 @@
       <div>
         <span v-if="workshopDescription" class="text-muted-foreground">{{ workshopDescription }}</span>
         <span v-if="workshopDescription && sourceLabel" class="text-muted-foreground/40 mx-2">·</span>
-        <span v-if="sourceLabel" class="text-muted-foreground/60">{{ sourceLabel }}</span>
+        <a v-if="sourceLabel" :href="sourceUrl" target="_blank" rel="noopener" class="text-muted-foreground/60 hover:text-primary transition">{{ sourceLabel }}</a>
       </div>
       <Button
         variant="outline"
@@ -89,6 +89,15 @@ const sourceLabel = computed(() => {
     const path = u.pathname.replace(/\/index\.yaml$/, '')
     return u.hostname + path
   } catch { return '' }
+})
+const sourceUrl = computed(() => {
+  const url = getSourceForSlug(workshop.value)
+  if (!url) return '#'
+  try {
+    const u = new URL(url)
+    u.pathname = u.pathname.replace(/\/index\.yaml$/, '/')
+    return u.toString()
+  } catch { return '#' }
 })
 
 async function copyShareLink() {

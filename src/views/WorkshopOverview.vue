@@ -60,9 +60,14 @@
             </p>
 
             <div v-if="isRemoteWorkshop(ws)" class="flex items-center justify-between">
-              <span class="text-xs text-muted-foreground/50 truncate max-w-[60%]">
+              <a
+                :href="getWorkshopSourceUrl(ws)"
+                target="_blank"
+                rel="noopener"
+                @click.stop
+                class="text-xs text-muted-foreground/50 hover:text-primary truncate max-w-[60%] transition">
                 {{ getWorkshopSourceLabel(ws) }}
-              </span>
+              </a>
               <button
                 @click.stop="removeSource(ws)"
                 class="p-1 rounded text-muted-foreground/40 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition text-xs"
@@ -224,6 +229,18 @@ function getWorkshopSourceLabel(workshop) {
     return url.hostname + path
   } catch {
     return sourceUrl
+  }
+}
+
+function getWorkshopSourceUrl(workshop) {
+  const sourceUrl = getSourceForSlug(workshop)
+  if (!sourceUrl) return '#'
+  try {
+    const url = new URL(sourceUrl)
+    url.pathname = url.pathname.replace(/\/index\.yaml$/, '/')
+    return url.toString()
+  } catch {
+    return '#'
   }
 }
 
