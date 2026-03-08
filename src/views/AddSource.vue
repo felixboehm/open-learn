@@ -12,19 +12,6 @@
           </div>
         </div>
 
-        <!-- Already added -->
-        <div v-else-if="alreadyAdded" class="text-center">
-          <div class="text-2xl font-bold text-green-500 mb-4">
-            {{ $t('addSource.alreadyAdded') }}
-          </div>
-          <p class="text-muted-foreground mb-6">
-            {{ $t('addSource.alreadyAddedDesc') }}
-          </p>
-          <Button @click="goHome">
-            {{ $t('addSource.goHome') }}
-          </Button>
-        </div>
-
         <!-- Error state -->
         <div v-else-if="error" class="text-center">
           <div class="text-2xl font-bold text-red-500 mb-4">
@@ -49,52 +36,6 @@
             {{ $t('addSource.backHome') }}
           </Button>
         </div>
-
-        <!-- Confirmation -->
-        <div v-else>
-          <h2 class="text-3xl font-bold mb-4 text-primary">
-            {{ $t('addSource.addHeading') }}
-          </h2>
-
-          <Card class="mb-6">
-            <CardContent class="p-4">
-              <div class="text-sm text-muted-foreground mb-1">{{ $t('addSource.sourceUrl') }}</div>
-              <div class="text-foreground font-mono text-sm break-all">
-                {{ sourceUrl }}
-              </div>
-            </CardContent>
-          </Card>
-
-          <!-- Discovered content -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold text-foreground mb-3">
-              {{ $t('addSource.availableContent') }}
-            </h3>
-            <div v-for="(workshops, lang) in discoveredContent" :key="lang" class="mb-3">
-              <div class="font-semibold text-primary">
-                {{ formatLangName(lang) }}
-              </div>
-              <div class="flex flex-wrap gap-2 mt-1">
-                <Badge
-                  v-for="ws in workshops"
-                  :key="ws"
-                  variant="secondary">
-                  {{ formatWorkshopName(ws) }}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex gap-3">
-            <Button @click="addSource" class="bg-green-500 hover:bg-green-600 text-white">
-              {{ $t('addSource.add') }}
-            </Button>
-            <Button variant="secondary" @click="goHome">
-              {{ $t('addSource.cancel') }}
-            </Button>
-          </div>
-        </div>
       </CardContent>
     </Card>
   </div>
@@ -104,44 +45,28 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useLessons } from '../composables/useLessons'
+import { useLanguage } from '../composables/useLanguage'
 import { formatLangName } from '../utils/formatters'
 import yaml from 'js-yaml'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 
 const router = useRouter()
 const route = useRoute()
-const { getContentSources, addContentSource } = useLessons()
+const { getContentSources, addContentSource, loadAvailableContent } = useLessons()
+const { selectedLanguage } = useLanguage()
 
 const sourceUrl = ref(route.query.source || '')
 const isValidating = ref(false)
-const alreadyAdded = ref(false)
 const error = ref(null)
-const discoveredContent = ref({})
-
-function formatWorkshopName(folderName) {
-  return formatLangName(folderName)
-}
 
 function goHome() {
   router.push({ name: 'home' })
 }
 
-function addSource() {
-  addContentSource(sourceUrl.value)
-  router.push({ name: 'home' })
-}
-
-async function validateSource() {
+async function validateAndAddSource() {
   const url = sourceUrl.value
   if (!url) return
-
-  // Check if already added
-  if (getContentSources().includes(url)) {
-    alreadyAdded.value = true
-    return
-  }
 
   isValidating.value = true
   error.value = null
@@ -152,6 +77,9 @@ async function validateSource() {
     if (!url.endsWith('.yaml')) {
       fetchUrl = url.replace(/\/$/, '') + '/index.yaml'
     }
+
+    // Check if already added — still discover content for navigation
+    const alreadyExists = getContentSources().includes(fetchUrl) || getContentSources().includes(url)
 
     const response = await fetch(fetchUrl)
     if (!response.ok) {
@@ -178,11 +106,15 @@ async function validateSource() {
       if (!langKey) continue
 
       try {
-        const topicsResponse = await fetch(`${baseUrl}/${langKey}/topics.yaml`)
-        if (!topicsResponse.ok) continue
-
-        const topicsText = await topicsResponse.text()
-        const topicsData = yaml.load(topicsText)
+        // Try workshops.yaml first, fallback to topics.yaml
+        let topicsData = null
+        for (const filename of ['workshops.yaml', 'topics.yaml']) {
+          const topicsResponse = await fetch(`${baseUrl}/${langKey}/${filename}`)
+          if (!topicsResponse.ok) continue
+          const topicsText = await topicsResponse.text()
+          topicsData = yaml.load(topicsText)
+          break
+        }
 
         const workshopsList = topicsData && (topicsData.workshops || topicsData.topics)
         if (workshopsList) {
@@ -199,7 +131,43 @@ async function validateSource() {
       throw new Error('No workshops found in the content source')
     }
 
-    discoveredContent.value = content
+    // Auto-add the source
+    if (!alreadyExists) {
+      addContentSource(fetchUrl)
+    }
+
+    // Reload content so the new source is available for navigation
+    await loadAvailableContent()
+
+    // Determine where to navigate
+    const userLang = selectedLanguage.value || 'deutsch'
+    const workshopsForLang = content[userLang]
+
+    if (workshopsForLang && workshopsForLang.length === 1) {
+      // Single workshop available in user's language — go directly to lessons
+      router.replace({
+        name: 'lessons-overview',
+        params: { learning: userLang, workshop: workshopsForLang[0] }
+      })
+    } else if (workshopsForLang && workshopsForLang.length > 1) {
+      // Multiple workshops — go to workshop overview
+      router.replace({
+        name: 'workshop-overview',
+        params: { learning: userLang }
+      })
+    } else {
+      // Workshop not available in user's language — go to workshop overview with notification
+      const availableLangs = Object.keys(content).map(l => formatLangName(l)).join(', ')
+      const workshopNames = Object.values(content).flat().map(w => formatLangName(w)).join(', ')
+      router.replace({
+        name: 'workshop-overview',
+        params: { learning: userLang },
+        query: {
+          added: workshopNames,
+          availableIn: availableLangs
+        }
+      })
+    }
   } catch (e) {
     error.value = e.message
   } finally {
@@ -208,6 +176,6 @@ async function validateSource() {
 }
 
 onMounted(() => {
-  validateSource()
+  validateAndAddSource()
 })
 </script>
